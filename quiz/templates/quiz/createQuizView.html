@@ -1,0 +1,67 @@
+{% extends "accounts/base.html" %}
+{% load static %}
+{% block content %}
+<style type="text/css">
+    body {
+        color: black;
+    }
+</style>
+<br>
+<br>
+<div class="container">
+    <form method="post" class="form-control">
+        {% csrf_token %}
+        {% for field in form %}
+            {% if field.field.widget.input_type == 'checkbox' %}
+            <div class="form-group">
+                {{ field }}
+                <label style="font-size: 17px;">{{ field.label }}</label>
+            </div>
+            {% elif field.field.widget.input_type == 'select' %}
+                {{ field }}
+            {% else %}
+                {{ field.label }}
+                {{ field }}
+            {% endif %}
+        {% for e in field.errors %}
+        <p class="text-center" style="color: red;"><small>{{e}}</small></p>
+        {% endfor %}
+        </br>
+        {% endfor %}
+        <div class="text-right">
+            <input type="submit" class="btn btn-primary" value="Submit">
+            <input type="reset" class="btn btn-danger" value="Reset">
+        </div>
+    </form>
+    </br>
+    </br>
+    </br>
+</div>
+
+    <script>
+
+        $("#id_subject").on('change', function () {
+            let subjectId = $(this).val();
+
+            fetch("{% url 'quiz:topicObjectApiEventVersion1Component' %}?subject_id=" + subjectId, {
+                method: 'GET',
+            }).then((response) => response.json())
+                .then((response) => {
+                    if (response.success) {
+
+                        $("#id_topic")
+                            .find('option')
+                            .remove()
+
+                        $.each(response.data.topics, function (i, item) {
+                            $('#id_topic').append($('<option>', {
+                                value: item.id,
+                                text: item.name
+                            }));
+                        })
+                    }
+                })
+        });
+
+    </script>
+{% endblock %}

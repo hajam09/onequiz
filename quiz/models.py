@@ -171,18 +171,6 @@ class Quiz(BaseModel):
     maxAttempt = models.PositiveIntegerField(default=False)
     creator = models.ForeignKey(User, on_delete=models.CASCADE)
 
-    def save(self, force_insert=False, force_update=False, *args, **kwargs):
-        self.url = re.sub('\s+', '-', self.url).lower()
-        self.url = ''.join(letter for letter in self.url if letter.isalnum() or letter == '-')
-
-        if self.maxAttempt == 1:
-            self.isExamPaper = True
-
-        if self.passMark > 100:
-            raise ValidationError(f'{self.passMark} is above 100')
-
-        super(Quiz, self).save(force_insert, force_update, *args, **kwargs)
-
     def __str__(self):
         return f"{self.name} - {self.topic.name}"
 
