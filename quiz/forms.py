@@ -1,8 +1,9 @@
 import re
 
 from django import forms
+from django.db import transaction
 
-from quiz.models import Quiz, Subject, Topic, TrueOfFalseQuestion, EssayQuestion
+from quiz.models import Quiz, Subject, Topic, TrueOfFalseQuestion, EssayQuestion, MultipleChoiceQuestion, Answer
 
 
 class QuizCreationForm(forms.Form):
@@ -314,6 +315,133 @@ class EssayQuestionForm(forms.Form):
             answer=self.cleaned_data.get('answer'),
         )
         return newEssayQuestion
+
+
+class MultipleChoiceQuestionForm(forms.Form):
+    figure = forms.ImageField(
+        label='Figure (Optional)',
+        required=False,
+        widget=forms.ClearableFileInput(
+            attrs={
+                'class': 'form-control',
+            }
+        ),
+    )
+    content = forms.CharField(
+        label='Content (Optional)',
+        required=False,
+        widget=forms.Textarea(
+            attrs={
+                'class': 'form-control col',
+                'style': 'border-radius: 0',
+                'rows': 5,
+            }
+        )
+    )
+    explanation = forms.CharField(
+        label='Explanation (Optional)',
+        required=False,
+        widget=forms.Textarea(
+            attrs={
+                'class': 'form-control col',
+                'style': 'border-radius: 0',
+                'rows': 5,
+            }
+        )
+    )
+    answerOrder = forms.MultipleChoiceField(
+        label='Answer Order',
+        widget=forms.Select(
+            attrs={
+                'class': 'form-control',
+                'style': 'width: 100%; border-radius: 0',
+                'required': 'required',
+            }
+        ),
+    )
+    mark = forms.IntegerField(
+        label='Mark',
+        widget=forms.NumberInput(
+            attrs={
+                'class': 'form-control',
+                'style': 'width: 100%',
+                'required': 'required',
+            }
+        ),
+    )
+
+    def __init__(self, *args, **kwargs):
+        kwargs.setdefault('label_suffix', '')
+        super(MultipleChoiceQuestionForm, self).__init__(*args, **kwargs)
+
+        ANSWER_ORDER_CHOICES = [
+            (0, '-- Select a value --'),
+            (MultipleChoiceQuestion.Order.SEQUENTIAL, MultipleChoiceQuestion.Order.SEQUENTIAL.label),
+            (MultipleChoiceQuestion.Order.RANDOM, MultipleChoiceQuestion.Order.RANDOM.label),
+            (MultipleChoiceQuestion.Order.NONE, MultipleChoiceQuestion.Order.NONE.label),
+        ]
+        # orderNo, enteredAnswer, isChecked
+        ANSWER_OPTIONS = [
+            (1, '', False),
+            (2, '', False)
+        ]
+        self.initial['initialAnswerOptions'] = ANSWER_OPTIONS
+        self.base_fields['answerOrder'].choices = ANSWER_ORDER_CHOICES
+
+    def clean(self):
+        figure = self.cleaned_data.get('figure')
+        content = self.cleaned_data.get('content')
+        mark = self.cleaned_data.get('mark')
+        answerOrder = self.data.get('answerOrder')
+
+        del self.errors['answerOrder']
+
+        if not figure and not content:
+            self.errors['figure'] = self.error_class([f'Cannot leave both figure and content empty.'])
+            self.errors['content'] = self.error_class([f'Cannot leave both figure and content empty.'])
+
+        if mark < 0:
+            self.errors['mark'] = self.error_class([f'Mark cannot be a negative number.'])
+
+        if answerOrder == '0':
+            self.errors['answerOrder'] = self.error_class(['Answer Order is empty.'])
+
+        answerValueList = self.data.getlist('answerValue')
+        ANSWER_OPTIONS = []
+        for i in range(len(answerValueList)):
+            orderNo = i + 1
+            enteredAnswer = answerValueList[i]
+            isChecked = self.data.get(f'answerChecked{orderNo}') == 'on'
+            ANSWER_OPTIONS.append((orderNo, enteredAnswer, isChecked))
+
+        self.initial['initialAnswerOptions'] = ANSWER_OPTIONS
+        return self.cleaned_data
+
+    def save(self):
+        answerValueList = self.data.getlist('answerValue')
+        bulkAnswer = []
+
+        with transaction.atomic():
+            newMultipleChoiceQuestion = MultipleChoiceQuestion.objects.create(
+                figure=self.cleaned_data.get('figure'),
+                content=self.cleaned_data.get('content'),
+                explanation=self.cleaned_data.get('explanation'),
+                mark=self.cleaned_data.get('mark'),
+                answerOrder=self.data.get('answerOrder')
+            )
+
+            for i in range(len(answerValueList)):
+                enteredAnswer = answerValueList[i]
+                isChecked = self.data.get(f'answerChecked{i + 1}') == 'on'
+                bulkAnswer.append(
+                    Answer(
+                        question=newMultipleChoiceQuestion,
+                        content=enteredAnswer,
+                        isCorrect=isChecked
+                    )
+                )
+            Answer.objects.bulk_create(bulkAnswer)
+        return newMultipleChoiceQuestion
 
 
 class TrueOrFalseQuestionForm(forms.Form):

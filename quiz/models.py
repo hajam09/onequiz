@@ -74,7 +74,7 @@ class EssayQuestion(Question):
 
 class MultipleChoiceQuestion(Question):
     class Order(models.TextChoices):
-        CREATION = 'CREATION', _('Creation')
+        SEQUENTIAL = 'SEQUENTIAL', _('Sequential')
         RANDOM = 'RANDOM', _('Random')
         NONE = 'NONE', _('None')
 
@@ -85,7 +85,7 @@ class MultipleChoiceQuestion(Question):
         return answer.isCorrect
 
     def orderAnswers(self, queryset):
-        if self.answerOrder == self.Order.CREATION:
+        if self.answerOrder == self.Order.SEQUENTIAL:
             return queryset.order_by('id')
         if self.answerOrder == self.Order.RANDOM:
             return queryset.order_by('?')
