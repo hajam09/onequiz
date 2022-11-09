@@ -54,6 +54,8 @@ class Question(BaseModel):
 
 
 class EssayQuestion(Question):
+    answer = models.TextField()
+
     def checkIfCorrect(self, guess):
         return False
 

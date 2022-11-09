@@ -1,12 +1,29 @@
 from django.http import Http404
 from django.shortcuts import render, redirect
 
-from quiz.forms import QuizCreationForm, TrueOrFalseQuestionForm
+from quiz.forms import QuizCreationForm, TrueOrFalseQuestionForm, EssayQuestionForm
 from quiz.models import Quiz
 
 
 def createEssayQuestionView(request, quizId):
-    pass
+    try:
+        quiz = Quiz.objects.get(id=quizId, creator=request.user)
+    except Quiz.DoesNotExist:
+        raise Http404
+
+    if request.method == "POST":
+        form = EssayQuestionForm(request.POST, request.FILES)
+        if form.is_valid():
+            newEssayQuestion = form.save()
+            quiz.questions.add(newEssayQuestion)
+            return redirect('quiz:create-essay-question-view', quizId=quizId)
+    else:
+        form = EssayQuestionForm()
+
+    context = {
+        'form': form,
+    }
+    return render(request, 'quiz/createEssayQuestionView.html', context)
 
 
 def createMultipleChoiceQuestionView(request, quizId):

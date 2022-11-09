@@ -2,7 +2,7 @@ import re
 
 from django import forms
 
-from quiz.models import Quiz, Subject, Topic, TrueOfFalseQuestion
+from quiz.models import Quiz, Subject, Topic, TrueOfFalseQuestion, EssayQuestion
 
 
 class QuizCreationForm(forms.Form):
@@ -228,6 +228,92 @@ class QuizCreationForm(forms.Form):
         newQuiz.creator_id = self.request.user.id
         newQuiz.save()
         return newQuiz
+
+
+class EssayQuestionForm(forms.Form):
+    figure = forms.ImageField(
+        label='Figure (Optional)',
+        required=False,
+        widget=forms.ClearableFileInput(
+            attrs={
+                'class': 'form-control',
+            }
+        ),
+    )
+    content = forms.CharField(
+        label='Content (Optional)',
+        required=False,
+        widget=forms.Textarea(
+            attrs={
+                'class': 'form-control col',
+                'style': 'border-radius: 0',
+                'rows': 5,
+            }
+        )
+    )
+    explanation = forms.CharField(
+        label='Explanation (Optional)',
+        required=False,
+        widget=forms.Textarea(
+            attrs={
+                'class': 'form-control col',
+                'style': 'border-radius: 0',
+                'rows': 5,
+            }
+        )
+    )
+    mark = forms.IntegerField(
+        label='Mark',
+        widget=forms.NumberInput(
+            attrs={
+                'class': 'form-control',
+                'style': 'width: 100%',
+                'required': 'required',
+            }
+        ),
+    )
+    answer = forms.CharField(
+        label='Answer',
+        widget=forms.Textarea(
+            attrs={
+                'class': 'form-control col',
+                'style': 'border-radius: 0',
+                'rows': 5,
+            }
+        )
+    )
+
+    def __init__(self, *args, **kwargs):
+        kwargs.setdefault('label_suffix', '')
+        super(EssayQuestionForm, self).__init__(*args, **kwargs)
+
+    def clean(self):
+        figure = self.cleaned_data.get('figure')
+        content = self.cleaned_data.get('content')
+        mark = self.cleaned_data.get('mark')
+        answer = self.cleaned_data.get('answer')
+
+        if not figure and not content:
+            self.errors['figure'] = self.error_class([f'Cannot leave both figure and content empty.'])
+            self.errors['content'] = self.error_class([f'Cannot leave both figure and content empty.'])
+
+        if mark < 0:
+            self.errors['mark'] = self.error_class([f'Mark cannot be a negative number.'])
+
+        if not answer:
+            self.errors['answer'] = self.error_class([f'Answer cannot be left empty.'])
+
+        return self.cleaned_data
+
+    def save(self):
+        newEssayQuestion = EssayQuestion.objects.create(
+            figure=self.cleaned_data.get('figure'),
+            content=self.cleaned_data.get('content'),
+            explanation=self.cleaned_data.get('explanation'),
+            mark=self.cleaned_data.get('mark'),
+            answer=self.cleaned_data.get('answer'),
+        )
+        return newEssayQuestion
 
 
 class TrueOrFalseQuestionForm(forms.Form):
