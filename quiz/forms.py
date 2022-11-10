@@ -407,12 +407,21 @@ class MultipleChoiceQuestionForm(forms.Form):
             self.errors['answerOrder'] = self.error_class(['Answer Order is empty.'])
 
         answerValueList = self.data.getlist('answerValue')
+        isAnswerOptionsValid = True
         ANSWER_OPTIONS = []
         for i in range(len(answerValueList)):
             orderNo = i + 1
             enteredAnswer = answerValueList[i]
             isChecked = self.data.get(f'answerChecked{orderNo}') == 'on'
             ANSWER_OPTIONS.append((orderNo, enteredAnswer, isChecked))
+
+            if not enteredAnswer:
+                isAnswerOptionsValid = False
+
+        if not isAnswerOptionsValid:
+            self.errors['initialAnswerOptions'] = self.error_class(
+                ['One of your answer options is empty or invalid. Please try again.']
+            )
 
         self.initial['initialAnswerOptions'] = ANSWER_OPTIONS
         return self.cleaned_data
