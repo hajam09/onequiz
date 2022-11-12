@@ -96,6 +96,9 @@ class MultipleChoiceQuestion(Question):
     def get_answers(self):
         return self.orderAnswers(Answer.objects.filter(question=self))
 
+    def getAnswers(self):
+        return Answer.objects.filter(question=self)
+
     def getAnswersList(self):
         return [(answer.id, answer.content) for answer in self.orderAnswers(Answer.objects.filter(question=self))]
 
@@ -103,7 +106,7 @@ class MultipleChoiceQuestion(Question):
         return Answer.objects.get(id=guess).content
 
 
-class TrueOfFalseQuestion(Question):
+class TrueOrFalseQuestion(Question):
     isCorrect = models.BooleanField(default=False)
 
     def checkIfCorrect(self, guess):
@@ -176,14 +179,18 @@ class Quiz(BaseModel):
     def __str__(self):
         return f"{self.name} - {self.topic.name}"
 
-    def getQuestions(self):
-        return self.questions.all().select_subclasses()
+    def getQuestions(self, shuffleQuestions=False):
+        questionList = self.questions.all().select_subclasses()
+        if shuffleQuestions:
+            random.shuffle(questionList)
+        return questionList
 
-    @property
-    def getQuestions(self):
-        questions = list(self.questions.all())
-        random.shuffle(questions)
-        return questions[:self.numberOfQuestions]
+    # @property
+    # def getQuestions(self):
+    #     questions = list(self.questions.all())
+    #     if self.inRandomOrder:
+    #         random.shuffle(questions)
+    #     return questions
 
     @property
     def getMaxScore(self):

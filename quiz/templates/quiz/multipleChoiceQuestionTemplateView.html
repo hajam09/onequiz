@@ -10,7 +10,7 @@
         <form method="post" class="form-control" enctype="multipart/form-data">
             {% csrf_token %}
             <legend>
-                <h2 class="heading-h2">Create Multiple Choice Question</h2>
+                <h2 class="heading-h2">{{ formTitle }}</h2>
             </legend>
 
             {% for field in form %}
@@ -69,7 +69,7 @@
 
         function showAnswerListError() {
             let fieldErrorListElement = $('#fieldErrorList');
-            fieldErrorListElement.append(' {{ form.errors }}');
+            fieldErrorListElement.append('{{ form.errors }}');
 
             if ( fieldErrorListElement.children().length === 0 )
                 return;

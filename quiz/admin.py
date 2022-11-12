@@ -11,7 +11,7 @@ from quiz.models import Quiz
 from quiz.models import Result
 from quiz.models import Subject
 from quiz.models import Topic
-from quiz.models import TrueOfFalseQuestion
+from quiz.models import TrueOrFalseQuestion
 
 
 class AnswerInline(admin.TabularInline):
@@ -61,7 +61,7 @@ admin.site.register(Subject)
 admin.site.register(Topic)
 admin.site.register(EssayQuestion)
 admin.site.register(MultipleChoiceQuestion, MultipleChoiceQuestionAdmin)
-admin.site.register(TrueOfFalseQuestion)
+admin.site.register(TrueOrFalseQuestion)
 admin.site.register(Answer)
 admin.site.register(Quiz, QuizAdmin)
 admin.site.register(Result)

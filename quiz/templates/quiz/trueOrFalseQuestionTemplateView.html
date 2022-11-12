@@ -7,7 +7,7 @@
         <form method="post" class="form-control" enctype="multipart/form-data">
             {% csrf_token %}
             <legend>
-                <h2 class="heading-h2">Create Essay Question</h2>
+                <h2 class="heading-h2">{{ formTitle }}</h2>
             </legend>
 
             {% for field in form %}
@@ -28,12 +28,11 @@
                 {% elif field.field.widget.input_type == 'radio' %}
                     <span class="form-label">{{ field.label }}</span>
                     <fieldset class="inline">
-                        {% for choice in form.isCorrect %}
-
+                        {% for choice in form.initial.isCorrectChoices %}
                             <div class="multiple-choice">
-                                <input class="form-control" value="{{ choice.choice_label }}"
-                                       type="radio" name="{{ field.html_name }}" required>
-                                <label class="form-label">{{ choice.choice_label }}</label>
+                                <input class="form-control" value="{{ choice.1 }}"
+                                       type="radio" name="{{ choice.0 }}" required {% if choice.3 == 'True' %} checked {% endif %}>
+                                <label class="form-label">{{ choice.2 }}</label>
                             </div>
                         {% endfor %}
                     </fieldset>
