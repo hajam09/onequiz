@@ -1,6 +1,8 @@
 {% extends "accounts/base.html" %}
 {% load static %}
 {% block content %}
+    <link type="text/css" rel="stylesheet" href="{% static 'css/baseFormStyle.css' %}">
+
     <br>
     <div class="container" style="color: black;">
         <div class="row">
@@ -11,14 +13,96 @@
             </div>
             <div class="col-sm">
                 <a class="btn btn-primary btn-sm btn-block"
-                   href="{% url 'quiz:create-multiple-choice-question-view' quizId=quizId %}" role="button">Create Multiple Choice
+                   href="{% url 'quiz:create-multiple-choice-question-view' quizId=quizId %}" role="button">Create
+                    Multiple Choice
                     Question</a>
             </div>
             <div class="col-sm">
                 <a class="btn btn-primary btn-sm btn-block"
-                   href="{% url 'quiz:create-true-or-false-question-view' quizId=quizId %}" role="button">Create True or False
+                   href="{% url 'quiz:create-true-or-false-question-view' quizId=quizId %}" role="button">Create True or
+                    False
                     Question</a>
             </div>
         </div>
+        <br>
+        <div class="row">
+            <form method="post" class="form-control">
+                {% csrf_token %}
+                <legend>
+                    <h2 class="heading-h2">{{ formTitle }}</h2>
+                </legend>
+
+                {% for field in form %}
+
+                    {% if field.field.widget.input_type == 'text' %}
+                        <span class="form-label">{{ field.label }}</span>
+                        {{ field }}
+                    {% elif field.field.widget.input_type == 'select' %}
+                        <span class="form-label">{{ field.label }}</span>
+                        {{ field }}
+                    {% elif field.field.widget.input_type == 'number' %}
+                        <span class="form-label">{{ field.label }}</span>
+                        {{ field }}
+                    {% elif field.field.widget.input_type == 'checkbox' %}
+                        <div class="multiple-choice">
+                            {{ field }}
+                            <label class="form-label">{{ field.label }}</label>
+                        </div>
+                    {% else %}
+                        <span class="form-label">{{ field.label }}</span>
+                        {{ field }}
+                    {% endif %}
+
+                    {% for error in field.errors %}
+                        <p class="text-center" style="color: red;"><small>{{ error }}</small></p>
+                    {% endfor %}
+
+                    <br>
+                {% endfor %}
+
+                <br><br><br><br><br>
+
+                <div class="text-right">
+                    <input type="submit" class="btn btn-primary" value="Submit">
+                    <input type="reset" class="btn btn-danger" value="Reset">
+                </div>
+            </form>
+        </div>
     </div>
+
+    <script>
+
+        $("#id_subject").on('change', function () {
+            let subjectId = $(this).val();
+
+            fetch("{% url 'quiz:topicObjectApiEventVersion1Component' %}?subject_id=" + subjectId, {
+                method: 'GET',
+            }).then((response) => response.json())
+                .then((response) => {
+                    if (response.success) {
+
+                        $("#id_topic")
+                            .find('option')
+                            .remove()
+
+                        if (response.data.topics.length === 0) {
+                            response.data.topics = [
+                                {
+                                    'id': 0,
+                                    'name': '--Select a subject first--'
+                                }
+                            ]
+                        }
+
+                        $.each(response.data.topics, function (i, item) {
+                            $('#id_topic').append($('<option>', {
+                                value: item.id,
+                                text: item.name
+                            }));
+                        })
+                    }
+                })
+        });
+
+    </script>
 {% endblock %}

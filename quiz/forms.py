@@ -3,6 +3,7 @@ import re
 
 from django import forms
 from django.db import transaction
+from django.db.models import Q
 
 from quiz.models import Quiz, Subject, Topic, TrueOrFalseQuestion, EssayQuestion, MultipleChoiceQuestion, Answer
 
@@ -76,7 +77,7 @@ class QuestionForm(forms.Form):
         raise NotImplementedError("Please implement update() method")
 
 
-class QuizCreationCreateForm(forms.Form):
+class QuizForm(forms.Form):
     name = forms.CharField(
         label='Quiz Name',
         widget=forms.TextInput(
@@ -216,74 +217,162 @@ class QuizCreationCreateForm(forms.Form):
         ),
     )
 
-    def __init__(self, request, *args, **kwargs):
+    def __init__(self, *args, **kwargs):
         kwargs.setdefault('label_suffix', '')
-        super(QuizCreationCreateForm, self).__init__(*args, **kwargs)
-        self.request = request
+        super(QuizForm, self).__init__(*args, **kwargs)
 
-        SUBJECT_CHOICES = [(0, '-- Select a value --')]
-        for subject in Subject.objects.all():
-            SUBJECT_CHOICES.append((subject.id, subject.name))
-
-        # selectedSubjectId = self.data.get('subject') or SUBJECT_CHOICES[0][0]
-        # INITIAL_TOPIC_CHOICES = [
-        #     (topic.id, topic.name) for topic in Topic.objects.filter(subject_id=selectedSubjectId)
-        # ]
-
+        SUBJECT_CHOICES = [(subject.id, subject.name) for subject in Subject.objects.all()]
+        SUBJECT_CHOICES.insert(0, (0, '-- Select a value --'))
         INITIAL_TOPIC_CHOICES = [(0, '-- Select a subject first --')]
-
         DIFFICULTY_CHOICES = [
             (Quiz.Difficulty.EASY, Quiz.Difficulty.EASY.label),
             (Quiz.Difficulty.MEDIUM, Quiz.Difficulty.MEDIUM.label),
             (Quiz.Difficulty.HARD, Quiz.Difficulty.HARD.label),
         ]
+
         self.base_fields['difficulty'].choices = DIFFICULTY_CHOICES
         self.base_fields['subject'].choices = SUBJECT_CHOICES
         self.base_fields['topic'].choices = INITIAL_TOPIC_CHOICES
 
-    def clean(self):
+    def clean_name(self):
         name = self.cleaned_data.get('name')
-        link = re.sub('\s+', '-', self.cleaned_data.get('link')).lower()
-        link = ''.join(letter for letter in link if letter.isalnum() or letter == '-')
-        subject = self.data.get('subject')
-        topic = self.data.get('topic')
-        maxAttempt = self.cleaned_data.get('maxAttempt')
-        passMark = self.cleaned_data.get('passMark')
-
-        del self.errors['difficulty']
-        del self.errors['subject']
-        del self.errors['topic']
-
-        INITIAL_TOPIC_CHOICES = [
-            (topic.id, topic.name) for topic in Topic.objects.filter(subject_id=subject)
-        ]
-        self.base_fields['topic'].choices = INITIAL_TOPIC_CHOICES
 
         if Quiz.objects.filter(name__iexact=name).exists():
-            self.errors['name'] = self.error_class([f'Quiz already exists with name: {name}'])
+            raise forms.ValidationError(f'Quiz already exists with name: {name}')
+
+        return name
+
+    def clean_description(self):
+        description = self.cleaned_data.get('description')
+
+        if not description:
+            raise forms.ValidationError(f'Description should not be empty.')
+
+        return description
+
+    def clean_link(self):
+        link = re.sub('\s+', '-', self.cleaned_data.get('link')).lower()
+        link = ''.join(letter for letter in link if letter.isalnum() or letter == '-')
 
         if Quiz.objects.filter(url__exact=link).exists():
-            self.errors['link'] = self.error_class([f'Quiz already exists with link: {link}'])
+            raise forms.ValidationError(f'Quiz already exists with link: {link}')
 
-        if passMark > 100:
-            self.errors['passMark'] = self.error_class(['Pass mark is above 100.'])
+        return link
+
+    def clean_subject(self):
+        subject = self.data.get('subject')
+
+        if not Subject.objects.filter(id=subject).exists():
+            raise forms.ValidationError(f'There\'s an error with the selected subject.')
+
+        return subject
+
+    def clean_topic(self):
+        topic = self.data.get('topic')
 
         if topic == '0':
-            self.errors['topic'] = self.error_class(['Topic is empty.'])
+            raise forms.ValidationError(f'Topic is empty.')
+        elif not Topic.objects.filter(id=topic).exists():
+            raise forms.ValidationError(f'There\'s an error with the selected topic.')
 
-        if maxAttempt == 1:
-            self.isExamPaper = True
+        return topic
+
+    def clean_quizDuration(self):
+        quizDuration = int(self.data.get('quizDuration'))
+
+        if quizDuration < 0:
+            raise forms.ValidationError(f'Quiz Durations should be greater than 0.')
+
+        return quizDuration
+
+    def clean_maxAttempt(self):
+        maxAttempt = int(self.data.get('maxAttempt'))
+
+        if maxAttempt < 0:
+            raise forms.ValidationError(f'Quiz Max Attempt should be greater than 0.')
+
+        return maxAttempt
+
+    def clean_difficulty(self):
+        difficulty = self.data.get('difficulty')
+
+        if not (
+                difficulty == Quiz.Difficulty.EASY or difficulty == Quiz.Difficulty.MEDIUM or difficulty == Quiz.Difficulty.HARD):
+            raise forms.ValidationError(
+                f'Quiz Difficulty should either be {Quiz.Difficulty.EASY.label} or {Quiz.Difficulty.MEDIUM.label} or {Quiz.Difficulty.HARD.label}'
+            )
+
+        return difficulty
+
+    def clean_passMark(self):
+        passMark = self.cleaned_data.get('passMark')
+
+        if passMark < 0 or passMark > 100:
+            raise forms.ValidationError(f'Pass mark should be between 0 and 100.')
+
+        return passMark
+
+    def clean_successText(self):
+        successText = self.cleaned_data.get('successText')
+
+        if not successText:
+            raise forms.ValidationError(f'Text to display when passed should not be empty.')
+
+        return successText
+
+    def clean_failText(self):
+        failText = self.cleaned_data.get('failText')
+
+        if not failText:
+            raise forms.ValidationError(f'Text to display when failed should not be empty.')
+
+        return failText
+
+    def clean_inRandomOrder(self):
+        return self.data.get('inRandomOrder') == 'on'
+
+    def clean_answerAtEnd(self):
+        return self.data.get('answerAtEnd') == 'on'
+
+    def clean_isExamPaper(self):
+        maxAttempt = self.clean_maxAttempt()
+        return maxAttempt is not None and int(maxAttempt) == 1 or self.data.get('isExamPaper') == 'on'
+
+    def clean_isDraft(self):
+        return self.data.get('isDraft') == 'on'
+
+    def clean(self):
+        raise NotImplementedError("Please implement clean() method")
+
+    def save(self):
+        raise NotImplementedError("Please implement save() method")
+
+    def update(self):
+        raise NotImplementedError("Please implement update() method")
+
+
+class QuizCreateForm(QuizForm):
+
+    def __init__(self, request, *args, **kwargs):
+        super(QuizCreateForm, self).__init__(*args, **kwargs)
+        self.request = request
+
+    def clean(self):
+        del self.errors['subject']
+        del self.errors['topic']
+        del self.errors['difficulty']
+
+        self.clean_subject()
+        self.clean_topic()
+        self.clean_difficulty()
 
         return self.cleaned_data
 
     def save(self):
-        link = re.sub('\s+', '-', self.cleaned_data.get('link')).lower()
-        link = ''.join(letter for letter in link if letter.isalnum() or letter == '-')
-
         newQuiz = Quiz()
         newQuiz.name = self.cleaned_data.get('name')
         newQuiz.description = self.cleaned_data.get('description')
-        newQuiz.url = link
+        newQuiz.url = self.cleaned_data.get('link')
         newQuiz.topic_id = self.data.get('topic')
         newQuiz.numberOfQuestions = 1
         newQuiz.quizDuration = self.cleaned_data.get('quizDuration')
@@ -299,6 +388,84 @@ class QuizCreationCreateForm(forms.Form):
         newQuiz.creator_id = self.request.user.id
         newQuiz.save()
         return newQuiz
+
+
+class QuizUpdateForm(QuizForm):
+
+    def __init__(self, request, quiz=None, *args, **kwargs):
+        super(QuizUpdateForm, self).__init__(*args, **kwargs)
+        self.request = request
+        self.quiz = quiz
+
+        if self.quiz is None or not isinstance(quiz, Quiz):
+            raise Exception('Quiz is none. or is not instance of Quiz object.')
+
+        INITIAL_TOPIC_CHOICES = [
+            (topic.id, topic.name) for topic in Topic.objects.filter(subject_id=self.quiz.topic.subject_id)
+        ]
+        self.base_fields['topic'].choices = INITIAL_TOPIC_CHOICES
+
+        self.initial['name'] = quiz.name
+        self.initial['description'] = quiz.description
+        self.initial['link'] = quiz.url
+        self.initial['subject'] = self.quiz.topic.subject_id
+        self.initial['topic'] = self.quiz.topic.id
+        self.initial['quizDuration'] = quiz.quizDuration
+        self.initial['maxAttempt'] = quiz.maxAttempt
+        self.initial['difficulty'] = quiz.difficulty
+        self.initial['passMark'] = quiz.passMark
+        self.initial['successText'] = quiz.successText
+        self.initial['failText'] = quiz.failText
+        self.initial['inRandomOrder'] = quiz.inRandomOrder
+        self.initial['answerAtEnd'] = quiz.answerAtEnd
+        self.initial['isExamPaper'] = quiz.isExamPaper
+        self.initial['isDraft'] = quiz.isDraft
+
+    def clean_name(self):
+        name = self.cleaned_data.get('name')
+
+        if not name:
+            raise forms.ValidationError(f'Quiz name field is empty.')
+
+        return name
+
+    def clean_link(self):
+        link = re.sub('\s+', '-', self.cleaned_data.get('link')).lower()
+        link = ''.join(letter for letter in link if letter.isalnum() or letter == '-')
+
+        if Quiz.objects.filter(~Q(id=self.quiz.id), Q(url__exact=link)).exists():
+            raise forms.ValidationError(f'Quiz already exists with link: {link}')
+
+        return link
+
+    def clean(self):
+        del self.errors['subject']
+        del self.errors['topic']
+        del self.errors['difficulty']
+
+        self.clean_subject()
+        self.clean_topic()
+        self.clean_difficulty()
+
+        return self.cleaned_data
+
+    def update(self):
+        self.quiz.name = self.cleaned_data.get('name')
+        self.quiz.description = self.cleaned_data.get('description')
+        self.quiz.url = self.cleaned_data.get('link')
+        self.quiz.topic_id = self.data.get('topic')
+        self.quiz.quizDuration = self.cleaned_data.get('quizDuration')
+        self.quiz.maxAttempt = self.cleaned_data.get('maxAttempt')
+        self.quiz.difficulty = self.data.get('difficulty')
+        self.quiz.passMark = self.cleaned_data.get('passMark')
+        self.quiz.successText = self.cleaned_data.get('successText')
+        self.quiz.failText = self.cleaned_data.get('failText')
+        self.quiz.inRandomOrder = self.cleaned_data.get('inRandomOrder')
+        self.quiz.answerAtEnd = self.cleaned_data.get('answerAtEnd')
+        self.quiz.isExamPaper = self.cleaned_data.get('isExamPaper')
+        self.quiz.isDraft = self.cleaned_data.get('isDraft')
+        self.quiz.save()
+        return self.quiz
 
 
 class EssayQuestionCreateForm(forms.Form):

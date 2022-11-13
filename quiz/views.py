@@ -2,12 +2,12 @@ from django.http import Http404
 from django.shortcuts import render, redirect
 
 from quiz.forms import (
-    QuizCreationCreateForm, TrueOrFalseQuestionCreateForm, EssayQuestionCreateForm,
-    MultipleChoiceQuestionCreateForm, EssayQuestionUpdateForm, MultipleChoiceQuestionUpdateForm,
-    TrueOrFalseQuestionUpdateForm
+    EssayQuestionCreateForm, EssayQuestionUpdateForm, MultipleChoiceQuestionCreateForm,
+    MultipleChoiceQuestionUpdateForm, QuizCreateForm, TrueOrFalseQuestionCreateForm,
+    TrueOrFalseQuestionUpdateForm, QuizUpdateForm
 )
 from quiz.models import (
-    Quiz, Question, EssayQuestion, TrueOrFalseQuestion, MultipleChoiceQuestion
+    EssayQuestion, MultipleChoiceQuestion, Question, Quiz, TrueOrFalseQuestion,
 )
 
 
@@ -86,15 +86,18 @@ def createTrueOrFalseQuestionView(request, quizId):
 def createQuizView(request):
     # TODO: Refactor view, and form like question objects
     if request.method == "POST":
-        form = QuizCreationCreateForm(request, request.POST)
+        form = QuizCreateForm(request, request.POST)
         if form.is_valid():
             form.save()
             return redirect('quiz:create-quiz')
     else:
-        form = QuizCreationCreateForm(request)
+        form = QuizCreateForm(request)
+
+    formTitle = 'Create Quiz'
 
     context = {
         'form': form,
+        'formTitle': formTitle,
     }
     return render(request, 'quiz/createQuizView.html', context)
 
@@ -107,7 +110,20 @@ def quizDetailView(request, quizId):
 
     quizQuestionList = quiz.getQuestions()
 
+    if request.method == "POST":
+        form = QuizUpdateForm(request, quiz, request.POST, request.FILES)
+        if form.is_valid():
+            form.update()
+            return redirect('quiz:quiz-detail-view', quizId=quizId)
+    else:
+        form = QuizUpdateForm(request, quiz)
+
+    template = 'quiz/essayQuestionTemplateView.html'
+    formTitle = 'View or Update Essay Question'
+
     context = {
+        'form': form,
+        'formTitle': formTitle,
         'quizId': quizId,
     }
     return render(request, 'quiz/quizDetailView.html', context)

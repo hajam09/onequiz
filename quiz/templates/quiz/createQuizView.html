@@ -8,7 +8,7 @@
         <form method="post" class="form-control">
             {% csrf_token %}
             <legend>
-                <h2 class="heading-h2">Create Quiz</h2>
+                <h2 class="heading-h2">{{ formTitle }}</h2>
             </legend>
 
             {% for field in form %}

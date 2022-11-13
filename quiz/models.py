@@ -163,6 +163,7 @@ class Quiz(BaseModel):
     topic = models.ForeignKey(Topic, on_delete=models.SET_NULL, null=True, blank=True, related_name='topicQuizzes')
     numberOfQuestions = models.PositiveIntegerField()
     quizDuration = models.IntegerField()
+    maxAttempt = models.PositiveIntegerField(default=False)
     difficulty = models.CharField(max_length=10, choices=Difficulty.choices, default=Difficulty.EASY)
     passMark = models.SmallIntegerField(blank=True, default=0, validators=[MaxValueValidator(100)])
     successText = models.TextField(blank=True, null=True)
@@ -173,7 +174,6 @@ class Quiz(BaseModel):
     answerAtEnd = models.BooleanField(default=False)
     isExamPaper = models.BooleanField(default=False)
     isDraft = models.BooleanField(default=False)
-    maxAttempt = models.PositiveIntegerField(default=False)
     creator = models.ForeignKey(User, on_delete=models.CASCADE)
 
     def __str__(self):
