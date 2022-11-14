@@ -84,7 +84,6 @@ def createTrueOrFalseQuestionView(request, quizId):
 
 
 def createQuizView(request):
-    # TODO: Refactor view, and form like question objects
     if request.method == "POST":
         form = QuizCreateForm(request, request.POST)
         if form.is_valid():

@@ -32,6 +32,13 @@ class Subject(BaseModel):
     def __str__(self):
         return self.name
 
+    class Meta:
+        verbose_name = 'Subject'
+        verbose_name_plural = 'Subjects'
+
+    def getSubjectTopics(self):
+        return self.subjectTopics.all().order_by('name')
+
 
 class Topic(BaseModel):
     """
@@ -43,6 +50,10 @@ class Topic(BaseModel):
     subject = models.ForeignKey(Subject, on_delete=models.CASCADE, related_name='subjectTopics')
     description = models.TextField(blank=True, null=True)
 
+    class Meta:
+        verbose_name = 'Topic'
+        verbose_name_plural = 'Topics'
+
 
 class Question(BaseModel):
     figure = models.ImageField(blank=True, null=True, upload_to='uploads/%Y/%m/%d')
@@ -51,6 +62,10 @@ class Question(BaseModel):
     mark = models.SmallIntegerField(blank=True, null=True, default=1)
 
     objects = InheritanceManager()
+
+    class Meta:
+        verbose_name = 'Question'
+        verbose_name_plural = 'Questions'
 
 
 class EssayQuestion(Question):
@@ -70,6 +85,10 @@ class EssayQuestion(Question):
 
     def __str__(self):
         return self.content
+
+    class Meta:
+        verbose_name = 'EssayQuestion'
+        verbose_name_plural = 'EssayQuestions'
 
 
 class MultipleChoiceQuestion(Question):
@@ -105,6 +124,10 @@ class MultipleChoiceQuestion(Question):
     def answerChoiceToString(self, guess):
         return Answer.objects.get(id=guess).content
 
+    class Meta:
+        verbose_name = 'MultipleChoiceQuestion'
+        verbose_name_plural = 'MultipleChoiceQuestions'
+
 
 class TrueOrFalseQuestion(Question):
     isCorrect = models.BooleanField(default=False)
@@ -132,6 +155,10 @@ class TrueOrFalseQuestion(Question):
     def answerChoiceToString(self, guess):
         return str(guess)
 
+    class Meta:
+        verbose_name = 'TrueOrFalseQuestion'
+        verbose_name_plural = 'TrueOrFalseQuestions'
+
 
 class Answer(BaseModel):
     question = models.ForeignKey(Question, on_delete=models.CASCADE, related_name='answers')
@@ -140,6 +167,10 @@ class Answer(BaseModel):
 
     def __str__(self):
         return self.content
+
+    class Meta:
+        verbose_name = 'Answer'
+        verbose_name_plural = 'Answers'
 
     # def ifCorrect(self, userAnswer):
     #     stripeText = re.sub(' +', ' ', self.content)
@@ -250,3 +281,7 @@ class Result(BaseModel):
     quiz = models.ForeignKey(Quiz, on_delete=models.CASCADE)
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     score = models.DecimalField(max_digits=5, decimal_places=2, default=0, validators=PERCENTAGE_VALIDATOR)
+
+    class Meta:
+        verbose_name = 'Result'
+        verbose_name_plural = 'Results'
