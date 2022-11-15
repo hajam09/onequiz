@@ -3,6 +3,7 @@ from quiz.forms import EssayQuestionCreateForm
 
 
 class EssayQuestionCreateFormTest(BaseTest):
+
     def setUp(self, path='') -> None:
         self.basePath = path
         super(EssayQuestionCreateFormTest, self).setUp('')
