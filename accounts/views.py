@@ -41,7 +41,7 @@ def login(request):
             redirectUrl = request.GET.get('next')
             if redirectUrl:
                 return redirect(redirectUrl)
-            return None#redirect('jira:dashboard-view')
+            return redirect('quiz:index-view')
 
         if cache.get(uniqueVisitorId) is None:
             cache.set(uniqueVisitorId, 1)

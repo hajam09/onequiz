@@ -6,6 +6,7 @@ from quiz.api import *
 app_name = "quiz"
 
 urlpatterns = [
+    path('', views.indexView, name='index-view'),
     path('create/', views.createQuizView, name='create-quiz'),
     path('<int:quizId>/create-true-or-false-question/', views.createTrueOrFalseQuestionView, name='create-true-or-false-question-view'),
     path('<int:quizId>/create-essay-question/', views.createEssayQuestionView, name='create-essay-question-view'),

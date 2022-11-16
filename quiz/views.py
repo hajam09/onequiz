@@ -11,6 +11,10 @@ from quiz.models import (
 )
 
 
+def indexView(request):
+    return render(request, 'quiz/indexView.html')
+
+
 def createEssayQuestionView(request, quizId):
     try:
         quiz = Quiz.objects.get(id=quizId, creator=request.user)
