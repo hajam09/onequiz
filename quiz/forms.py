@@ -5,6 +5,7 @@ from django import forms
 from django.db import transaction
 from django.db.models import Q
 
+from onequiz.operations import generalOperations
 from quiz.models import Quiz, Subject, Topic, TrueOrFalseQuestion, EssayQuestion, MultipleChoiceQuestion, Answer
 
 
@@ -251,8 +252,7 @@ class QuizForm(forms.Form):
         return description
 
     def clean_link(self):
-        link = re.sub('\s+', '-', self.cleaned_data.get('link')).lower()
-        link = ''.join(letter for letter in link if letter.isalnum() or letter == '-')
+        link = generalOperations.parseStringToUrl(self.cleaned_data.get('link'))
 
         if Quiz.objects.filter(url__exact=link).exists():
             raise forms.ValidationError(f'Quiz already exists with link: {link}')
@@ -430,8 +430,7 @@ class QuizUpdateForm(QuizForm):
         return name
 
     def clean_link(self):
-        link = re.sub('\s+', '-', self.cleaned_data.get('link')).lower()
-        link = ''.join(letter for letter in link if letter.isalnum() or letter == '-')
+        link = generalOperations.parseStringToUrl(self.cleaned_data.get('link'))
 
         if Quiz.objects.filter(~Q(id=self.quiz.id), Q(url__exact=link)).exists():
             raise forms.ValidationError(f'Quiz already exists with link: {link}')

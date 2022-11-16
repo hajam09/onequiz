@@ -4,8 +4,12 @@ from django.conf import settings
 from django.contrib.auth.models import User
 from faker import Faker
 
+from onequiz.operations import generalOperations
+from quiz.models import Subject, Topic, Quiz
+
 EMAIL_DOMAINS = ["@yahoo", "@gmail", "@outlook", "@hotmail"]
 DOMAINS = [".co.uk", ".com", ".co.in", ".net", ".us"]
+BOOLEAN = [True, False]
 
 
 def createUsers(limit=20, maxLimit=20, save=True):
@@ -37,3 +41,66 @@ def createUsers(limit=20, maxLimit=20, save=True):
 def createUser(save=True):
     userList = createUsers(1, 2, save)
     return userList.first() if save else userList[0]
+
+
+def createSubjectsAndTopics():
+    faker = Faker()
+    BULK_SUBJECT_LIST = []
+    BULK_TOPIC_LIST = []
+
+    for _ in range(5):
+        subject = Subject(name=faker.pystr_format(), description=faker.paragraph())
+        BULK_SUBJECT_LIST.append(subject)
+
+        for _ in range(10):
+            BULK_TOPIC_LIST.append(
+                Topic(
+                    name=faker.pystr_format(),
+                    subject=subject,
+                    description=faker.paragraph()
+                )
+            )
+
+    Subject.objects.bulk_create(BULK_SUBJECT_LIST)
+    subjectNameUnique = list(set([i.name for i in BULK_SUBJECT_LIST]))
+    subjectList = Subject.objects.filter(name__in=subjectNameUnique)
+
+    topicNameUnique = []
+
+    for subject in subjectList:
+        for topic in BULK_TOPIC_LIST:
+            if subject.name == topic.subject.name:
+                topic.subject = subject
+
+            if topic.name not in topicNameUnique:
+                topicNameUnique.append(topic.name)
+
+    Topic.objects.bulk_create(BULK_TOPIC_LIST)
+    topicList = Topic.objects.filter(name__in=topicNameUnique)
+    return subjectList, topicList
+
+
+def createQuiz(creator=None):
+    faker = Faker()
+
+    newQuiz = Quiz()
+    newQuiz.name = faker.pystr_format()
+    newQuiz.description = faker.paragraph()
+    newQuiz.url = generalOperations.parseStringToUrl(faker.paragraph())
+    # newQuiz.topic = None
+    newQuiz.numberOfQuestions = faker.random_number(digits=2, fix_len=False)
+    newQuiz.quizDuration = faker.random_number(digits=2)
+    newQuiz.maxAttempt = faker.random_number(digits=1)
+    newQuiz.difficulty = random.choice([Quiz.Difficulty.EASY, Quiz.Difficulty.MEDIUM, Quiz.Difficulty.HARD])
+    newQuiz.passMark = faker.random_number(digits=2)
+    newQuiz.successText = faker.paragraph()
+    newQuiz.failText = faker.paragraph()
+    # newQuiz.questions = None
+    newQuiz.inRandomOrder = random.choice(BOOLEAN)
+    newQuiz.answerAtEnd = random.choice(BOOLEAN)
+    newQuiz.isExamPaper = random.choice(BOOLEAN)
+    newQuiz.isDraft = random.choice(BOOLEAN)
+    newQuiz.creator = creator if creator is not None else createUser()
+    newQuiz.save()
+    newQuiz.refresh_from_db()
+    return newQuiz
