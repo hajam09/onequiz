@@ -39,7 +39,7 @@ def createUsers(limit=20, maxLimit=20, save=True):
 
 
 def createUser(save=True):
-    userList = createUsers(1, 2, save)
+    userList = createUsers(1, User.objects.count() + 1, save)
     return userList.first() if save else userList[0]
 
 
