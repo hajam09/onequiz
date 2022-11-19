@@ -10,6 +10,7 @@ class MultipleChoiceQuestionCreateFormTest(BaseTest):
     def setUp(self, path='') -> None:
         self.basePath = path
         super(MultipleChoiceQuestionCreateFormTest, self).setUp('')
+        # TODO: Search for 'Answer Order is empty.' and remove its usage.
 
     def testInitialValues(self):
         form = MultipleChoiceQuestionCreateForm()
@@ -29,7 +30,7 @@ class MultipleChoiceQuestionCreateFormTest(BaseTest):
         self.assertListEqual(form.base_fields.get('answerOrder').choices, ANSWER_ORDER_CHOICES)
         self.assertListEqual(form.initial.get('initialAnswerOptions'), ANSWER_OPTIONS)
 
-    def testFigureAndColumnIsEmpty(self):
+    def testFigureAndContentIsEmpty(self):
         testParams = self.TestParams(
             answerOrder=MultipleChoiceQuestion.Order.SEQUENTIAL
         )

@@ -5,7 +5,7 @@ from django.contrib.auth.models import User
 from faker import Faker
 
 from onequiz.operations import generalOperations
-from quiz.models import Subject, Topic, Quiz, EssayQuestion, TrueOrFalseQuestion
+from quiz.models import Subject, Topic, Quiz, EssayQuestion, TrueOrFalseQuestion, MultipleChoiceQuestion, Answer
 
 EMAIL_DOMAINS = ["@yahoo", "@gmail", "@outlook", "@hotmail"]
 DOMAINS = [".co.uk", ".com", ".co.in", ".net", ".us"]
@@ -128,3 +128,27 @@ def createTrueOrFalseQuestion():
         isCorrect=random.choice(BOOLEAN),
     )
     return newTrueOrFalseQuestion
+
+
+def createMultipleChoiceQuestionAndAnswers(answerOptions=None):
+    faker = Faker()
+    bulkAnswer = []
+    answerOptions = answerOptions or []
+
+    newMultipleChoiceQuestion = MultipleChoiceQuestion.objects.create(
+        figure=None,
+        content=faker.paragraph(),
+        explanation=faker.paragraph(),
+        mark=faker.random_number(digits=2)
+    )
+
+    for answer in answerOptions:
+        bulkAnswer.append(
+            Answer(
+                question=newMultipleChoiceQuestion,
+                content=answer[1],
+                isCorrect=answer[2]
+            )
+        )
+    Answer.objects.bulk_create(bulkAnswer)
+    return newMultipleChoiceQuestion

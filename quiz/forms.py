@@ -838,13 +838,13 @@ class MultipleChoiceQuestionUpdateForm(forms.Form):
     )
 
     def __init__(self, multipleChoiceQuestion=None, *args, **kwargs):
-        # TODO: Refactor this.
+        # TODO: Refactor this, re do this.
         kwargs.setdefault('label_suffix', '')
         super(MultipleChoiceQuestionUpdateForm, self).__init__(*args, **kwargs)
         self.multipleChoiceQuestion = None
 
         ANSWER_ORDER_CHOICES = [
-            (0, '-- Select a value --'),
+            (None, '-- Select a value --'),
             (MultipleChoiceQuestion.Order.SEQUENTIAL, MultipleChoiceQuestion.Order.SEQUENTIAL.label),
             (MultipleChoiceQuestion.Order.RANDOM, MultipleChoiceQuestion.Order.RANDOM.label),
             (MultipleChoiceQuestion.Order.NONE, MultipleChoiceQuestion.Order.NONE.label),
@@ -878,8 +878,8 @@ class MultipleChoiceQuestionUpdateForm(forms.Form):
         if mark < 0:
             self.errors['mark'] = self.error_class([f'Mark cannot be a negative number.'])
 
-        if answerOrder == '0':
-            self.errors['answerOrder'] = self.error_class(['Answer Order is empty.'])
+        # if answerOrder == '0':
+        #     self.errors['answerOrder'] = self.error_class(['Answer Order is empty.'])
 
         answerOptionsList = self.data.getlist('answerOptions')
         isAnswerOptionsValid = True
