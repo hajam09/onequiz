@@ -122,7 +122,7 @@ def quizDetailView(request, quizId):
         form = QuizUpdateForm(request, quiz)
 
     template = 'quiz/essayQuestionTemplateView.html'
-    formTitle = 'View or Update Essay Question'
+    formTitle = 'View or Update Quiz'
 
     context = {
         'form': form,

@@ -14,7 +14,7 @@ class TrueOrFalseQuestionCreateFormTest(BaseTest):
         self.assertIn('isCorrectChoices', form.initial)
         self.assertListEqual(form.initial.get('isCorrectChoices'), IS_CORRECT_CHOICES)
 
-    def testFigureAndColumnIsEmpty(self):
+    def testFigureAndContentIsEmpty(self):
         testParams = self.TestParams(
             mark=50,
             isCorrect=True

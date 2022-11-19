@@ -5,7 +5,7 @@ from django.contrib.auth.models import User
 from faker import Faker
 
 from onequiz.operations import generalOperations
-from quiz.models import Subject, Topic, Quiz
+from quiz.models import Subject, Topic, Quiz, EssayQuestion, TrueOrFalseQuestion
 
 EMAIL_DOMAINS = ["@yahoo", "@gmail", "@outlook", "@hotmail"]
 DOMAINS = [".co.uk", ".com", ".co.in", ".net", ".us"]
@@ -80,14 +80,14 @@ def createSubjectsAndTopics():
     return subjectList, topicList
 
 
-def createQuiz(creator=None):
+def createQuiz(creator=None, topic=None):
     faker = Faker()
 
     newQuiz = Quiz()
     newQuiz.name = faker.pystr_format()
     newQuiz.description = faker.paragraph()
     newQuiz.url = generalOperations.parseStringToUrl(faker.paragraph())
-    # newQuiz.topic = None
+    newQuiz.topic = topic
     newQuiz.numberOfQuestions = faker.random_number(digits=2, fix_len=False)
     newQuiz.quizDuration = faker.random_number(digits=2)
     newQuiz.maxAttempt = faker.random_number(digits=1)
@@ -104,3 +104,27 @@ def createQuiz(creator=None):
     newQuiz.save()
     newQuiz.refresh_from_db()
     return newQuiz
+
+
+def createEssayQuestion():
+    faker = Faker()
+    newEssayQuestion = EssayQuestion.objects.create(
+        figure=None,
+        content=faker.paragraph(),
+        explanation=faker.paragraph(),
+        mark=faker.random_number(digits=2),
+        answer=faker.paragraph()
+    )
+    return newEssayQuestion
+
+
+def createTrueOrFalseQuestion():
+    faker = Faker()
+    newTrueOrFalseQuestion = TrueOrFalseQuestion.objects.create(
+        figure=None,
+        content=faker.paragraph(),
+        explanation=faker.paragraph(),
+        mark=faker.random_number(digits=2),
+        isCorrect=random.choice(BOOLEAN),
+    )
+    return newTrueOrFalseQuestion

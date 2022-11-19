@@ -1,19 +1,29 @@
+from onequiz.operations import bakerOperations
 from onequiz.tests.BaseTest import BaseTest
-from quiz.forms import EssayQuestionCreateForm
+from quiz.forms import EssayQuestionUpdateForm
 
 
-class EssayQuestionCreateFormTest(BaseTest):
+class EssayQuestionUpdateFormTest(BaseTest):
 
     def setUp(self, path='') -> None:
-        self.basePath = path
-        super(EssayQuestionCreateFormTest, self).setUp('')
+        super(EssayQuestionUpdateFormTest, self).setUp('')
+        self.essayQuestion = bakerOperations.createEssayQuestion()
+
+    def testFormInitialValuesAndChoices(self):
+        form = EssayQuestionUpdateForm(self.essayQuestion)
+
+        # self.assertEqual(form.initial['figure'], self.essayQuestion.figure)
+        self.assertEqual(form.initial['content'], self.essayQuestion.content)
+        self.assertEqual(form.initial['explanation'], self.essayQuestion.explanation)
+        self.assertEqual(form.initial['mark'], self.essayQuestion.mark)
+        self.assertEqual(form.initial['answer'], self.essayQuestion.answer)
 
     def testFigureAndContentIsEmpty(self):
         testParams = self.TestParams(
             mark=50,
-            answer='test answer',
+            answer='new answer',
         )
-        form = EssayQuestionCreateForm(data=testParams.getData())
+        form = EssayQuestionUpdateForm(self.essayQuestion, data=testParams.getData())
         self.assertFalse(form.is_valid())
         self.assertEqual(2, len(form.errors))
         self.assertTrue(form.has_error('figure'))
@@ -23,11 +33,11 @@ class EssayQuestionCreateFormTest(BaseTest):
 
     def testMarkIsLessThanZero(self):
         testParams = self.TestParams(
-            content='test content',
+            content='new content',
             mark=-1,
-            answer='test answer',
+            answer='new answer',
         )
-        form = EssayQuestionCreateForm(data=testParams.getData())
+        form = EssayQuestionUpdateForm(self.essayQuestion, data=testParams.getData())
         self.assertFalse(form.is_valid())
         self.assertEqual(1, len(form.errors))
         self.assertTrue(form.has_error('mark'))
@@ -35,32 +45,31 @@ class EssayQuestionCreateFormTest(BaseTest):
 
     def testAnswerFieldIsEmpty(self):
         testParams = self.TestParams(
-            content='test content',
+            content='new content',
             mark=80,
         )
-        form = EssayQuestionCreateForm(data=testParams.getData())
+        form = EssayQuestionUpdateForm(self.essayQuestion, data=testParams.getData())
         self.assertFalse(form.is_valid())
         self.assertEqual(1, len(form.errors))
         self.assertTrue(form.has_error('answer'))
         self.assertEqual('Answer cannot be left empty.', form.errors.get('answer')[0])
 
-    def testEssayQuestionObjectCreated(self):
+    def testEssayQuestionUpdatedSuccessfully(self):
         testParams = self.TestParams(
-            content='test content',
-            explanation='test explanation',
-            mark=80,
-            answer='test answer',
+            content='new content',
+            explanation='new explanation',
+            mark=70,
+            answer='new answer',
         )
-
-        form = EssayQuestionCreateForm(data=testParams.getData())
+        form = EssayQuestionUpdateForm(self.essayQuestion, data=testParams.getData())
         self.assertTrue(form.is_valid())
+        essayQuestion = form.update()
 
-        newEssayQuestion = form.save()
-        # self.assertIsNone(newEssayQuestion.figure)
-        self.assertEqual(testParams.content, newEssayQuestion.content)
-        self.assertEqual(testParams.explanation, newEssayQuestion.explanation)
-        self.assertEqual(testParams.mark, newEssayQuestion.mark)
-        self.assertEqual(testParams.answer, newEssayQuestion.answer)
+        self.assertEqual(testParams.figure, essayQuestion.figure)
+        self.assertEqual(testParams.content, essayQuestion.content)
+        self.assertEqual(testParams.explanation, essayQuestion.explanation)
+        self.assertEqual(testParams.mark, essayQuestion.mark)
+        self.assertEqual(testParams.answer, essayQuestion.answer)
 
     class TestParams:
 
