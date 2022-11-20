@@ -15,6 +15,7 @@ def navigationPanel(request):
     if request.user.is_authenticated:
         links.append(
             linkItem('Account', '', None, [
+                linkItem('My Quizzes', reverse('quiz:user-created-quizzes-view'), Icon('', 'fas fa-question', '15')),
                 None,
                 linkItem('Logout', reverse('accounts:logout'), Icon('', 'fas fa-sign-out-alt', '15')),
             ]),
