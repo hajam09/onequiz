@@ -1,0 +1,62 @@
+{% extends "accounts/base.html" %}
+{% load static %}
+{% block content %}
+    <link type="text/css" rel="stylesheet" href="{% static 'css/baseFormStyle.css' %}">
+    <style>
+        .container {
+            color: black;
+        }
+
+        .badge {
+            border-radius: 1rem;
+        }
+    </style>
+    <br>
+
+    <div class="container">
+        <form method="GET" action="{{ request.path }}">
+            <div class="row">
+                <div class="col">
+                    <input type="text" id="query" name="query" class="form-control col"
+                           placeholder="Search for your quiz"/>
+                </div>
+                <div class="col-auto">
+                    <input type="submit" class="btn btn-secondary btn-sm"/>
+                </div>
+            </div>
+        </form>
+        <br><br>
+
+        {% for quiz in quizList %}
+            <div class="row form-control">
+                <h5><a href="{{ quiz.getUrl }}">{{ quiz.name }}</a></h5>
+                <p>Description: {{ quiz.description }}</p>
+                <h6>
+                    <span class="badge badge-primary">Subject: {{ quiz.topic.subject }}</span>
+                    <span class="badge badge-secondary">Topic: {{ quiz.topic }}</span>
+                </h6>
+            </div>
+            <br>
+        {% endfor %}
+    </div>
+
+    <script>
+
+        window.onload = function (e) {
+            let query = getParameterByName('query');
+            if (query != null)
+                document.getElementById('query').defaultValue = query;
+        }
+
+        function getParameterByName(name, url = window.location.href) {
+            name = name.replace(/[\[\]]/g, '\\$&');
+            let regex = new RegExp('[?&]' + name + '(=([^&#]*)|&|#|$)'),
+                results = regex.exec(url);
+            if (!results) return null;
+            if (!results[2]) return '';
+            return decodeURIComponent(results[2].replace(/\+/g, ' '));
+        }
+
+    </script>
+
+{% endblock %}

@@ -13,6 +13,7 @@ urlpatterns = [
     path('<int:quizId>/create-multiple-choice-question/', views.createMultipleChoiceQuestionView, name='create-multiple-choice-question-view'),
     path('<int:quizId>/detail/', views.quizDetailView, name='quiz-detail-view'),
     path('<int:quizId>/question/<int:questionId>/detail', views.questionDetailView, name='question-detail-view'),
+    path('my-quizzes/', views.userCreatedQuizzesView, name='user-created-quizzes-view'),
 ]
 
 urlpatterns += [

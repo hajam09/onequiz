@@ -5,6 +5,7 @@ from django.contrib.auth.models import User
 from django.core.exceptions import ValidationError
 from django.core.validators import MinValueValidator, MaxValueValidator
 from django.db import models
+from django.urls import reverse
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 from model_utils.managers import InheritanceManager
@@ -49,6 +50,9 @@ class Topic(BaseModel):
     name = models.CharField(max_length=255)
     subject = models.ForeignKey(Subject, on_delete=models.CASCADE, related_name='subjectTopics')
     description = models.TextField(blank=True, null=True)
+
+    def __str__(self):
+        return self.name
 
     class Meta:
         verbose_name = 'Topic'
@@ -215,6 +219,9 @@ class Quiz(BaseModel):
         if shuffleQuestions:
             random.shuffle(questionList)
         return questionList
+
+    def getUrl(self):
+        return reverse('quiz:quiz-detail-view', kwargs={'quizId': self.id})
 
     # @property
     # def getQuestions(self):

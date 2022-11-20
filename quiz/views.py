@@ -1,3 +1,7 @@
+import operator
+from functools import reduce
+
+from django.db.models import Q
 from django.http import Http404
 from django.shortcuts import render, redirect
 
@@ -185,8 +189,33 @@ def questionDetailView(request, quizId, questionId):
     return render(request, template, context)
 
 
-def userCreatedQuizzes(request):
-    pass
+def userCreatedQuizzesView(request):
+    query = request.GET.get('query')
+    qFilterSet = []
+    attributesToSearch = [
+        'name', 'description', 'url',
+        'topic__name', 'topic__description',
+        'topic__subject__name', 'topic__subject__description'
+    ]
+
+    if query and query.strip():
+        qFilterSet.append(
+            reduce(
+                operator.or_, [Q(**{f'{v}__icontains': query}) for v in attributesToSearch]
+            )
+        )
+
+    qFilterSet.append(
+        reduce(
+            operator.or_, [Q(**{'creator_id': request.user.id})]
+        )
+    )
+
+    quizList = Quiz.objects.filter(reduce(operator.and_, qFilterSet)).select_related('topic__subject').distinct()
+    context = {
+        'quizList': quizList
+    }
+    return render(request, 'quiz/userCreatedQuizzesView.html', context)
 
 
 def userAttemptedQuizzes(request):

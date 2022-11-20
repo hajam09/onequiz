@@ -80,7 +80,7 @@ def createSubjectsAndTopics():
     return subjectList, topicList
 
 
-def createQuiz(creator=None, topic=None):
+def createQuiz(creator=None, topic=None, save=True):
     faker = Faker()
 
     newQuiz = Quiz()
@@ -101,8 +101,11 @@ def createQuiz(creator=None, topic=None):
     newQuiz.isExamPaper = random.choice(BOOLEAN)
     newQuiz.isDraft = random.choice(BOOLEAN)
     newQuiz.creator = creator if creator is not None else createUser()
-    newQuiz.save()
-    newQuiz.refresh_from_db()
+
+    if save:
+        newQuiz.save()
+        newQuiz.refresh_from_db()
+
     return newQuiz
 
 
