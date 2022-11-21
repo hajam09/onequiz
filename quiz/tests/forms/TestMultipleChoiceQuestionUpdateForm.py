@@ -10,20 +10,20 @@ class MultipleChoiceQuestionUpdateFormTest(BaseTest):
 
     def setUp(self, path='') -> None:
         super(MultipleChoiceQuestionUpdateFormTest, self).setUp('')
-        self.answerOptions = [
-            (1, 'Answer 1', True), (2, 'Answer 2', False), (3, 'Answer 3', True), (4, 'Answer 4', False)
-        ]
         self.answerOrderChoices = [
             (None, '-- Select a value --'), ('SEQUENTIAL', 'Sequential'), ('RANDOM', 'Random'), ('NONE', 'None')
         ]
-        self.multipleChoiceQuestion = bakerOperations.createMultipleChoiceQuestionAndAnswers(self.answerOptions)
+        self.multipleChoiceQuestion = bakerOperations.createMultipleChoiceQuestionAndAnswers(None)
+        self.choices = [
+            (i, x['content'], x['isCorrect']) for i, x in enumerate(self.multipleChoiceQuestion.choices['choices'], 1)
+        ]
 
     def testFormInitialValuesAndChoices(self):
         form = MultipleChoiceQuestionUpdateForm(self.multipleChoiceQuestion)
         self.assertIn('initialAnswerOptions', form.initial)
         self.assertIn('answerOrder', form.base_fields)
         self.assertListEqual(form.base_fields.get('answerOrder').choices, self.answerOrderChoices)
-        self.assertListEqual(form.initial.get('initialAnswerOptions'), self.answerOptions)
+        self.assertListEqual(form.initial.get('initialAnswerOptions'), self.choices)
 
         # self.assertEqual(form.initial['figure'], self.multipleChoiceQuestion.figure)
         self.assertEqual(form.initial['content'], self.multipleChoiceQuestion.content)
@@ -68,7 +68,8 @@ class MultipleChoiceQuestionUpdateFormTest(BaseTest):
         self.assertFalse(form.is_valid())
         self.assertEqual(1, len(form.errors))
         self.assertTrue(form.has_error('initialAnswerOptions'))
-        self.assertEqual('One of your answer options is empty or invalid. Please try again.', form.errors.get('initialAnswerOptions')[0])
+        self.assertEqual('One of your answer options is empty or invalid. Please try again.',
+                         form.errors.get('initialAnswerOptions')[0])
         self.assertIn('initialAnswerOptions', form.initial)
         self.assertListEqual(form.initial.get('initialAnswerOptions'), testParams.answerOptions)
 
@@ -91,14 +92,15 @@ class MultipleChoiceQuestionUpdateFormTest(BaseTest):
         self.assertEqual(testParams.mark, multipleChoiceQuestion.mark)
         self.assertEqual(testParams.answerOrder, multipleChoiceQuestion.answerOrder)
 
-        answerList = multipleChoiceQuestion.getAnswers()
-        self.assertEqual(2, answerList.count())
-        self.assertListEqual([(i.content, i.isCorrect) for i in answerList], [(i[1], i[2]) for i in testParams.answerOptions])
-
+        newChoiceList = multipleChoiceQuestion.choices['choices']
+        self.assertEqual(2, len(newChoiceList))
+        self.assertListEqual(
+            [(i, x['content'], x['isCorrect']) for i, x in enumerate(newChoiceList, 1)], testParams.answerOptions
+        )
 
     def testAddNewAnswerOptionsToExistingList(self):
-        newAnswerOptions = [i for i in self.answerOptions]
-        newAnswerOptions.append((5, 'Answer 5', True))
+        newAnswerOptions = [i for i in self.choices]
+        newAnswerOptions.append((len(newAnswerOptions) + 1, 'New Option', True))
         testParams = self.TestParams(
             content='new content',
             explanation='new explanation',
@@ -117,9 +119,11 @@ class MultipleChoiceQuestionUpdateFormTest(BaseTest):
         self.assertEqual(testParams.mark, multipleChoiceQuestion.mark)
         self.assertEqual(testParams.answerOrder, multipleChoiceQuestion.answerOrder)
 
-        answerList = multipleChoiceQuestion.getAnswers()
-        self.assertEqual(5, answerList.count())
-        self.assertListEqual([(i.content, i.isCorrect) for i in answerList], [(i[1], i[2]) for i in testParams.answerOptions])
+        newChoiceList = multipleChoiceQuestion.choices['choices']
+        self.assertEqual(len(newAnswerOptions), len(newChoiceList))
+        self.assertListEqual(
+            [(i, x['content'], x['isCorrect']) for i, x in enumerate(newChoiceList, 1)], testParams.answerOptions
+        )
 
     class TestParams:
 
@@ -148,7 +152,7 @@ class MultipleChoiceQuestionUpdateFormTest(BaseTest):
 
                 for answer in self.answerOptions:
                     if answer[2]:
-                        answerTextCheckedDict[f'answerChecked{answer[0]}'] = 'on'
+                        answerTextCheckedDict[f'answerChecked-{answer[0]}'] = 'on'
                     answerTextList.append(answer[1])
 
                 queryDict.setlist('answerOptions', answerTextList)

@@ -1,8 +1,8 @@
+import datetime
 import random
-import re
 
+import jsonfield
 from django.contrib.auth.models import User
-from django.core.exceptions import ValidationError
 from django.core.validators import MinValueValidator, MaxValueValidator
 from django.db import models
 from django.urls import reverse
@@ -102,6 +102,7 @@ class MultipleChoiceQuestion(Question):
         NONE = 'NONE', _('None')
 
     answerOrder = models.CharField(max_length=30, choices=Order.choices, default=Order.RANDOM)
+    choices = jsonfield.JSONField()
 
     def checkIfCorrect(self, pk):
         answer = Answer.objects.get(id=pk)
@@ -164,6 +165,7 @@ class TrueOrFalseQuestion(Question):
         verbose_name_plural = 'TrueOrFalseQuestions'
 
 
+# TODO: Refactor
 class Answer(BaseModel):
     question = models.ForeignKey(Question, on_delete=models.CASCADE, related_name='answers')
     content = models.TextField()
@@ -212,7 +214,7 @@ class Quiz(BaseModel):
     creator = models.ForeignKey(User, on_delete=models.CASCADE)
 
     def __str__(self):
-        return f"{self.name} - {self.topic.name}"
+        return f"{self.id} - {self.name} - {self.topic.name}"
 
     def getQuestions(self, shuffleQuestions=False):
         questionList = self.questions.all().select_subclasses()
@@ -292,3 +294,62 @@ class Result(BaseModel):
     class Meta:
         verbose_name = 'Result'
         verbose_name_plural = 'Results'
+
+
+class Response(BaseModel):
+    question = models.ForeignKey(Question, on_delete=models.CASCADE)
+    isCorrect = models.BooleanField(default=False)
+    mark = models.SmallIntegerField(blank=True, null=True, default=0)
+
+    objects = InheritanceManager()
+
+    class Meta:
+        verbose_name = 'Response'
+        verbose_name_plural = 'Response'
+
+
+class EssayResponse(Response):
+    answer = models.TextField()
+
+    class Meta:
+        verbose_name = 'EssayResponse'
+        verbose_name_plural = 'EssayResponse'
+
+
+class MultipleChoiceResponse(Response):
+    answers = jsonfield.JSONField()
+
+    class Meta:
+        verbose_name = 'MultipleChoiceResponse'
+        verbose_name_plural = 'MultipleChoiceResponse'
+
+
+class TrueOrFalseResponse(Response):
+    # TODO: change this to isTrueChecked
+    isChecked = models.BooleanField(blank=True, null=True, default=False)
+
+    class Meta:
+        verbose_name = 'TrueOrFalseResponse'
+        verbose_name_plural = 'TrueOrFalseResponse'
+
+
+class QuizAttempt(BaseModel):
+    class Status(models.TextChoices):
+        NOT_ATTEMPTED = 'NOT_ATTEMPTED', _('Non Attempted')
+        IN_PROGRESS = 'IN_PROGRESS', _('In Progress')
+        SUBMITTED = 'SUBMITTED', _('Submitted')
+        IN_REVIEW = 'IN_REVIEW', _('In Review')
+        MARKED = 'MARKED', _('Marked')
+
+    quiz = models.ForeignKey(Quiz, on_delete=models.CASCADE)
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    status = models.CharField(max_length=30, choices=Status.choices, default=Status.NOT_ATTEMPTED)
+    responses = models.ManyToManyField(Response, blank=True, related_name='quizAttemptResponses')
+
+    class Meta:
+        verbose_name = 'QuizAttempt'
+        verbose_name_plural = 'QuizAttempts'
+
+    def getQuizEndTime(self, uiFormat=True):
+        time = (self.createdDttm + datetime.timedelta(minutes=self.quiz.quizDuration))
+        return time.strftime('%b %d, %Y %H:%M:%S') if uiFormat else time

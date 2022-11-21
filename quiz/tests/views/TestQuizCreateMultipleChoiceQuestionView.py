@@ -47,7 +47,7 @@ class QuizCreateMultipleChoiceQuestionViewTest(BaseTestViews):
             content='test content',
             explanation='test explanation',
             answerOrder=MultipleChoiceQuestion.Order.RANDOM,
-            answerOptions=[(1, 'Answer 1', True), (2, 'Answer 2', False), (3, 'Answer 3', True), (4, 'Answer 4', False)]
+            choices=[(1, 'Answer 1', True), (2, 'Answer 2', False), (3, 'Answer 3', True), (4, 'Answer 4', False)]
         )
 
         response = self.post(testParams.getData(True))
@@ -65,19 +65,20 @@ class QuizCreateMultipleChoiceQuestionViewTest(BaseTestViews):
         self.assertEqual(newMultipleChoiceQuestion.mark, testParams.mark)
         self.assertEqual(newMultipleChoiceQuestion.answerOrder, testParams.answerOrder)
 
-        answerList = newMultipleChoiceQuestion.getAnswers()
-        self.assertListEqual([(i.content, i.isCorrect) for i in answerList],
-                             [(i[1], i[2]) for i in testParams.answerOptions])
+        choiceList = newMultipleChoiceQuestion.choices['choices']
+        self.assertListEqual(
+            [(i['content'], i['isCorrect']) for i in choiceList], [(i[1], i[2]) for i in testParams.choices]
+        )
 
     class TestParams:
 
-        def __init__(self, figure=None, content=None, explanation=None, mark=80, answerOrder=None, answerOptions=None):
+        def __init__(self, figure=None, content=None, explanation=None, mark=80, answerOrder=None, choices=None):
             self.figure = figure
             self.content = content
             self.explanation = explanation
             self.mark = mark
             self.answerOrder = answerOrder
-            self.answerOptions = answerOptions
+            self.choices = choices
 
         def getData(self, withAnswerOptions=False):
             data = {
@@ -93,7 +94,7 @@ class QuizCreateMultipleChoiceQuestionViewTest(BaseTestViews):
             if withAnswerOptions:
                 answerTextList = []
 
-                for answer in self.answerOptions:
+                for answer in self.choices:
                     if answer[2]:
                         data[f'answerChecked{answer[0]}'] = 'on'
                     answerTextList.append(answer[1])

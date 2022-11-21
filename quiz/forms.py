@@ -1,5 +1,6 @@
 import itertools
 import re
+import uuid
 
 from django import forms
 from django.db import transaction
@@ -759,28 +760,23 @@ class MultipleChoiceQuestionCreateForm(forms.Form):
 
     def save(self):
         answerOptionsList = self.data.getlist('answerOptions')
-        bulkAnswer = []
+        choices = [
+            {
+                'id': uuid.uuid4().hex,
+                'content': answerOptionsList[i],
+                'isCorrect': self.data.get(f'answerChecked{i + 1}') == 'on'
+            }
+            for i in range(len(answerOptionsList))
+        ]
 
-        with transaction.atomic():
-            newMultipleChoiceQuestion = MultipleChoiceQuestion.objects.create(
-                figure=self.cleaned_data.get('figure'),
-                content=self.cleaned_data.get('content'),
-                explanation=self.cleaned_data.get('explanation'),
-                mark=self.cleaned_data.get('mark'),
-                answerOrder=self.data.get('answerOrder')
-            )
-
-            for i in range(len(answerOptionsList)):
-                enteredAnswer = answerOptionsList[i]
-                isChecked = self.data.get(f'answerChecked{i + 1}') == 'on'
-                bulkAnswer.append(
-                    Answer(
-                        question=newMultipleChoiceQuestion,
-                        content=enteredAnswer,
-                        isCorrect=isChecked
-                    )
-                )
-            Answer.objects.bulk_create(bulkAnswer)
+        newMultipleChoiceQuestion = MultipleChoiceQuestion.objects.create(
+            figure=self.cleaned_data.get('figure'),
+            content=self.cleaned_data.get('content'),
+            explanation=self.cleaned_data.get('explanation'),
+            mark=self.cleaned_data.get('mark'),
+            answerOrder=self.data.get('answerOrder'),
+            choices={'choices': choices}
+        )
         return newMultipleChoiceQuestion
 
 
@@ -850,7 +846,7 @@ class MultipleChoiceQuestionUpdateForm(forms.Form):
             (MultipleChoiceQuestion.Order.NONE, MultipleChoiceQuestion.Order.NONE.label),
         ]
         # orderNo, enteredAnswer, isChecked
-        ANSWER_OPTIONS = [(i, x.content, x.isCorrect) for i, x in enumerate(multipleChoiceQuestion.getAnswers(), 1)]
+        ANSWER_OPTIONS = [(i, x['content'], x['isCorrect']) for i, x in enumerate(multipleChoiceQuestion.choices['choices'], 1)]
 
         self.initial['initialAnswerOptions'] = ANSWER_OPTIONS
         self.base_fields['answerOrder'].choices = ANSWER_ORDER_CHOICES
@@ -887,7 +883,7 @@ class MultipleChoiceQuestionUpdateForm(forms.Form):
         for i in range(len(answerOptionsList)):
             orderNo = i + 1
             enteredAnswer = answerOptionsList[i]
-            isChecked = self.data.get(f'answerChecked{orderNo}') == 'on'
+            isChecked = self.data.get(f'answerChecked-{orderNo}') == 'on'
             ANSWER_OPTIONS.append((orderNo, enteredAnswer, isChecked))
 
             if not enteredAnswer:
@@ -902,42 +898,41 @@ class MultipleChoiceQuestionUpdateForm(forms.Form):
         return self.cleaned_data
 
     def update(self):
-        with transaction.atomic():
-            if self.multipleChoiceQuestion is not None:
-                # self.multipleChoiceQuestion.figure = self.cleaned_data.get('figure')
-                self.multipleChoiceQuestion.content = self.cleaned_data.get('content')
-                self.multipleChoiceQuestion.explanation = self.cleaned_data.get('explanation')
-                self.multipleChoiceQuestion.mark = self.cleaned_data.get('mark')
-                self.multipleChoiceQuestion.answerOrder = self.data.get('answerOrder')
-                self.multipleChoiceQuestion.save()
+        # self.multipleChoiceQuestion.figure = self.cleaned_data.get('figure')
+        self.multipleChoiceQuestion.content = self.cleaned_data.get('content')
+        self.multipleChoiceQuestion.explanation = self.cleaned_data.get('explanation')
+        self.multipleChoiceQuestion.mark = self.cleaned_data.get('mark')
+        self.multipleChoiceQuestion.answerOrder = self.data.get('answerOrder')
 
-            newAnswerOptionsList = self.data.getlist('answerOptions')
-            oldAnswerOptionsList = self.multipleChoiceQuestion.getAnswers()
-            counter = 1
-            idsToDeleteExistingAnswers = []
+        newAnswerOptionsList = self.data.getlist('answerOptions')
+        oldAnswerOptionsList = self.multipleChoiceQuestion.choices['choices']
+        counter = 0
+        idsToDelete = []
 
-            for (ol, nl) in itertools.zip_longest(newAnswerOptionsList, oldAnswerOptionsList):
-                isChecked = self.data.get(f'answerChecked{counter}') == 'on'
-                counter += 1
+        for (nl, ol) in itertools.zip_longest(newAnswerOptionsList, oldAnswerOptionsList):
+            counter += 1
+            isChecked = self.data.get(f'answerChecked-{counter}') == 'on'
 
-                if nl is None:
-                    # additional answer is added.
-                    nl = Answer()
-                    nl.question = self.multipleChoiceQuestion
-                elif ol is None:
-                    # existing answer is removed.
-                    idsToDeleteExistingAnswers.append(nl.id)
-                    continue
+            if nl is not None and ol is None:
+                # additional answer is added.
+                newOption = {
+                    'id': uuid.uuid4().hex,
+                    'content': nl,
+                    'isCorrect': isChecked
+                }
+                oldAnswerOptionsList.append(newOption)
+                continue
+            elif nl is None and ol is not None:
+                # existing answer is removed.
+                idsToDelete.append(ol['id'])
 
-                nl.content = ol
-                nl.isCorrect = isChecked
+            ol['content'] = nl
+            ol['isCorrect'] = isChecked
 
-                if nl.id is None:
-                    nl.save()
-
-            # If there is an error with removing existing answers, then swap line 707 with 708.
-            Answer.objects.filter(id__in=idsToDeleteExistingAnswers).delete()
-            Answer.objects.bulk_update(oldAnswerOptionsList, ['content', 'isCorrect'])
+        self.multipleChoiceQuestion.choices = {
+            'choices': [i for i in oldAnswerOptionsList if i['id'] not in idsToDelete]
+        }
+        self.multipleChoiceQuestion.save()
         return self.multipleChoiceQuestion
 
 
