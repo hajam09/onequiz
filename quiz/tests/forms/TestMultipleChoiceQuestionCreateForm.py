@@ -81,7 +81,7 @@ class MultipleChoiceQuestionCreateFormTest(BaseTest):
         testParams = self.TestParams(
             content='test content',
             answerOrder=MultipleChoiceQuestion.Order.RANDOM,
-            answerOptions=[(1, '', True), (2, 'Answer 2', False), (3, 'Answer 3', True), (4, 'Answer 4', False)]
+            choices=[(1, '', True), (2, 'Answer 2', False), (3, 'Answer 3', True), (4, 'Answer 4', False)]
         )
         form = MultipleChoiceQuestionCreateForm(data=testParams.getData(True))
 
@@ -90,20 +90,20 @@ class MultipleChoiceQuestionCreateFormTest(BaseTest):
         self.assertTrue(form.has_error('initialAnswerOptions'))
         self.assertEqual('One of your answer options is empty or invalid. Please try again.', form.errors.get('initialAnswerOptions')[0])
         self.assertIn('initialAnswerOptions', form.initial)
-        self.assertListEqual(form.initial.get('initialAnswerOptions'), testParams.answerOptions)
+        self.assertListEqual(form.initial.get('initialAnswerOptions'), testParams.choices)
 
     def testMultipleChoiceQuestionAndAnswerObjectsCreated(self):
         testParams = self.TestParams(
             content='test content',
             answerOrder=MultipleChoiceQuestion.Order.RANDOM,
-            answerOptions=[(1, 'Answer 1', True), (2, 'Answer 2', False), (3, 'Answer 3', True), (4, 'Answer 4', False)]
+            choices=[(1, 'Answer 1', True), (2, 'Answer 2', False), (3, 'Answer 3', True), (4, 'Answer 4', False)]
         )
         form = MultipleChoiceQuestionCreateForm(data=testParams.getData(True))
 
         self.assertTrue(form.is_valid())
         self.assertEqual(0, len(form.errors))
         self.assertIn('initialAnswerOptions', form.initial)
-        self.assertListEqual(form.initial.get('initialAnswerOptions'), testParams.answerOptions)
+        self.assertListEqual(form.initial.get('initialAnswerOptions'), testParams.choices)
 
         newMultipleChoiceQuestion = form.save()
 
@@ -113,18 +113,20 @@ class MultipleChoiceQuestionCreateFormTest(BaseTest):
         self.assertEqual(testParams.mark, newMultipleChoiceQuestion.mark)
         self.assertEqual(testParams.answerOrder, newMultipleChoiceQuestion.answerOrder)
 
-        answerList = newMultipleChoiceQuestion.getAnswers()
-        self.assertListEqual([(i.content, i.isCorrect) for i in answerList], [(i[1], i[2]) for i in testParams.answerOptions])
+        choiceList = newMultipleChoiceQuestion.choices['choices']
+        self.assertListEqual(
+            [(i['content'], i['isCorrect']) for i in choiceList], [(i[1], i[2]) for i in testParams.choices]
+        )
 
     class TestParams:
 
-        def __init__(self, figure=None, content=None, explanation=None, mark=80, answerOrder=None, answerOptions=None):
+        def __init__(self, figure=None, content=None, explanation=None, mark=80, answerOrder=None, choices=None):
             self.figure = figure
             self.content = content
             self.explanation = explanation
             self.mark = mark
             self.answerOrder = answerOrder
-            self.answerOptions = answerOptions
+            self.choices = choices
 
         def getData(self, withAnswerOptions=False):
             data = {
@@ -141,7 +143,7 @@ class MultipleChoiceQuestionCreateFormTest(BaseTest):
                 answerTextList = []
                 answerTextCheckedDict = {}
 
-                for answer in self.answerOptions:
+                for answer in self.choices:
                     if answer[2]:
                         answerTextCheckedDict[f'answerChecked{answer[0]}'] = 'on'
                     answerTextList.append(answer[1])

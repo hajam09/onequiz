@@ -1,0 +1,42 @@
+{% extends "accounts/base.html" %}
+{% load static %}
+{% block content %}
+    <link type="text/css" rel="stylesheet" href="{% static 'css/baseFormStyle.css' %}">
+    <br>
+    <style>
+        .container {
+            color: black;
+        }
+    </style>
+
+    <div class="container">
+        <div class="row">
+            <div class="col-sm">
+                One of three columns
+            </div>
+            <div class="col-sm">
+                Status
+            </div>
+            <div class="col-sm">
+                One of three columns
+            </div>
+        </div>
+        <br>
+        {% for quizAttempt in quizAttemptList %}
+            <div class="form-control">
+                <div class="row">
+                    <div class="col-sm">
+                        One of three columns
+                    </div>
+                    <div class="col-sm">
+                        {{ quizAttempt.get_status_display }}
+                    </div>
+                    <div class="col-sm">
+                        One of three columns
+                    </div>
+                </div>
+            </div>
+            <br>
+        {% endfor %}
+    </div>
+{% endblock %}

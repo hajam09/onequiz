@@ -13,18 +13,16 @@ class QuizQuestionDetailViewTest(BaseTestViews):
     def setUp(self, path='') -> None:
         super(QuizQuestionDetailViewTest, self).setUp('')
         bakerOperations.createSubjectsAndTopics()
-        self.answerOptions = [
-            (1, 'Answer 1', True), (2, 'Answer 2', False), (3, 'Answer 3', True), (4, 'Answer 4', False)
-        ]
         self.topic = Topic.objects.select_related('subject').first()
         self.quiz = bakerOperations.createQuiz(self.request.user, self.topic)
         self.essayQuestion = bakerOperations.createEssayQuestion()
         self.trueOrFalseQuestion = bakerOperations.createTrueOrFalseQuestion()
-        self.multipleChoiceQuestion = bakerOperations.createMultipleChoiceQuestionAndAnswers(self.answerOptions)
-
-        self.quiz.questions.add(self.essayQuestion)
-        self.quiz.questions.add(self.trueOrFalseQuestion)
-        self.quiz.questions.add(self.multipleChoiceQuestion)
+        self.multipleChoiceQuestion = bakerOperations.createMultipleChoiceQuestionAndAnswers(None)
+        self.quiz.questions.add(*[
+            self.essayQuestion,
+            self.trueOrFalseQuestion,
+            self.multipleChoiceQuestion,
+        ])
 
     def testQuizDoesNotExist(self):
         path = reverse('quiz:question-detail-view', kwargs={'quizId': self.quiz.id, 'questionId': 0})

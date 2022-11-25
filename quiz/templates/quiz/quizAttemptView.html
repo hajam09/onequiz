@@ -1,0 +1,697 @@
+{% extends "accounts/base.html" %}
+{% load static %}
+{% block content %}
+    <script crossorigin src="https://unpkg.com/react@17/umd/react.development.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@17/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/babel-standalone@6/babel.min.js"></script>
+    <style>
+        .container {
+            color: black;
+        }
+    </style>
+
+    <link type="text/css" rel="stylesheet" href="{% static 'css/baseFormStyle.css' %}">
+    <br>
+    <div class="container">
+        <div class="row form-control" id="question-container">
+
+        </div>
+    </div>
+
+    <script type="text/babel">
+        function getCookie(name) {
+            let cookieValue = null;
+
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+
+                    // Does this cookie string begin with the name we want?
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+
+        class EssayResponse {
+            constructor(id, text) {
+                this.id = id;
+                this.text = text;
+            }
+
+            getData() {
+                return {
+                    'id': this.id,
+                    'text': this.text,
+                }
+            }
+        }
+
+        class TrueOrFalseResponse {
+            constructor(id, selectedOption) {
+                this.id = id;
+                this.selectedOption = selectedOption;
+            }
+
+            getData() {
+                return {
+                    'id': this.id,
+                    'selectedOption': this.selectedOption,
+                }
+            }
+        }
+
+        class ChoiceOption {
+            constructor(id, content, isChecked) {
+                this.id = id;
+                this.content = content;
+                this.isChecked = isChecked;
+            }
+
+            getData() {
+                return {
+                    'id': this.id,
+                    'content': this.content,
+                    'isChecked': this.isChecked,
+                }
+            }
+        }
+
+        class MultipleChoiceResponse {
+            constructor(id, choices) {
+                this.id = id;
+                this.choices = choices;
+            }
+        }
+
+        class EssayQuestion {
+            constructor(id, figure, content, explanation, response) {
+                this.id = id;
+                this.figure = figure;
+                this.content = content;
+                this.explanation = explanation;
+                this.response = response;
+            }
+        }
+
+        class TrueOrFalseQuestion {
+            constructor(id, figure, content, explanation, response) {
+                this.id = id;
+                this.figure = figure;
+                this.content = content;
+                this.explanation = explanation;
+                this.response = response;
+            }
+        }
+
+        class MultipleChoiceQuestion {
+            constructor(id, figure, content, explanation, response) {
+                this.id = id;
+                this.figure = figure;
+                this.content = content;
+                this.explanation = explanation;
+                this.response = response;
+            }
+        }
+
+        class AnswerOptions {
+            constructor(id, text, isChecked) {
+                this.id = id;
+                this.text = text;
+                this.isChecked = isChecked;
+            }
+        }
+
+        class EssayQuestionComponent extends React.Component {
+            constructor(props) {
+                super(props);
+                this.state = {
+                    canEdit: this.props.getQuestionComponentState().canEdit
+                }
+            }
+
+            updateAnswerForThisQuestion = () => {
+                let questionId = this.props.question.id;
+                let newText = this.refs.answerInputRef.value;
+                this.props.updateEssayAnswerForQuestion(questionId, newText)
+            }
+
+            render() {
+                const style1 = {
+                    borderRadius: 0,
+                }
+                return (
+                    <div>
+                        <div className="row">
+                            <div className="col">
+                                <h3>Question {this.props.getQuestionComponentState().currentIndex + 1} of {this.props.getQuestionComponentState().questionLength}</h3>
+                            </div>
+                            <div className="col-auto">{this.props.getQuestionComponentState().countdown}</div>
+                        </div>
+                        <br></br>
+                        {
+                            this.props.question.content.trim().length !== 0 ?
+                                <span><h5>Content / Question</h5><p>{this.props.question.content}</p></span> :
+                                <span></span>
+                        }
+                        <br></br>
+                        <br></br>
+                        <h5>Your Answer</h5>
+                        <textarea name="answer" ref="answerInputRef" value={this.props.question.response.text} cols="40"
+                                  disabled={!this.state.canEdit}
+                                  rows="5" onChange={this.updateAnswerForThisQuestion}
+                                  className="form-control col" style={style1}></textarea>
+                        <br></br>
+                    </div>
+                )
+            }
+        }
+
+        class TrueOrFalseQuestionComponent extends React.Component {
+            constructor(props) {
+                super(props);
+                this.state = {
+                    canEdit: this.props.getQuestionComponentState().canEdit
+                }
+            }
+
+            whenTrueIsClicked = () => {
+                let questionId = this.props.question.id;
+                this.props.updateTrueOrFalseAnswerForQuestion(questionId, true);
+            }
+
+            whenFalseIsClicked = () => {
+                let questionId = this.props.question.id;
+                this.props.updateTrueOrFalseAnswerForQuestion(questionId, false);
+            }
+
+            render() {
+                return (
+                    <div>
+                        <div className="row">
+                            <div className="col">
+                                <h3>Question {this.props.getQuestionComponentState().currentIndex + 1} of {this.props.getQuestionComponentState().questionLength}</h3>
+                            </div>
+                            <div className="col-auto">{this.props.getQuestionComponentState().countdown}</div>
+                        </div>
+                        <br></br>
+                        {
+                            this.props.question.content.trim().length !== 0 ?
+                                <span><h5>Content / Question</h5><p>{this.props.question.content}</p></span> :
+                                <span></span>
+                        }
+                        <br></br>
+                        <br></br>
+                        <h5>Is the answer True or False?</h5>
+                        <fieldset className="inline">
+                            <div className="multiple-choice">
+                                <input className="form-control" value="True" type="radio" name="isCorrect"
+                                       onChange={this.whenTrueIsClicked}
+                                       required=""
+                                       checked={this.props.question.response.selectedOption != null && this.props.question.response.selectedOption === true}></input>
+                                <label className="form-label">True</label>
+                            </div>
+
+                            <div className="multiple-choice">
+                                <input className="form-control" value="False" type="radio" name="isCorrect"
+                                       onChange={this.whenFalseIsClicked}
+                                       required=""
+                                       checked={this.props.question.response.selectedOption != null && this.props.question.response.selectedOption === false}></input>
+                                <label className="form-label">False</label>
+                            </div>
+                        </fieldset>
+                        <br></br>
+                    </div>
+                )
+            }
+        }
+
+        class AnswerOptionComponent extends React.Component {
+            constructor(props) {
+                super(props);
+            }
+
+            updateAnswerForThisQuestion = () => {
+                this.props.updateMultipleChoiceQuestionAnswerOptionForQuestion(this.props.choice.id, this.refs.checkboxInputRef.checked);
+            }
+
+            render() {
+                const style1 = {
+                    paddingLeft: '0px',
+                }
+                return (
+                    <div className="row">
+                        <div className="col-1">
+                            <div className="multiple-choice" style={style1}>
+                                <input type="checkbox" className="form-control" name="answerChecked2"
+                                       ref="checkboxInputRef"
+                                       checked={this.props.choice.isChecked}
+                                       onChange={this.updateAnswerForThisQuestion}></input>
+                                <label className="form-label">&nbsp;</label></div>
+                        </div>
+                        <div className="col">
+                            <input type="text" className="form-control col" disabled
+                                   value={this.props.choice.content}></input>
+                        </div>
+                    </div>
+                )
+            }
+        }
+
+        class MultipleChoiceQuestionComponent extends React.Component {
+            constructor(props) {
+                super(props);
+            }
+
+            render() {
+                return (
+                    <div>
+                        <div className="row">
+                            <div className="col">
+                                <h3>Question {this.props.getQuestionComponentState().currentIndex + 1} of {this.props.getQuestionComponentState().questionLength}</h3>
+                            </div>
+                            <div className="col-auto">{this.props.getQuestionComponentState().countdown}</div>
+                        </div>
+                        <br></br>
+                        {
+                            this.props.question.content.trim().length !== 0 ?
+                                <span><h5>Content / Question</h5><p>{this.props.question.content}</p></span> :
+                                <span></span>
+                        }
+                        <br></br>
+                        <br></br>
+
+                        <h5>Select the correct answers.</h5>
+                        {this.props.question.response.choices.map((item) => <AnswerOptionComponent key={item.id}
+                                                                                                   updateMultipleChoiceQuestionAnswerOptionForQuestion={this.props.updateMultipleChoiceQuestionAnswerOptionForQuestion}
+                                                                                                   choice={item}/>)}
+                    </div>
+                )
+            }
+        }
+
+        class QuestionValidComponent extends React.Component {
+            constructor(props) {
+                super(props);
+                let isValid = false;
+
+                if (this.props.question instanceof EssayQuestion) {
+                    isValid = this.props.question.response.text.trim().length !== 0;
+                } else if (this.props.question instanceof TrueOrFalseQuestion) {
+                    isValid = this.props.question.response.selectedOption !== null;
+                } else if (this.props.question instanceof MultipleChoiceQuestion) {
+                    isValid = true;
+                }
+
+                this.state = {
+                    isValid: isValid,
+                }
+            }
+
+            renderValidOrInvalidIcon = () => {
+
+                const style2 = {
+                    fontSize: '9.5px',
+                }
+                if (this.state.isValid)
+                    return (
+                        <span>
+                        Question {this.props.index + 1} : <button type="button" className="btn btn-success btn-sm"><i
+                            className="fas fa-check" style={style2}></i></button>
+                    </span>
+                    )
+                return (
+                    <span>
+                        Question {this.props.index + 1} : <button type="button" className="btn btn-danger btn-sm"><i
+                        className="fas fa-times"></i></button>&nbsp;&nbsp;(You have not answered this question)
+                    </span>
+                )
+            }
+
+            render() {
+                const style1 = {
+                    height: '3px',
+                }
+                return (
+                    <div>
+                        {this.renderValidOrInvalidIcon()}
+                        <div style={style1}></div>
+                    </div>
+                )
+            }
+        }
+
+        class QuestionComponent extends React.Component {
+            constructor(props) {
+                super(props);
+                this.state = {
+                    currentIndex: 0,
+                    questionList: [],
+                    canEdit: false,
+                    countdown: null,
+                    quizResultView: "{% url 'quiz:quiz-attempt-result-view' attemptId=quizAttempt.id %}",
+                }
+
+                this.updateEssayAnswerForQuestion = this.updateEssayAnswerForQuestion.bind(this);
+                this.updateTrueOrFalseAnswerForQuestion = this.updateTrueOrFalseAnswerForQuestion.bind(this);
+                this.updateMultipleChoiceQuestionAnswerOptionForQuestion = this.updateMultipleChoiceQuestionAnswerOptionForQuestion.bind(this);
+                this.getQuestionComponentState = this.getQuestionComponentState.bind(this);
+            }
+
+            getQuestionComponentState = () => {
+                return {
+                    currentIndex: this.state.currentIndex,
+                    questionLength: this.state.questionList.length,
+                    countdown: this.state.countdown === null || !this.state.canEdit ? '' : 'Remaining: ' + this.state.countdown,
+                    canEdit: this.state.canEdit,
+                };
+            }
+
+            updateEssayAnswerForQuestion = (id, text) => {
+                if (!this.state.canEdit)
+                    return;
+
+                let tempList = this.state.questionList;
+                for (const q of tempList) {
+                    if (q.id === id) {
+                        q.response.text = text;
+                        break;
+                    }
+                }
+                this.setState({
+                    questionList: tempList
+                })
+            }
+
+            updateTrueOrFalseAnswerForQuestion = (id, value) => {
+                if (!this.state.canEdit)
+                    return;
+
+                let tempList = this.state.questionList;
+                for (const q of tempList) {
+                    if (q.id === id) {
+                        q.response.selectedOption = value;
+                        break;
+                    }
+                }
+                this.setState({
+                    questionList: tempList
+                })
+            }
+
+            updateMultipleChoiceQuestionAnswerOptionForQuestion = (choiceId, value) => {
+                if (!this.state.canEdit)
+                    return;
+
+                let tempList = this.state.questionList;
+                for (const q of tempList) {
+                    if (q instanceof MultipleChoiceQuestion) {
+                        for (const c of q.response.choices) {
+                            if (c.id === choiceId) {
+                                c.isChecked = value;
+                                break;
+                            }
+                        }
+                    }
+                }
+
+                this.setState({
+                    questionList: tempList
+                })
+            }
+
+            componentDidMount = () => {
+                fetch("{% url 'quiz:quizAttemptQuestionsApiEventVersion1Component' id=quizAttempt.id %}", {
+                    method: 'GET',
+                }).then((response) => response.json())
+                    .then((response) => {
+                        if (response.success) {
+                            let newQuestionList = [];
+                            for (const question of response.data.questions) {
+                                if (question.type === 'EssayQuestion') {
+                                    let newEssayResponse = new EssayResponse(question.response.id, question.response.text);
+
+                                    newQuestionList.push(
+                                        new EssayQuestion(question.id, question.figure, question.content, question.explanation, newEssayResponse)
+                                    );
+                                } else if (question.type === 'TrueOrFalseQuestion') {
+                                    let newTrueOrFalseResponse = new TrueOrFalseResponse(question.response.id, question.response.selectedOption);
+
+                                    newQuestionList.push(
+                                        new TrueOrFalseQuestion(question.id, question.figure, question.content, question.explanation, newTrueOrFalseResponse)
+                                    );
+                                } else if (question.type === 'MultipleChoiceQuestion') {
+                                    let choiceList = [];
+                                    for (const choice of question.response.choices) {
+                                        choiceList.push(
+                                            new ChoiceOption(choice.id, choice.content, choice.isChecked)
+                                        )
+                                    }
+                                    let newMultipleChoiceResponse = new MultipleChoiceResponse(question.response.id, choiceList)
+                                    newQuestionList.push(
+                                        new MultipleChoiceQuestion(question.id, question.figure, question.content, question.explanation, newMultipleChoiceResponse)
+                                    )
+                                } else {
+                                    console.log('Unknown question type.')
+                                }
+                            }
+
+                            this.setState({
+                                questionList: newQuestionList,
+                                canEdit: response.data.quiz.canEdit,
+                            })
+                        }
+                    })
+
+                let quizStartDttm = new Date('{{ quizAttempt.getQuizEndTime }}').getTime();
+                this.interval = setInterval(() => this.setState({countdown: this.getRemainingTime(quizStartDttm)}), 999);
+            }
+
+            componentWillUnmount() {
+                clearInterval(this.interval);
+            }
+
+            getRemainingTime = (quizStartDttm) => {
+                let now = new Date().getTime();
+                let distance = quizStartDttm - now;
+                let hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+                let minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+                let seconds = Math.floor((distance % (1000 * 60)) / 1000);
+                let time = '';
+                if (hours !== 0)
+                    time += hours + "h ";
+
+                if (minutes !== 0)
+                    time += minutes + "m ";
+
+                if (hours === 0 && minutes === 0 && seconds === 0) {
+                    this.setState({
+                        currentIndex: this.state.questionList.length,
+                    })
+                    this.submitQuiz();
+                }
+
+                return time + seconds + "s ";
+            }
+
+            increaseCurrentIndex = () => {
+                this.setState({
+                    currentIndex: this.state.currentIndex + 1
+                })
+            }
+
+            decreaseCurrentIndex = () => {
+                this.setState({
+                    currentIndex: this.state.currentIndex - 1
+                })
+            }
+
+            submitQuiz = () => {
+                let quizAttemptId = '{{ quizAttempt.id }}';
+                let data = {
+                    'id': quizAttemptId,
+                    'response': [],
+                }
+
+                for (const question of this.state.questionList) {
+                    let questionId = null;
+                    let questionType = null;
+                    let response = null;
+
+                    if (question instanceof EssayQuestion) {
+                        questionId = question.id;
+                        questionType = 'EssayQuestion';
+                        response = question.response.getData();
+
+                    } else if (question instanceof TrueOrFalseQuestion) {
+                        questionId = question.id;
+                        questionType = 'TrueOrFalseQuestion';
+                        response = question.response.getData();
+
+                    } else if (question instanceof MultipleChoiceQuestion) {
+                        questionId = question.id;
+                        questionType = 'MultipleChoiceQuestion';
+                        let choiceList = [];
+                        for (const choice of question.response.choices) {
+                            choiceList.push(
+                                {
+                                    'id': choice.id,
+                                    'content': choice.content,
+                                    'isChecked': choice.isChecked,
+                                }
+                            );
+                        }
+                        response = {
+                            'id': question.response.id,
+                            'choices': choiceList
+                        }
+
+                    } else {
+                        continue;
+                    }
+
+                    let questionObject = {
+                        'id': questionId,
+                        'type': questionType,
+                        'response': response,
+                    }
+                    data.response.push(questionObject)
+                }
+                fetch('{% url 'quiz:quizAttemptQuestionsApiEventVersion1Component' id=quizAttempt.id %}', {
+                    method: 'POST',
+                    headers: {
+                        'Content-type': 'application/json',
+                        "X-CSRFToken": getCookie("csrftoken")
+                    },
+                    dataType: 'json',
+                    body: JSON.stringify(data)
+                }).then((response) => response.json())
+                    .then((json) => {
+                        if (json.success) {
+                            let redirectUrl = this.state.quizResultView;
+                            this.redirectAfterNSeconds(5, redirectUrl);
+                            alert('You have submitted your quiz. You will be redirected to the results page.')
+                        }
+                    })
+            }
+
+            redirectAfterNSeconds = async (sleepSeconds, redirectUrl) => {
+                sleepSeconds = sleepSeconds * 1000;
+                await new Promise(resolve => {
+                    setTimeout(() => {
+                        resolve('');
+                    }, sleepSeconds);
+                });
+                window.location.href = redirectUrl
+            }
+
+            isFormValid = () => {
+                for (const question of this.state.questionList) {
+                    let isValid = true;
+                    if (question instanceof EssayQuestion) {
+                        isValid = question.response.text.trim().length !== 0;
+                    } else if (question instanceof TrueOrFalseQuestion) {
+                        isValid = question.response.selectedOption !== null;
+                    } else if (question instanceof MultipleChoiceQuestion) {
+                        isValid = true;
+                    }
+                    if (!isValid)
+                        return false;
+                }
+                return true;
+            }
+
+            renderSubmitOrNextButton = () => {
+                if (this.state.canEdit === false && this.state.currentIndex === this.state.questionList.length - 1)
+                    return (
+                        <a type="button" href={this.state.quizResultView} className="btn btn-info">View Results</a>
+                    )
+                else if (this.state.currentIndex !== this.state.questionList.length)
+                    return (
+                        <button type="button" className="btn btn-primary" onClick={this.increaseCurrentIndex}>
+                            Next
+                        </button>
+                    )
+                else if (this.state.canEdit === false)
+                    return (
+                        <span></span>
+                    )
+                return <button type="button" className="btn btn-success" onClick={this.submitQuiz}>Submit</button>
+            }
+
+            renderPreviousButton = () => {
+                if (this.state.currentIndex > 0)
+                    return (
+                        <button type="button" className="btn btn-secondary" onClick={this.decreaseCurrentIndex}>
+                            Previous
+                        </button>
+                    )
+                return (
+                    <span></span>
+                )
+            }
+
+            getQuizReviewComponent = () => {
+                return (
+                    <div>
+                        <h3>Review</h3>
+                        {this.state.questionList.map((item, index) => <QuestionValidComponent key={item.id}
+                                                                                              question={item}
+                                                                                              index={index}/>)}
+                    </div>
+                )
+            }
+
+            getCurrentQuizQuestionComponent = () => {
+                let currentQuestion = this.state.questionList[this.state.currentIndex];
+                if (currentQuestion instanceof EssayQuestion) {
+                    return (
+                        <EssayQuestionComponent question={currentQuestion}
+                                                getQuestionComponentState={this.getQuestionComponentState}
+                                                updateEssayAnswerForQuestion={this.updateEssayAnswerForQuestion}/>
+                    )
+                } else if (currentQuestion instanceof TrueOrFalseQuestion) {
+                    return (
+                        <TrueOrFalseQuestionComponent question={currentQuestion}
+                                                      getQuestionComponentState={this.getQuestionComponentState}
+                                                      updateTrueOrFalseAnswerForQuestion={this.updateTrueOrFalseAnswerForQuestion}/>
+                    )
+                } else if (currentQuestion instanceof MultipleChoiceQuestion) {
+                    return (
+                        <MultipleChoiceQuestionComponent question={currentQuestion}
+                                                         getQuestionComponentState={this.getQuestionComponentState}
+                                                         updateMultipleChoiceQuestionAnswerOptionForQuestion={this.updateMultipleChoiceQuestionAnswerOptionForQuestion}/>
+                    )
+                }
+                /*
+                this.state.questionList[this.state.currentIndex] instanceof EssayQuestion ? this.renderEssayQuestionComponent() :
+                                this.state.questionList[this.state.currentIndex] instanceof TrueOrFalseQuestion ? this.renderTrueOrFalseQuestionComponent() :
+                                    this.state.questionList[this.state.currentIndex] instanceof MultipleChoiceQuestion ? this.renderMultipleChoiceQuestionComponent() :
+                                        <span></span>
+                * */
+                return <span></span>
+            }
+
+            render() {
+                return (
+                    <div>
+                        {
+                            this.state.currentIndex === this.state.questionList.length && this.state.canEdit ?
+                                this.getQuizReviewComponent() : this.getCurrentQuizQuestionComponent()
+                        }
+                        <div className="text-right">
+                            {this.renderPreviousButton()}&nbsp;{this.renderSubmitOrNextButton()}
+                        </div>
+                    </div>
+                )
+            }
+        }
+
+        ReactDOM.render(<QuestionComponent/>, document.getElementById('question-container'));
+    </script>
+{% endblock %}

@@ -5,13 +5,17 @@ from django.utils.translation import ugettext_lazy as _
 
 from quiz.models import Answer
 from quiz.models import EssayQuestion
+from quiz.models import EssayResponse
 from quiz.models import MultipleChoiceQuestion
+from quiz.models import MultipleChoiceResponse
 from quiz.models import Question
 from quiz.models import Quiz
+from quiz.models import QuizAttempt
 from quiz.models import Result
 from quiz.models import Subject
 from quiz.models import Topic
 from quiz.models import TrueOrFalseQuestion
+from quiz.models import TrueOrFalseResponse
 
 
 class AnswerInline(admin.TabularInline):
@@ -40,7 +44,7 @@ class QuizAdminForm(forms.ModelForm):
     def save(self, commit=True):
         quiz = super(QuizAdminForm, self).save(commit=False)
         quiz.save()
-        quiz.question_set.set(self.cleaned_data['questions'])
+        # quiz.question_set.set(self.cleaned_data['questions'])
         self.save_m2m()
         return quiz
 
@@ -65,3 +69,7 @@ admin.site.register(TrueOrFalseQuestion)
 admin.site.register(Answer)
 admin.site.register(Quiz, QuizAdmin)
 admin.site.register(Result)
+admin.site.register(QuizAttempt)
+admin.site.register(EssayResponse)
+admin.site.register(MultipleChoiceResponse)
+admin.site.register(TrueOrFalseResponse)

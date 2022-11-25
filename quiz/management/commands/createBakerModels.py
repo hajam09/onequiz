@@ -2,7 +2,6 @@ import random
 
 from django.contrib.auth.models import User
 from django.core.management import BaseCommand
-from faker import Faker
 
 from onequiz.operations import bakerOperations
 from quiz.models import Topic
@@ -34,23 +33,12 @@ class Command(BaseCommand):
             tf2 = bakerOperations.createTrueOrFalseQuestion()
             tf3 = bakerOperations.createTrueOrFalseQuestion()
 
-            mcq1 = bakerOperations.createMultipleChoiceQuestionAndAnswers(self.generateAnswerOptions())
-            mcq2 = bakerOperations.createMultipleChoiceQuestionAndAnswers(self.generateAnswerOptions())
-            mcq3 = bakerOperations.createMultipleChoiceQuestionAndAnswers(self.generateAnswerOptions())
+            mcq1 = bakerOperations.createMultipleChoiceQuestionAndAnswers(None)
+            mcq2 = bakerOperations.createMultipleChoiceQuestionAndAnswers(None)
+            mcq3 = bakerOperations.createMultipleChoiceQuestionAndAnswers(None)
 
-            newQuiz.questions.add(eq1)
-            newQuiz.questions.add(eq2)
-            newQuiz.questions.add(eq3)
-
-            newQuiz.questions.add(tf1)
-            newQuiz.questions.add(tf2)
-            newQuiz.questions.add(tf3)
-
-            newQuiz.questions.add(mcq1)
-            newQuiz.questions.add(mcq2)
-            newQuiz.questions.add(mcq3)
-
-    def generateAnswerOptions(self):
-        numberOfAnswersCounter = random.randint(3, 5)
-        faker = Faker()
-        return [(i, faker.paragraph(), random.choice(BOOLEAN)) for i in range(1, numberOfAnswersCounter, 1)]
+            newQuiz.questions.add(*[
+                eq1, eq2, eq3,
+                tf1, tf2, tf3,
+                mcq1, mcq2, mcq3
+            ])

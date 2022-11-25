@@ -2,8 +2,9 @@ import operator
 from functools import reduce
 
 from django.db.models import Q
-from django.http import Http404
+from django.http import Http404, HttpResponse
 from django.shortcuts import render, redirect
+from django.utils import timezone
 
 from quiz.forms import (
     EssayQuestionCreateForm, EssayQuestionUpdateForm, MultipleChoiceQuestionCreateForm,
@@ -11,7 +12,7 @@ from quiz.forms import (
     TrueOrFalseQuestionUpdateForm, QuizUpdateForm
 )
 from quiz.models import (
-    EssayQuestion, MultipleChoiceQuestion, Question, Quiz, TrueOrFalseQuestion,
+    EssayQuestion, MultipleChoiceQuestion, Question, Quiz, TrueOrFalseQuestion, QuizAttempt
 )
 
 
@@ -218,5 +219,34 @@ def userCreatedQuizzesView(request):
     return render(request, 'quiz/userCreatedQuizzesView.html', context)
 
 
-def userAttemptedQuizzes(request):
-    pass
+def quizAttemptView(request, attemptId):
+    try:
+        quizAttempt = QuizAttempt.objects.get(id=attemptId)
+    except QuizAttempt.DoesNotExist:
+        raise Http404
+
+    if quizAttempt.user != request.user:
+        # return 401 page.
+        return HttpResponse('Unauthorized', status=401)
+
+    quizNotStartedStatues = [QuizAttempt.Status.NOT_ATTEMPTED, QuizAttempt.Status.IN_PROGRESS]
+    if timezone.now() > quizAttempt.getQuizEndTime(False) and quizAttempt.status in quizNotStartedStatues:
+        quizAttempt.status = QuizAttempt.Status.SUBMITTED
+        quizAttempt.save(update_fields=['status'])
+
+    context = {
+        'quizAttempt': quizAttempt,
+    }
+    return render(request, 'quiz/quizAttemptView.html', context)
+
+
+def quizAttemptResultView(request, attemptId):
+    return render(request, 'quiz/quizAttemptResultView.html')
+
+
+def attemptedQuizzesView(request):
+    quizAttemptList = QuizAttempt.objects.filter(user=request.user)
+    context = {
+        'quizAttemptList': quizAttemptList
+    }
+    return render(request, 'quiz/attemptedQuizzesView.html', context)

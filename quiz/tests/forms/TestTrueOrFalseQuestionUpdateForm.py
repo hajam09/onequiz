@@ -112,8 +112,6 @@ class TrueOrFalseQuestionUpdateFormTest(BaseTest):
             self.mark = mark
             self.isCorrect = isCorrect
 
-            pass
-
         def getData(self):
             data = {
                 'figure': self.figure,

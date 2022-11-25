@@ -1,11 +1,12 @@
 import random
+import uuid
 
 from django.conf import settings
 from django.contrib.auth.models import User
 from faker import Faker
 
 from onequiz.operations import generalOperations
-from quiz.models import Subject, Topic, Quiz, EssayQuestion, TrueOrFalseQuestion, MultipleChoiceQuestion, Answer
+from quiz.models import Subject, Topic, Quiz, EssayQuestion, TrueOrFalseQuestion, MultipleChoiceQuestion
 
 EMAIL_DOMAINS = ["@yahoo", "@gmail", "@outlook", "@hotmail"]
 DOMAINS = [".co.uk", ".com", ".co.in", ".net", ".us"]
@@ -43,16 +44,16 @@ def createUser(save=True):
     return userList.first() if save else userList[0]
 
 
-def createSubjectsAndTopics():
+def createSubjectsAndTopics(numberOfSubjects=5, numberOfTopicsForEachSubject=10):
     faker = Faker()
     BULK_SUBJECT_LIST = []
     BULK_TOPIC_LIST = []
 
-    for _ in range(5):
+    for _ in range(numberOfSubjects):
         subject = Subject(name=faker.pystr_format(), description=faker.paragraph())
         BULK_SUBJECT_LIST.append(subject)
 
-        for _ in range(10):
+        for _ in range(numberOfTopicsForEachSubject):
             BULK_TOPIC_LIST.append(
                 Topic(
                     name=faker.pystr_format(),
@@ -133,25 +134,27 @@ def createTrueOrFalseQuestion():
     return newTrueOrFalseQuestion
 
 
-def createMultipleChoiceQuestionAndAnswers(answerOptions=None):
+def createMultipleChoiceQuestionAndAnswers(choices):
     faker = Faker()
-    bulkAnswer = []
-    answerOptions = answerOptions or []
+    answerOrder = [MultipleChoiceQuestion.Order.SEQUENTIAL,
+                     MultipleChoiceQuestion.Order.RANDOM,
+                     MultipleChoiceQuestion.Order.NONE]
+
+    if choices is None or choices == []:
+        choices = [
+            {
+                'id': uuid.uuid4().hex,
+                'content': faker.paragraph(),
+                'isCorrect': random.choice(BOOLEAN)
+            } for _ in range(random.randint(2, 10))
+        ]
 
     newMultipleChoiceQuestion = MultipleChoiceQuestion.objects.create(
         figure=None,
         content=faker.paragraph(),
         explanation=faker.paragraph(),
-        mark=faker.random_number(digits=2)
+        mark=faker.random_number(digits=2),
+        answerOrder=random.choice(answerOrder),
+        choices={'choices': choices}
     )
-
-    for answer in answerOptions:
-        bulkAnswer.append(
-            Answer(
-                question=newMultipleChoiceQuestion,
-                content=answer[1],
-                isCorrect=answer[2]
-            )
-        )
-    Answer.objects.bulk_create(bulkAnswer)
     return newMultipleChoiceQuestion
