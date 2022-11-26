@@ -22,6 +22,10 @@ class AnswerInline(admin.TabularInline):
     model = Answer
 
 
+class MultipleChoiceQuestionAdmin(admin.ModelAdmin):
+    inlines = [AnswerInline]
+
+
 class QuizAdminForm(forms.ModelForm):
     class Meta:
         model = Quiz
@@ -30,10 +34,11 @@ class QuizAdminForm(forms.ModelForm):
     questions = forms.ModelMultipleChoiceField(
         queryset=Question.objects.all().select_subclasses(),
         required=False,
-        label=_("Questions"),
+        label=_('Questions'),
         widget=FilteredSelectMultiple(
-            verbose_name=_("Questions"),
-            is_stacked=False)
+            verbose_name=_('Questions'),
+            is_stacked=False
+        )
     )
 
     def __init__(self, *args, **kwargs):
@@ -52,13 +57,25 @@ class QuizAdminForm(forms.ModelForm):
 class QuizAdmin(admin.ModelAdmin):
     form = QuizAdminForm
 
-    list_display = ('name', 'topic',)
+    list_display = ('name',)
     list_filter = ('topic',)
     search_fields = ('description', 'topic',)
 
 
-class MultipleChoiceQuestionAdmin(admin.ModelAdmin):
-    inlines = [AnswerInline]
+class QuizAttemptForm(forms.ModelForm):
+    class Meta:
+        model = QuizAttempt
+        exclude = []
+
+    def __init__(self, *args, **kwargs):
+        super(QuizAttemptForm, self).__init__(*args, **kwargs)
+        self.fields['quiz'].choices = [
+            (i.id, f"{i.id} - {i.name} - {i.topic.name}") for i in Quiz.objects.all().select_related('topic')
+        ]
+
+
+class QuizAttemptAdmin(admin.ModelAdmin):
+    form = QuizAttemptForm
 
 
 admin.site.register(Subject)
@@ -69,7 +86,7 @@ admin.site.register(TrueOrFalseQuestion)
 admin.site.register(Answer)
 admin.site.register(Quiz, QuizAdmin)
 admin.site.register(Result)
-admin.site.register(QuizAttempt)
+admin.site.register(QuizAttempt, QuizAttemptAdmin)
 admin.site.register(EssayResponse)
 admin.site.register(MultipleChoiceResponse)
 admin.site.register(TrueOrFalseResponse)

@@ -496,6 +496,9 @@
                     this.submitQuiz();
                 }
 
+                if ((hours < 0 || minutes < 0 || seconds < 0) && (this.state.canEdit === true))
+                    location.reload();
+
                 return time + seconds + "s ";
             }
 
@@ -590,22 +593,6 @@
                 window.location.href = redirectUrl
             }
 
-            isFormValid = () => {
-                for (const question of this.state.questionList) {
-                    let isValid = true;
-                    if (question instanceof EssayQuestion) {
-                        isValid = question.response.text.trim().length !== 0;
-                    } else if (question instanceof TrueOrFalseQuestion) {
-                        isValid = question.response.selectedOption !== null;
-                    } else if (question instanceof MultipleChoiceQuestion) {
-                        isValid = true;
-                    }
-                    if (!isValid)
-                        return false;
-                }
-                return true;
-            }
-
             renderSubmitOrNextButton = () => {
                 if (this.state.canEdit === false && this.state.currentIndex === this.state.questionList.length - 1)
                     return (
@@ -631,9 +618,7 @@
                             Previous
                         </button>
                     )
-                return (
-                    <span></span>
-                )
+                return <span></span>
             }
 
             getQuizReviewComponent = () => {
