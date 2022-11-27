@@ -1,14 +1,15 @@
 import json
 from http import HTTPStatus
+from json import JSONDecodeError
 
 from django.db.models import F
-from django.http import JsonResponse, QueryDict
+from django.http import JsonResponse
 from django.urls import reverse
 from django.utils.decorators import method_decorator
 from django.views import View
 from django.views.decorators.csrf import csrf_exempt
 
-from onequiz.operations.generalOperations import QuestionAndResponse
+from onequiz.operations.generalOperations import QuestionAndResponse, QuizAttemptMarking
 from quiz.models import (
     EssayQuestion, EssayResponse, MultipleChoiceQuestion, MultipleChoiceResponse, QuizAttempt, Topic,
     TrueOrFalseQuestion, TrueOrFalseResponse
@@ -85,8 +86,9 @@ class QuizAttemptObjectApiEventVersion1Component(View):
 class QuizAttemptQuestionsApiEventVersion1Component(View):
 
     def get(self, *args, **kwargs):
-        quizAttempt = QuizAttempt.objects.select_related('quiz', 'user').prefetch_related(
-            'responses__question'
+        quizAttempt = QuizAttempt.objects.select_related('quiz').prefetch_related(
+            'responses__question', 'responses__essayresponse', 'responses__trueorfalseresponse',
+            'responses__multiplechoiceresponse'
         ).get(id=kwargs.get('id'))
         questionList = quizAttempt.quiz.getQuestions()
         responseList = quizAttempt.responses.all()
@@ -103,33 +105,53 @@ class QuizAttemptQuestionsApiEventVersion1Component(View):
         }
         return JsonResponse(response, status=HTTPStatus.OK)
 
-    def post(self, *args, **kwargs):
-        quizAttempt = QuizAttempt.objects.get(id=kwargs.get('id'))
-        queryDict = QueryDict('', mutable=True)
-        queryDict.update(json.loads(self.request.body.decode()))
-        userResponse = queryDict.get('response', [])
+    def put(self, *args, **kwargs):
+        quizAttempt = QuizAttempt.objects.prefetch_related(
+            'responses__question', 'responses__essayresponse', 'responses__trueorfalseresponse',
+            'responses__multiplechoiceresponse'
+        ).get(id=kwargs.get('id'))
+
+        try:
+            put = json.loads(self.request.body)
+        except JSONDecodeError:
+            put = json.loads(self.request.body.decode().replace('"', "'").replace("'", '"'))
+
+        userResponse = put.get('response', [])
         responseList = quizAttempt.responses.all()
+
+        essayResponseObjects = []
+        trueOrFalseResponseObjects = []
+        multipleChoiceResponseObjects = []
 
         for response in userResponse:
             if response['type'] == 'EssayQuestion':
                 existingResponseObject = next((o for o in responseList if o.id == response['response']['id']))
                 if existingResponseObject is not None:
                     existingResponseObject.essayresponse.answer = response['response']['text']
-                    existingResponseObject.essayresponse.save()
+                    essayResponseObjects.append(existingResponseObject.essayresponse)
             elif response['type'] == 'TrueOrFalseQuestion':
                 existingResponseObject = next((o for o in responseList if o.id == response['response']['id']))
                 if existingResponseObject is not None:
                     existingResponseObject.trueorfalseresponse.isChecked = response['response']['selectedOption']
-                    existingResponseObject.trueorfalseresponse.save()
+                    trueOrFalseResponseObjects.append(existingResponseObject.trueorfalseresponse)
             elif response['type'] == 'MultipleChoiceQuestion':
                 existingResponseObject = next((o for o in responseList if o.id == response['response']['id']))
                 if existingResponseObject is not None:
                     existingResponseObject.multiplechoiceresponse.answers['answers'] = response['response']['choices']
-                    existingResponseObject.multiplechoiceresponse.save()
+                    multipleChoiceResponseObjects.append(existingResponseObject.multiplechoiceresponse)
             else:
-                pass
+                continue
 
-        quizAttempt.status = QuizAttempt.Status.SUBMITTED
+        EssayResponse.objects.bulk_update(essayResponseObjects, ['answer'])
+        TrueOrFalseResponse.objects.bulk_update(trueOrFalseResponseObjects, ['isChecked'])
+        MultipleChoiceResponse.objects.bulk_update(multipleChoiceResponseObjects, ['answers'])
+
+        quizAttemptMarking = QuizAttemptMarking(quizAttempt, quizAttempt.quiz.getQuestions(), responseList)
+        if quizAttemptMarking.mark():
+            quizAttempt.status = QuizAttempt.Status.MARKED
+        else:
+            quizAttempt.status = QuizAttempt.Status.SUBMITTED
+
         quizAttempt.save()
 
         response = {

@@ -96,7 +96,7 @@ class QuizCreateMultipleChoiceQuestionViewTest(BaseTestViews):
 
                 for answer in self.choices:
                     if answer[2]:
-                        data[f'answerChecked{answer[0]}'] = 'on'
+                        data[f'answerChecked-{answer[0]}'] = 'on'
                     answerTextList.append(answer[1])
 
                 data['answerOptions'] = answerTextList

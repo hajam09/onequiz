@@ -145,7 +145,7 @@ class MultipleChoiceQuestionCreateFormTest(BaseTest):
 
                 for answer in self.choices:
                     if answer[2]:
-                        answerTextCheckedDict[f'answerChecked{answer[0]}'] = 'on'
+                        answerTextCheckedDict[f'answerChecked-{answer[0]}'] = 'on'
                     answerTextList.append(answer[1])
 
                 queryDict.setlist('answerOptions', answerTextList)

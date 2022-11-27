@@ -566,7 +566,7 @@
                     data.response.push(questionObject)
                 }
                 fetch('{% url 'quiz:quizAttemptQuestionsApiEventVersion1Component' id=quizAttempt.id %}', {
-                    method: 'POST',
+                    method: 'PUT',
                     headers: {
                         'Content-type': 'application/json',
                         "X-CSRFToken": getCookie("csrftoken")

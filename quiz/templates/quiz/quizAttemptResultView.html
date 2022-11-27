@@ -1,0 +1,45 @@
+{% extends "accounts/base.html" %}
+{% load static %}
+{% block content %}
+    <style>
+        .container {
+            color: black;
+        }
+    </style>
+    <div style="height: 70px;"></div>
+    <div class="container">
+        <div class="card">
+            <div class="card-body">
+                <legend>
+                    <h2 class="heading-h2">Quiz Results</h2>
+                </legend>
+                <h4 class="text-center">Status: {{ result.quizAttempt.status }}</h4>
+
+                <div class="container">
+                    {% for item in data %}
+                        {% if item is not None %}
+                            <div class="row" style="width: 70%">
+                                <div class="col-3 text-right">{{ item.key }}:</div>
+                                <div class="col-9"><b>{{ item.value }}</b></div>
+                            </div>
+                        {% else %}
+                            <br>
+                        {% endif %}
+                    {% endfor %}
+                    <br>
+                    <h5 class="text-center">
+                        {% if result.score >= result.quizAttempt.quiz.passMark %}
+                            <div class="alert alert-success" role="alert">
+                                {{ result.quizAttempt.quiz.successText }}
+                            </div>
+                        {% else %}
+                            <div class="alert alert-danger" role="alert">
+                                {{ result.quizAttempt.quiz.failText }}
+                            </div>
+                        {% endif %}
+                    </h5>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}

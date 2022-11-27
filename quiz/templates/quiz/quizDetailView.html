@@ -69,6 +69,30 @@
             </form>
         </div>
         <br><br><br>
+        {% for question in quizQuestions %}
+            <div class="card">
+                <div class="card-body" style="padding: 1rem;">
+                    <div class="row">
+                        <div class="col">{{ question.content }}</div>
+                        <div class="col">
+                            {% if question.getInstanceType == 'EssayQuestion' %}
+                                <span class="badge badge-primary">{{ question.getInstanceType }}</span>
+                            {% elif question.getInstanceType == 'TrueOrFalseQuestion' %}
+                                <span class="badge badge-secondary">{{ question.getInstanceType }}</span>
+                            {% elif question.getInstanceType == 'MultipleChoiceQuestion' %}
+                                <span class="badge badge-success">{{ question.getInstanceType }}</span>
+                            {% endif %}
+                        </div>
+                        <div class="col-auto">
+                            <a class="btn btn-dark"
+                               href="{% url 'quiz:question-detail-view' quizId=quizId questionId=question.id %}"
+                               role="button">Edit</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        {% endfor %}
+        <br><br><br>
     </div>
 
     <script>

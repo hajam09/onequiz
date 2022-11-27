@@ -744,7 +744,7 @@ class MultipleChoiceQuestionCreateForm(forms.Form):
         for i in range(len(answerOptionsList)):
             orderNo = i + 1
             enteredAnswer = answerOptionsList[i]
-            isChecked = self.data.get(f'answerChecked{orderNo}') == 'on'
+            isChecked = self.data.get(f'answerChecked-{orderNo}') == 'on'
             ANSWER_OPTIONS.append((orderNo, enteredAnswer, isChecked))
 
             if not enteredAnswer:
@@ -764,7 +764,7 @@ class MultipleChoiceQuestionCreateForm(forms.Form):
             {
                 'id': uuid.uuid4().hex,
                 'content': answerOptionsList[i],
-                'isCorrect': self.data.get(f'answerChecked{i + 1}') == 'on'
+                'isCorrect': self.data.get(f'answerChecked-{i + 1}') == 'on'
             }
             for i in range(len(answerOptionsList))
         ]

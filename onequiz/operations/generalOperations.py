@@ -3,8 +3,9 @@ import random
 import re
 
 from django.conf import settings
+from django.utils import timezone
 
-from quiz.models import EssayQuestion, MultipleChoiceQuestion, TrueOrFalseQuestion
+from quiz.models import EssayQuestion, MultipleChoiceQuestion, TrueOrFalseQuestion, Response, Result
 
 
 def isPasswordStrong(password):
@@ -124,3 +125,82 @@ class QuestionAndResponse:
             }
         }
         return data
+
+
+class QuizAttemptMarking:
+
+    def __init__(self, quizAttempt, questionList, responseList):
+        self.quizAttempt = quizAttempt
+        self.questionList = questionList
+        self.responseList = responseList
+        self.errors = []
+        self.result = None
+
+    def requiresManualMarking(self):
+        # any(isinstance(question, EssayQuestion) for question in self.questionList)
+        for question in self.questionList:
+            if isinstance(question, EssayQuestion):
+                return True
+        return False
+
+    def getResponseObject(self, question):
+        return next((o for o in self.responseList if o.question.id == question.id))
+
+    def mark(self):
+        if self.requiresManualMarking():
+            self.errors.append('Quiz contains an essay question, which needs manual marking.')
+            return False
+
+        responseObjectsList = []
+        numberOfCorrectAnswers = 0
+        numberOfPartialAnswers = 0
+        numberOfWrongAnswers = 0
+        totalAwardedMark = 0
+        totalQuizMark = 0
+
+        for question in self.questionList:
+            responseObject = self.getResponseObject(question)
+            awardedMark = 0
+
+            if isinstance(question, EssayQuestion):
+                continue
+            elif isinstance(question, TrueOrFalseQuestion):
+                actualAnswer = question.isCorrect
+                providedAnswer = responseObject.trueorfalseresponse.isChecked
+                awardedMark = question.mark if actualAnswer == providedAnswer else 0
+                if awardedMark == question.mark:
+                    numberOfCorrectAnswers += 1
+                else:
+                    numberOfWrongAnswers += 1
+            elif isinstance(question, MultipleChoiceQuestion):
+                actualChoices = question.choices['choices']
+                providedChoices = responseObject.multiplechoiceresponse.answers['answers']
+                marksPerChoice = round(question.mark / len(actualChoices), 2)
+                for ac in actualChoices:
+                    pc = next((p for p in providedChoices if p['id'] == ac['id']))
+                    if pc is not None and ac['isCorrect'] == pc['isChecked']:
+                        awardedMark += marksPerChoice
+
+                if awardedMark == question.mark:
+                    numberOfCorrectAnswers += 1
+                elif awardedMark == 0:
+                    numberOfWrongAnswers += 1
+                else:
+                    numberOfPartialAnswers += 1
+
+            totalAwardedMark += awardedMark
+            totalQuizMark += question.mark
+            responseObject.mark = awardedMark
+            responseObjectsList.append(responseObject)
+
+        self.result = Result.objects.create(
+            quizAttempt=self.quizAttempt,
+            timeSpent=(timezone.now() - self.quizAttempt.createdDttm).seconds,
+            numberOfCorrectAnswers=numberOfCorrectAnswers,
+            numberOfPartialAnswers=numberOfPartialAnswers,
+            numberOfWrongAnswers=numberOfWrongAnswers,
+            score=round(totalAwardedMark / totalQuizMark * 100, 2)
+        )
+
+        Response.objects.bulk_update(responseObjectsList, ['mark'])
+        return True
