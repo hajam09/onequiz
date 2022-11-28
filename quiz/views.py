@@ -12,7 +12,7 @@ from quiz.forms import (
     TrueOrFalseQuestionUpdateForm, QuizUpdateForm
 )
 from quiz.models import (
-    EssayQuestion, MultipleChoiceQuestion, Question, Quiz, TrueOrFalseQuestion, QuizAttempt
+    EssayQuestion, MultipleChoiceQuestion, Question, Quiz, TrueOrFalseQuestion, QuizAttempt, Result
 )
 
 
@@ -116,7 +116,7 @@ def quizDetailView(request, quizId):
     except Quiz.DoesNotExist:
         raise Http404
 
-    quizQuestionList = quiz.getQuestions()
+    quizQuestions = quiz.getQuestions()
 
     if request.method == "POST":
         form = QuizUpdateForm(request, quiz, request.POST, request.FILES)
@@ -133,6 +133,7 @@ def quizDetailView(request, quizId):
         'form': form,
         'formTitle': formTitle,
         'quizId': quizId,
+        'quizQuestions': quizQuestions,
     }
     return render(request, 'quiz/quizDetailView.html', context)
 
@@ -241,7 +242,27 @@ def quizAttemptView(request, attemptId):
 
 
 def quizAttemptResultView(request, attemptId):
-    return render(request, 'quiz/quizAttemptResultView.html')
+    try:
+        result = Result.objects.select_related('quizAttempt__quiz').get(quizAttempt__id=attemptId)
+    except Result.DoesNotExist:
+        raise Http404
+
+    data = [
+        {'key': 'Quiz', 'value': result.quizAttempt.quiz.name},
+        None,
+        {'key': 'Total Questions', 'value': result.quizAttempt.quiz.questions.count},
+        {'key': 'Correct Questions', 'value': result.numberOfCorrectAnswers},
+        {'key': 'Partial Questions', 'value': result.numberOfPartialAnswers},
+        {'key': 'Wrong Questions', 'value': result.numberOfWrongAnswers},
+        {'key': 'Your Score', 'value': f'{result.score} %'},
+        {'key': 'Your Time', 'value': result.getTimeSpent()},
+    ]
+
+    context = {
+        'result': result,
+        'data': data,
+    }
+    return render(request, 'quiz/quizAttemptResultView.html', context)
 
 
 def attemptedQuizzesView(request):

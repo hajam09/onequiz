@@ -71,6 +71,9 @@ class Question(BaseModel):
         verbose_name = 'Question'
         verbose_name_plural = 'Questions'
 
+    def getInstanceType(self):
+        return self.__class__.__name__
+
 
 class EssayQuestion(Question):
     answer = models.TextField()
@@ -87,8 +90,7 @@ class EssayQuestion(Question):
     def answerChoiceToString(self, guess):
         return str(guess)
 
-    def __str__(self):
-        return self.content
+
 
     class Meta:
         verbose_name = 'EssayQuestion'
@@ -165,7 +167,7 @@ class TrueOrFalseQuestion(Question):
         verbose_name_plural = 'TrueOrFalseQuestions'
 
 
-# TODO: Refactor
+# TODO: Remove
 class Answer(BaseModel):
     question = models.ForeignKey(Question, on_delete=models.CASCADE, related_name='answers')
     content = models.TextField()
@@ -286,20 +288,11 @@ class Quiz(BaseModel):
 #     return stripeText.casefold() == stripeUserAnswer.casefold()
 
 
-class Result(BaseModel):
-    quiz = models.ForeignKey(Quiz, on_delete=models.CASCADE)
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
-    score = models.DecimalField(max_digits=5, decimal_places=2, default=0, validators=PERCENTAGE_VALIDATOR)
-
-    class Meta:
-        verbose_name = 'Result'
-        verbose_name_plural = 'Results'
-
 
 class Response(BaseModel):
     question = models.ForeignKey(Question, on_delete=models.CASCADE)
     isCorrect = models.BooleanField(default=False)
-    mark = models.SmallIntegerField(blank=True, null=True, default=0)
+    mark = models.DecimalField(blank=True, null=True, default=0.0, max_digits=4, decimal_places=2)
 
     objects = InheritanceManager()
 
@@ -353,3 +346,19 @@ class QuizAttempt(BaseModel):
     def getQuizEndTime(self, uiFormat=True):
         time = (self.createdDttm + datetime.timedelta(minutes=self.quiz.quizDuration))
         return time.strftime('%b %d, %Y %H:%M:%S') if uiFormat else time
+
+
+class Result(BaseModel):
+    quizAttempt = models.ForeignKey(QuizAttempt, on_delete=models.CASCADE)
+    timeSpent = models.BigIntegerField()
+    numberOfCorrectAnswers = models.PositiveSmallIntegerField()
+    numberOfPartialAnswers = models.PositiveSmallIntegerField()
+    numberOfWrongAnswers = models.PositiveSmallIntegerField()
+    score = models.DecimalField(max_digits=5, decimal_places=2, default=0, validators=PERCENTAGE_VALIDATOR)
+
+    class Meta:
+        verbose_name = 'Result'
+        verbose_name_plural = 'Results'
+
+    def getTimeSpent(self):
+        return str(datetime.timedelta(seconds=self.timeSpent))
