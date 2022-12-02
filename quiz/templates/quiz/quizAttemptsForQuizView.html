@@ -1,0 +1,34 @@
+{% extends "accounts/base.html" %}
+{% load static %}
+{% block content %}
+    <link type="text/css" rel="stylesheet" href="{% static 'css/baseFormStyle.css' %}">
+    <br>
+    <style>
+        .container {
+            color: black;
+        }
+    </style>
+
+    <div class="container">
+        <table class="table">
+            <thead class="thead-dark">
+            <tr>
+                <th scope="col">Attempted by</th>
+                <th scope="col">Date and Time</th>
+                <th scope="col">Status</th>
+                <th scope="col">Actions</th>
+            </tr>
+            </thead>
+            <tbody>
+            {% for quizAttempt in quizAttemptList %}
+                <tr>
+                    <th scope="row">{{ quizAttempt.user.get_full_name }}</th>
+                    <td>{{ quizAttempt.createdDttm }}</td>
+                    <td>{{ quizAttempt.get_status_display }}</td>
+                    <td></td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+{% endblock %}

@@ -226,26 +226,27 @@ def quizAttemptView(request, attemptId):
     except QuizAttempt.DoesNotExist:
         raise Http404
 
-    if quizAttempt.user != request.user:
+    if quizAttempt.user != request.user or quizAttempt.quiz.creator != request.user:
         # return 401 page.
         return HttpResponse('Unauthorized', status=401)
 
-    quizNotStartedStatues = [QuizAttempt.Status.NOT_ATTEMPTED, QuizAttempt.Status.IN_PROGRESS]
-    if timezone.now() > quizAttempt.getQuizEndTime(False) and quizAttempt.status in quizNotStartedStatues:
+    quizNotSubmittedStatues = [QuizAttempt.Status.NOT_ATTEMPTED, QuizAttempt.Status.IN_PROGRESS]
+    if timezone.now() > quizAttempt.getQuizEndTime(False) and quizAttempt.status in quizNotSubmittedStatues:
         quizAttempt.status = QuizAttempt.Status.SUBMITTED
         quizAttempt.save(update_fields=['status'])
 
     context = {
         'quizAttempt': quizAttempt,
+        'mode': quizAttempt.getPermissionMode(request.user),
     }
     return render(request, 'quiz/quizAttemptView.html', context)
 
 
 def quizAttemptResultView(request, attemptId):
-    try:
-        result = Result.objects.select_related('quizAttempt__quiz').get(quizAttempt__id=attemptId)
-    except Result.DoesNotExist:
+    result = Result.objects.select_related('quizAttempt__quiz').filter(quizAttempt__id=attemptId).order_by('-id')
+    if result.count() == 0:
         raise Http404
+    result = result[0]
 
     data = [
         {'key': 'Quiz', 'value': result.quizAttempt.quiz.name},
@@ -271,3 +272,11 @@ def attemptedQuizzesView(request):
         'quizAttemptList': quizAttemptList
     }
     return render(request, 'quiz/attemptedQuizzesView.html', context)
+
+
+def quizAttemptsForQuizView(request, quizId):
+    quizAttemptList = QuizAttempt.objects.filter(quiz_id=quizId)
+    context = {
+        'quizAttemptList': quizAttemptList
+    }
+    return render(request, 'quiz/quizAttemptsForQuizView.html', context)
