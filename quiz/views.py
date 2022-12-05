@@ -222,7 +222,7 @@ def userCreatedQuizzesView(request):
 
 def quizAttemptView(request, attemptId):
     try:
-        quizAttempt = QuizAttempt.objects.get(id=attemptId)
+        quizAttempt = QuizAttempt.objects.select_related('user', 'quiz__creator').get(id=attemptId)
     except QuizAttempt.DoesNotExist:
         raise Http404
 
