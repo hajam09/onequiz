@@ -12,6 +12,7 @@ urlpatterns = [
     path('<int:quizId>/create-essay-question/', views.createEssayQuestionView, name='create-essay-question-view'),
     path('<int:quizId>/create-multiple-choice-question/', views.createMultipleChoiceQuestionView, name='create-multiple-choice-question-view'),
     path('<int:quizId>/detail/', views.quizDetailView, name='quiz-detail-view'),
+    path('<int:quizId>/attempts/', views.quizAttemptsForQuizView, name='quiz-attempts-for-quiz-view'),
     path('<int:quizId>/question/<int:questionId>/detail', views.questionDetailView, name='question-detail-view'),
     path('my-quizzes/', views.userCreatedQuizzesView, name='user-created-quizzes-view'),
     path('quiz-attempt/<int:attemptId>/', views.quizAttemptView, name='quiz-attempt-view'),
@@ -34,5 +35,10 @@ urlpatterns += [
         'api/v1/quizAttemptQuestionsApiEventVersion1Component/<int:id>',
         QuizAttemptQuestionsApiEventVersion1Component.as_view(),
         name='quizAttemptQuestionsApiEventVersion1Component'
+    ),
+    path(
+        'api/v1/quizMarkingOccurrenceApiEventVersion1Component/<int:id>',
+        QuizMarkingOccurrenceApiEventVersion1Component.as_view(),
+        name='quizMarkingOccurrenceApiEventVersion1Component'
     ),
 ]

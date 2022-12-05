@@ -39,9 +39,10 @@
         }
 
         class EssayResponse {
-            constructor(id, text) {
+            constructor(id, text, awardedMark) {
                 this.id = id;
                 this.text = text;
+                this.awardedMark = awardedMark;
             }
 
             getData() {
@@ -53,9 +54,10 @@
         }
 
         class TrueOrFalseResponse {
-            constructor(id, selectedOption) {
+            constructor(id, selectedOption, awardedMark) {
                 this.id = id;
                 this.selectedOption = selectedOption;
+                this.awardedMark = awardedMark;
             }
 
             getData() {
@@ -83,38 +85,42 @@
         }
 
         class MultipleChoiceResponse {
-            constructor(id, choices) {
+            constructor(id, choices, awardedMark) {
                 this.id = id;
                 this.choices = choices;
+                this.awardedMark = awardedMark;
             }
         }
 
         class EssayQuestion {
-            constructor(id, figure, content, explanation, response) {
+            constructor(id, figure, content, explanation, maximumMark, response) {
                 this.id = id;
                 this.figure = figure;
                 this.content = content;
                 this.explanation = explanation;
+                this.maximumMark = maximumMark;
                 this.response = response;
             }
         }
 
         class TrueOrFalseQuestion {
-            constructor(id, figure, content, explanation, response) {
+            constructor(id, figure, content, explanation, maximumMark, response) {
                 this.id = id;
                 this.figure = figure;
                 this.content = content;
                 this.explanation = explanation;
+                this.maximumMark = maximumMark;
                 this.response = response;
             }
         }
 
         class MultipleChoiceQuestion {
-            constructor(id, figure, content, explanation, response) {
+            constructor(id, figure, content, explanation, maximumMark, response) {
                 this.id = id;
                 this.figure = figure;
                 this.content = content;
                 this.explanation = explanation;
+                this.maximumMark = maximumMark;
                 this.response = response;
             }
         }
@@ -127,12 +133,52 @@
             }
         }
 
+        class ScoreComponent extends React.Component {
+            constructor(props) {
+                super(props);
+            }
+
+            updateMarkForThisQuestion = () => {
+                let newMark = this.refs.awardedMarkInputRef.value;
+                if (newMark > this.props.maximumMark)
+                    this.refs.awardedMarkInputRef.value = this.props.maximumMark;
+                else if (newMark < 0)
+                    this.refs.awardedMarkInputRef.value = 0;
+
+                this.props.updateAwardedMarkForQuestion(this.props.questionId, this.refs.awardedMarkInputRef.value)
+            }
+
+            render() {
+
+                const style1 = {
+                    width: '40px',
+                    paddingLeft: '10px',
+                    paddingRight: '10px'
+                }
+
+                const style2 = {
+                    fontSize: '26px'
+                }
+                return (
+                    <div className="row float-right">
+                        <div className="col-auto">
+                            <input type="number" className="form-control" ref="awardedMarkInputRef"
+                                   value={this.props.awardedMark == null ? '' : this.props.awardedMark}
+                                   onChange={this.updateMarkForThisQuestion} style={style1}></input>
+                        </div>
+                        <b style={style2}>/</b>
+                        <div className="col-auto">
+                            <input disabled type="number" className="form-control" style={style1}
+                                   value={this.props.maximumMark}></input>
+                        </div>
+                    </div>
+                )
+            }
+        }
+
         class EssayQuestionComponent extends React.Component {
             constructor(props) {
                 super(props);
-                this.state = {
-                    canEdit: this.props.getQuestionComponentState().canEdit
-                }
             }
 
             updateAnswerForThisQuestion = () => {
@@ -163,10 +209,19 @@
                         <br></br>
                         <h5>Your Answer</h5>
                         <textarea name="answer" ref="answerInputRef" value={this.props.question.response.text} cols="40"
-                                  disabled={!this.state.canEdit}
+                                  disabled={!this.props.getQuestionComponentState().mode.canEdit()}
                                   rows="5" onChange={this.updateAnswerForThisQuestion}
                                   className="form-control col" style={style1}></textarea>
                         <br></br>
+                        {
+                            this.props.getQuestionComponentState().mode.canMark() ? <span> <div className="row"> <div
+                                    className="col"> <div className="text-right"><ScoreComponent
+                                    questionId={this.props.question.id}
+                                    updateAwardedMarkForQuestion={this.props.updateAwardedMarkForQuestion}
+                                    awardedMark={this.props.question.response.awardedMark}
+                                    maximumMark={this.props.question.maximumMark}/></div> </div> </div> <br></br> </span> :
+                                <span></span>
+                        }
                     </div>
                 )
             }
@@ -176,7 +231,7 @@
             constructor(props) {
                 super(props);
                 this.state = {
-                    canEdit: this.props.getQuestionComponentState().canEdit
+                    canEdit: this.props.getQuestionComponentState().mode.canEdit()
                 }
             }
 
@@ -225,6 +280,15 @@
                                 <label className="form-label">False</label>
                             </div>
                         </fieldset>
+                        {
+                            this.props.getQuestionComponentState().mode.canMark() ? <span> <div className="row"> <div
+                                    className="col"> <div className="text-right"><ScoreComponent
+                                    questionId={this.props.question.id}
+                                    updateAwardedMarkForQuestion={this.props.updateAwardedMarkForQuestion}
+                                    awardedMark={this.props.question.response.awardedMark}
+                                    maximumMark={this.props.question.maximumMark}/></div> </div> </div> <br></br> </span> :
+                                <span></span>
+                        }
                         <br></br>
                     </div>
                 )
@@ -290,6 +354,65 @@
                         {this.props.question.response.choices.map((item) => <AnswerOptionComponent key={item.id}
                                                                                                    updateMultipleChoiceQuestionAnswerOptionForQuestion={this.props.updateMultipleChoiceQuestionAnswerOptionForQuestion}
                                                                                                    choice={item}/>)}
+                        {
+                            this.props.getQuestionComponentState().mode.canMark() ? <span> <div className="row"> <div
+                                    className="col"> <div className="text-right"><ScoreComponent
+                                    questionId={this.props.question.id}
+                                    updateAwardedMarkForQuestion={this.props.updateAwardedMarkForQuestion}
+                                    awardedMark={this.props.question.response.awardedMark}
+                                    maximumMark={this.props.question.maximumMark}/></div> </div> </div> <br></br> </span> :
+                                <span></span>
+                        }
+                        <br></br>
+                    </div>
+                )
+            }
+        }
+
+        class QuestionMarkingReviewComponent extends React.Component {
+            constructor(props) {
+                super(props);
+
+                let isValue = true;
+                if (this.props.question.response.awardedMark === null)
+                    isValue = false;
+                if (this.props.question.response.awardedMark === '')
+                    isValue = false;
+
+                this.state = {
+                    isValid: isValue,
+                }
+            }
+
+            renderValidOrInvalidStatement = () => {
+
+                const style2 = {
+                    fontSize: '9.5px',
+                }
+                if (this.state.isValid)
+                    return (
+                        <span>
+                        Question {this.props.index + 1} : <button type="button" className="btn btn-success btn-sm"><i
+                            className="fas fa-check"
+                            style={style2}></i></button>&nbsp;&nbsp; {this.props.question.response.awardedMark} / {this.props.question.maximumMark}
+                    </span>
+                    )
+                return (
+                    <span>
+                        Question {this.props.index + 1} : <button type="button" className="btn btn-danger btn-sm"><i
+                        className="fas fa-times"></i></button>&nbsp;&nbsp;(You have not marked this answer)
+                    </span>
+                )
+            }
+
+            render() {
+                const style1 = {
+                    height: '3px',
+                }
+                return (
+                    <div>
+                        {this.renderValidOrInvalidStatement()}
+                        <div style={style1}></div>
                     </div>
                 )
             }
@@ -346,13 +469,31 @@
             }
         }
 
+        class Mode {
+            constructor(mode) {
+                this.mode = mode.toLowerCase();
+            }
+
+            canEdit() {
+                return this.mode === 'edit'
+            }
+
+            canView() {
+                return this.mode === 'view'
+            }
+
+            canMark() {
+                return this.mode === 'mark'
+            }
+        }
+
         class QuestionComponent extends React.Component {
             constructor(props) {
                 super(props);
                 this.state = {
                     currentIndex: 0,
                     questionList: [],
-                    canEdit: false,
+                    mode: new Mode('{{ mode }}'),
                     countdown: null,
                     quizResultView: "{% url 'quiz:quiz-attempt-result-view' attemptId=quizAttempt.id %}",
                 }
@@ -361,19 +502,36 @@
                 this.updateTrueOrFalseAnswerForQuestion = this.updateTrueOrFalseAnswerForQuestion.bind(this);
                 this.updateMultipleChoiceQuestionAnswerOptionForQuestion = this.updateMultipleChoiceQuestionAnswerOptionForQuestion.bind(this);
                 this.getQuestionComponentState = this.getQuestionComponentState.bind(this);
+                this.updateAwardedMarkForQuestion = this.updateAwardedMarkForQuestion.bind(this);
             }
 
             getQuestionComponentState = () => {
                 return {
                     currentIndex: this.state.currentIndex,
                     questionLength: this.state.questionList.length,
-                    countdown: this.state.countdown === null || !this.state.canEdit ? '' : 'Remaining: ' + this.state.countdown,
-                    canEdit: this.state.canEdit,
+                    countdown: this.state.countdown === null || !this.state.mode.canEdit() ? '' : 'Remaining: ' + this.state.countdown,
+                    mode: this.state.mode,
                 };
             }
 
+            updateAwardedMarkForQuestion = (id, mark) => {
+                if (!this.state.mode.canMark())
+                    return;
+
+                let tempList = this.state.questionList;
+                for (const q of tempList) {
+                    if (q.id === id) {
+                        q.response.awardedMark = mark;
+                        break;
+                    }
+                }
+                this.setState({
+                    questionList: tempList
+                })
+            }
+
             updateEssayAnswerForQuestion = (id, text) => {
-                if (!this.state.canEdit)
+                if (!this.state.mode.canEdit())
                     return;
 
                 let tempList = this.state.questionList;
@@ -389,7 +547,7 @@
             }
 
             updateTrueOrFalseAnswerForQuestion = (id, value) => {
-                if (!this.state.canEdit)
+                if (!this.state.mode.canEdit())
                     return;
 
                 let tempList = this.state.questionList;
@@ -405,7 +563,7 @@
             }
 
             updateMultipleChoiceQuestionAnswerOptionForQuestion = (choiceId, value) => {
-                if (!this.state.canEdit)
+                if (!this.state.mode.canEdit())
                     return;
 
                 let tempList = this.state.questionList;
@@ -434,16 +592,16 @@
                             let newQuestionList = [];
                             for (const question of response.data.questions) {
                                 if (question.type === 'EssayQuestion') {
-                                    let newEssayResponse = new EssayResponse(question.response.id, question.response.text);
+                                    let newEssayResponse = new EssayResponse(question.response.id, question.response.text, question.response.mark);
 
                                     newQuestionList.push(
-                                        new EssayQuestion(question.id, question.figure, question.content, question.explanation, newEssayResponse)
+                                        new EssayQuestion(question.id, question.figure, question.content, question.explanation, question.mark, newEssayResponse)
                                     );
                                 } else if (question.type === 'TrueOrFalseQuestion') {
-                                    let newTrueOrFalseResponse = new TrueOrFalseResponse(question.response.id, question.response.selectedOption);
+                                    let newTrueOrFalseResponse = new TrueOrFalseResponse(question.response.id, question.response.selectedOption, question.response.mark);
 
                                     newQuestionList.push(
-                                        new TrueOrFalseQuestion(question.id, question.figure, question.content, question.explanation, newTrueOrFalseResponse)
+                                        new TrueOrFalseQuestion(question.id, question.figure, question.content, question.explanation, question.mark, newTrueOrFalseResponse)
                                     );
                                 } else if (question.type === 'MultipleChoiceQuestion') {
                                     let choiceList = [];
@@ -452,9 +610,9 @@
                                             new ChoiceOption(choice.id, choice.content, choice.isChecked)
                                         )
                                     }
-                                    let newMultipleChoiceResponse = new MultipleChoiceResponse(question.response.id, choiceList)
+                                    let newMultipleChoiceResponse = new MultipleChoiceResponse(question.response.id, choiceList, question.response.mark)
                                     newQuestionList.push(
-                                        new MultipleChoiceQuestion(question.id, question.figure, question.content, question.explanation, newMultipleChoiceResponse)
+                                        new MultipleChoiceQuestion(question.id, question.figure, question.content, question.explanation, question.mark, newMultipleChoiceResponse)
                                     )
                                 } else {
                                     console.log('Unknown question type.')
@@ -463,7 +621,6 @@
 
                             this.setState({
                                 questionList: newQuestionList,
-                                canEdit: response.data.quiz.canEdit,
                             })
                         }
                     })
@@ -496,7 +653,7 @@
                     this.submitQuiz();
                 }
 
-                if ((hours < 0 || minutes < 0 || seconds < 0) && (this.state.canEdit === true))
+                if ((hours < 0 || minutes < 0 || seconds < 0) && (this.state.mode.canEdit() === true))
                     location.reload();
 
                 return time + seconds + "s ";
@@ -512,6 +669,40 @@
                 this.setState({
                     currentIndex: this.state.currentIndex - 1
                 })
+            }
+
+            confirmAwardMarks = () => {
+                let quizAttemptId = '{{ quizAttempt.id }}';
+                let data = {
+                    'id': quizAttemptId,
+                    'response': [],
+                }
+
+                for (const question of this.state.questionList) {
+                    let object = {
+                        'questionId': question.id,
+                        'responseId': question.response.id,
+                        'awardedMark': question.response.awardedMark,
+                    }
+                    data.response.push(object)
+                }
+
+                fetch('{% url 'quiz:quizMarkingOccurrenceApiEventVersion1Component' id=quizAttempt.id %}', {
+                    method: 'PUT',
+                    headers: {
+                        'Content-type': 'application/json',
+                        "X-CSRFToken": getCookie("csrftoken")
+                    },
+                    dataType: 'json',
+                    body: JSON.stringify(data)
+                }).then((response) => response.json())
+                    .then((json) => {
+                        if (json.success) {
+                            let redirectUrl = this.state.quizResultView;
+                            this.redirectAfterNSeconds(5, redirectUrl);
+                            alert('You have marked this quiz. You will be redirected to the results page.')
+                        }
+                    })
             }
 
             submitQuiz = () => {
@@ -593,22 +784,54 @@
                 window.location.href = redirectUrl
             }
 
+            isMarkingValid = () => {
+                for (const question of this.state.questionList) {
+                    if (question.response.awardedMark === null || question.response.awardedMark === '')
+                        return false;
+                }
+                return true;
+            }
+
             renderSubmitOrNextButton = () => {
-                if (this.state.canEdit === false && this.state.currentIndex === this.state.questionList.length - 1)
-                    return (
-                        <a type="button" href={this.state.quizResultView} className="btn btn-info">View Results</a>
-                    )
-                else if (this.state.currentIndex !== this.state.questionList.length)
-                    return (
-                        <button type="button" className="btn btn-primary" onClick={this.increaseCurrentIndex}>
-                            Next
-                        </button>
-                    )
-                else if (this.state.canEdit === false)
-                    return (
-                        <span></span>
-                    )
-                return <button type="button" className="btn btn-success" onClick={this.submitQuiz}>Submit</button>
+                if (this.state.mode.canEdit()) {
+                    if (this.state.currentIndex !== this.state.questionList.length) {
+                        return (
+                            <button type="button" className="btn btn-primary" onClick={this.increaseCurrentIndex}>
+                                Next
+                            </button>
+                        )
+                    } else {
+                        return (
+                            <button type="button" className="btn btn-success" onClick={this.submitQuiz}>Submit</button>
+                        )
+                    }
+
+                } else if (this.state.mode.canView()) {
+                    if (this.state.currentIndex === this.state.questionList.length - 1) {
+                        return (
+                            <a type="button" href={this.state.quizResultView} className="btn btn-info">View Results</a>
+                        )
+                    } else {
+                        return (
+                            <button type="button" className="btn btn-primary" onClick={this.increaseCurrentIndex}>
+                                Next
+                            </button>
+                        )
+                    }
+
+                } else if (this.state.mode.canMark()) {
+                    if (this.state.currentIndex !== this.state.questionList.length) {
+                        return (
+                            <button type="button" className="btn btn-primary" onClick={this.increaseCurrentIndex}>
+                                Next
+                            </button>
+                        )
+                    } else if (this.isMarkingValid()) {
+                        return (
+                            <button type="button" className="btn btn-success" onClick={this.confirmAwardMarks}>Confirm</button>
+                        )
+                    }
+                }
             }
 
             renderPreviousButton = () => {
@@ -632,24 +855,55 @@
                 )
             }
 
+            getQuizMarkReviewComponent = () => {
+                return (
+                    <div>
+                        <h3>Review Awarded Marks</h3>
+                        {this.state.questionList.map((item, index) => <QuestionMarkingReviewComponent key={item.id}
+                                                                                                      question={item}
+                                                                                                      index={index}/>)}
+                    </div>
+                )
+            }
+
+            displayComponent = () => {
+                if (this.state.mode.canEdit()) {
+                    if (this.state.currentIndex !== this.state.questionList.length)
+                        return this.getCurrentQuizQuestionComponent();
+                    else
+                        return this.getQuizReviewComponent();
+                } else if (this.state.mode.canView()) {
+                    if (this.state.currentIndex !== this.state.questionList.length)
+                        return this.getCurrentQuizQuestionComponent();
+                } else if (this.state.mode.canMark()) {
+                    if (this.state.currentIndex !== this.state.questionList.length)
+                        return this.getCurrentQuizQuestionComponent();
+                    else
+                        return this.getQuizMarkReviewComponent();
+                }
+            }
+
             getCurrentQuizQuestionComponent = () => {
                 let currentQuestion = this.state.questionList[this.state.currentIndex];
                 if (currentQuestion instanceof EssayQuestion) {
                     return (
                         <EssayQuestionComponent question={currentQuestion}
                                                 getQuestionComponentState={this.getQuestionComponentState}
+                                                updateAwardedMarkForQuestion={this.updateAwardedMarkForQuestion}
                                                 updateEssayAnswerForQuestion={this.updateEssayAnswerForQuestion}/>
                     )
                 } else if (currentQuestion instanceof TrueOrFalseQuestion) {
                     return (
                         <TrueOrFalseQuestionComponent question={currentQuestion}
                                                       getQuestionComponentState={this.getQuestionComponentState}
+                                                      updateAwardedMarkForQuestion={this.updateAwardedMarkForQuestion}
                                                       updateTrueOrFalseAnswerForQuestion={this.updateTrueOrFalseAnswerForQuestion}/>
                     )
                 } else if (currentQuestion instanceof MultipleChoiceQuestion) {
                     return (
                         <MultipleChoiceQuestionComponent question={currentQuestion}
                                                          getQuestionComponentState={this.getQuestionComponentState}
+                                                         updateAwardedMarkForQuestion={this.updateAwardedMarkForQuestion}
                                                          updateMultipleChoiceQuestionAnswerOptionForQuestion={this.updateMultipleChoiceQuestionAnswerOptionForQuestion}/>
                     )
                 }
@@ -665,10 +919,7 @@
             render() {
                 return (
                     <div>
-                        {
-                            this.state.currentIndex === this.state.questionList.length && this.state.canEdit ?
-                                this.getQuizReviewComponent() : this.getCurrentQuizQuestionComponent()
-                        }
+                        {this.displayComponent()}
                         <div className="text-right">
                             {this.renderPreviousButton()}&nbsp;{this.renderSubmitOrNextButton()}
                         </div>

@@ -5,14 +5,14 @@ from json import JSONDecodeError
 from django.db.models import F
 from django.http import JsonResponse
 from django.urls import reverse
-from django.utils.decorators import method_decorator
 from django.views import View
-from django.views.decorators.csrf import csrf_exempt
 
-from onequiz.operations.generalOperations import QuestionAndResponse, QuizAttemptMarking
+from onequiz.operations.generalOperations import (
+    QuestionAndResponse, QuizAttemptAutomaticMarking, QuizAttemptManualMarking
+)
 from quiz.models import (
     EssayQuestion, EssayResponse, MultipleChoiceQuestion, MultipleChoiceResponse, QuizAttempt, Topic,
-    TrueOrFalseQuestion, TrueOrFalseResponse
+    TrueOrFalseQuestion, TrueOrFalseResponse, Result
 )
 
 
@@ -82,7 +82,34 @@ class QuizAttemptObjectApiEventVersion1Component(View):
         return JsonResponse(response, status=HTTPStatus.OK)
 
 
-@method_decorator(csrf_exempt, name='dispatch')
+class QuizMarkingOccurrenceApiEventVersion1Component(View):
+
+    def put(self, *args, **kwargs):
+        quizAttempt = QuizAttempt.objects.prefetch_related('responses__question').get(id=kwargs.get('id'))
+        try:
+            put = json.loads(self.request.body)
+        except JSONDecodeError:
+            put = json.loads(self.request.body.decode().replace('"', "'").replace("'", '"'))
+
+        questionList = quizAttempt.quiz.getQuestions()
+        responseList = quizAttempt.responses.all()
+        awardedMarks = put.get('response', [])
+        quizAttemptManualMarking = QuizAttemptManualMarking(quizAttempt, questionList, responseList, awardedMarks)
+
+        if quizAttemptManualMarking.mark():
+            resultObject = quizAttemptManualMarking.result
+            resultObject.versionNo = Result.objects.filter(quizAttempt=quizAttempt).count() + 1
+            quizAttempt.status = QuizAttempt.Status.MARKED
+            resultObject.save()
+            quizAttempt.save()
+
+        response = {
+            "success": True,
+            "redirectUrl": reverse('quiz:quiz-attempt-result-view', kwargs={'attemptId': quizAttempt.id})
+        }
+        return JsonResponse(response, status=HTTPStatus.OK)
+
+
 class QuizAttemptQuestionsApiEventVersion1Component(View):
 
     def get(self, *args, **kwargs):
@@ -146,8 +173,8 @@ class QuizAttemptQuestionsApiEventVersion1Component(View):
         TrueOrFalseResponse.objects.bulk_update(trueOrFalseResponseObjects, ['isChecked'])
         MultipleChoiceResponse.objects.bulk_update(multipleChoiceResponseObjects, ['answers'])
 
-        quizAttemptMarking = QuizAttemptMarking(quizAttempt, quizAttempt.quiz.getQuestions(), responseList)
-        if quizAttemptMarking.mark():
+        quizAttemptAutomaticMarking = QuizAttemptAutomaticMarking(quizAttempt, quizAttempt.quiz.getQuestions(), responseList)
+        if quizAttemptAutomaticMarking.mark():
             quizAttempt.status = QuizAttempt.Status.MARKED
         else:
             quizAttempt.status = QuizAttempt.Status.SUBMITTED

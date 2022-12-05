@@ -292,7 +292,7 @@ class Quiz(BaseModel):
 class Response(BaseModel):
     question = models.ForeignKey(Question, on_delete=models.CASCADE)
     isCorrect = models.BooleanField(default=False)
-    mark = models.DecimalField(blank=True, null=True, default=0.0, max_digits=4, decimal_places=2)
+    mark = models.DecimalField(blank=True, null=True, default=None, max_digits=4, decimal_places=2)
 
     objects = InheritanceManager()
 
@@ -334,6 +334,11 @@ class QuizAttempt(BaseModel):
         IN_REVIEW = 'IN_REVIEW', _('In Review')
         MARKED = 'MARKED', _('Marked')
 
+    class Mode(models.TextChoices):
+        EDIT = 'EDIT', _('Edit')
+        MARK = 'MARK', _('Mark')
+        VIEW = 'VIEW', _('View')
+
     quiz = models.ForeignKey(Quiz, on_delete=models.CASCADE)
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     status = models.CharField(max_length=30, choices=Status.choices, default=Status.NOT_ATTEMPTED)
@@ -346,6 +351,18 @@ class QuizAttempt(BaseModel):
     def getQuizEndTime(self, uiFormat=True):
         time = (self.createdDttm + datetime.timedelta(minutes=self.quiz.quizDuration))
         return time.strftime('%b %d, %Y %H:%M:%S') if uiFormat else time
+
+    def getPermissionMode(self, user):
+        viewStatues = [self.Status.SUBMITTED, self.Status.IN_REVIEW, self.Status.MARKED]
+        if self.user == user and timezone.now() < self.getQuizEndTime(False) and self.status in [self.Status.NOT_ATTEMPTED, self.Status.IN_PROGRESS]:
+            mode = self.Mode.EDIT
+        elif self.quiz.creator == user and (timezone.now() >= self.getQuizEndTime(False) or self.status in viewStatues):
+            mode = self.Mode.MARK
+        elif self.user == user and timezone.now() >= self.getQuizEndTime(False) and self.status in viewStatues:
+            mode = self.Mode.VIEW
+        else:
+            raise NotImplementedError('Cannot find a permission mode for quiz attempt: ', self.id)
+        return mode
 
 
 class Result(BaseModel):

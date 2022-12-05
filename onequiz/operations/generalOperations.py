@@ -5,7 +5,7 @@ import re
 from django.conf import settings
 from django.utils import timezone
 
-from quiz.models import EssayQuestion, MultipleChoiceQuestion, TrueOrFalseQuestion, Response, Result
+from quiz.models import EssayQuestion, MultipleChoiceQuestion, TrueOrFalseQuestion, Response, Result, QuizAttempt
 
 
 def isPasswordStrong(password):
@@ -64,6 +64,7 @@ class QuestionAndResponse:
             'figure': None,
             'content': question.content,
             'explanation': question.explanation,
+            'mark': question.mark,
         }
 
         additionalData = {}
@@ -86,13 +87,21 @@ class QuestionAndResponse:
     def getResponseObject(self, question):
         return next((o for o in self.responseList if o.question.id == question.id))
 
+    def parseResponseMark(self, mark):
+        if mark is None:
+            return None
+        elif mark % 1 == 0:
+            return int(mark)
+        return mark
+
     def getEssayQuestionResponse(self, question):
         responseObject = self.getResponseObject(question)
         data = {
             'type': 'EssayQuestion',
             'response': {
                 'id': responseObject.essayresponse.id,
-                'text': responseObject.essayresponse.answer
+                'text': responseObject.essayresponse.answer,
+                'mark': self.parseResponseMark(responseObject.essayresponse.mark)
             }
         }
         return data
@@ -103,7 +112,8 @@ class QuestionAndResponse:
             'type': 'TrueOrFalseQuestion',
             'response': {
                 'id': responseObject.trueorfalseresponse.id,
-                'selectedOption': responseObject.trueorfalseresponse.isChecked
+                'selectedOption': responseObject.trueorfalseresponse.isChecked,
+                'mark': self.parseResponseMark(responseObject.trueorfalseresponse.mark)
             }
         }
         return data
@@ -121,13 +131,65 @@ class QuestionAndResponse:
                         'isChecked': answer['isChecked']
                     }
                     for answer in responseObject.multiplechoiceresponse.answers['answers']
-                ]
+                ],
+                'mark': self.parseResponseMark(responseObject.multiplechoiceresponse.mark)
             }
         }
         return data
 
 
-class QuizAttemptMarking:
+class QuizAttemptManualMarking:
+    def __init__(self, quizAttempt, questionList, responseList, awardedMarks):
+        self.quizAttempt = quizAttempt
+        self.questionList = questionList
+        self.responseList = responseList
+        self.awardedMarks = awardedMarks
+        self.result = None
+
+    def getResponseObject(self, qid, rid):
+        return next((o for o in self.responseList if o.question.id == qid and o.id == rid), None)
+
+    def mark(self):
+        updatedObjectList = []
+        numberOfCorrectAnswers = 0
+        numberOfPartialAnswers = 0
+        numberOfWrongAnswers = 0
+        totalAwardedMark = 0
+        totalQuizMark = 0
+
+        for item in self.awardedMarks:
+            if not ('questionId' in item and 'responseId' in item and 'awardedMark' in item):
+                return False
+
+            responseObject = self.getResponseObject(item['questionId'], item['responseId'])
+            if responseObject is None:
+                return False
+
+            responseObject.mark = float(item['awardedMark'])
+            if responseObject.mark == responseObject.question.mark:
+                numberOfCorrectAnswers += 1
+            elif responseObject.mark == 0:
+                numberOfWrongAnswers += 1
+            else:
+                numberOfPartialAnswers += 1
+
+            totalQuizMark += responseObject.question.mark
+            totalAwardedMark += responseObject.mark
+            updatedObjectList.append(responseObject)
+
+        Response.objects.bulk_update(updatedObjectList, ['mark'])
+        self.result = Result(
+            quizAttempt=self.quizAttempt,
+            timeSpent=(timezone.now() - self.quizAttempt.createdDttm).seconds,
+            numberOfCorrectAnswers=numberOfCorrectAnswers,
+            numberOfPartialAnswers=numberOfPartialAnswers,
+            numberOfWrongAnswers=numberOfWrongAnswers,
+            score=round(totalAwardedMark / totalQuizMark * 100, 2)
+        )
+        return True
+
+
+class QuizAttemptAutomaticMarking:
 
     def __init__(self, quizAttempt, questionList, responseList):
         self.quizAttempt = quizAttempt
