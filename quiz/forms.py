@@ -1,13 +1,11 @@
 import itertools
-import re
 import uuid
 
 from django import forms
-from django.db import transaction
 from django.db.models import Q
 
 from onequiz.operations import generalOperations
-from quiz.models import Quiz, Subject, Topic, TrueOrFalseQuestion, EssayQuestion, MultipleChoiceQuestion, Answer
+from quiz.models import Quiz, Subject, Topic, TrueOrFalseQuestion, EssayQuestion, MultipleChoiceQuestion
 
 
 class QuestionForm(forms.Form):

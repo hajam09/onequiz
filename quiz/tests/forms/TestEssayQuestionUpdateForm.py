@@ -1,3 +1,5 @@
+from django import forms
+
 from onequiz.operations import bakerOperations
 from onequiz.tests.BaseTest import BaseTest
 from quiz.forms import EssayQuestionUpdateForm
@@ -8,6 +10,15 @@ class EssayQuestionUpdateFormTest(BaseTest):
     def setUp(self, path='') -> None:
         super(EssayQuestionUpdateFormTest, self).setUp('')
         self.essayQuestion = bakerOperations.createEssayQuestion()
+
+    def testFieldsAndType(self):
+        form = EssayQuestionUpdateForm()
+        self.assertEqual(len(form.base_fields), 5)
+        self.assertTrue(isinstance(form.base_fields.get('figure'), forms.ImageField))
+        self.assertTrue(isinstance(form.base_fields.get('content'), forms.CharField))
+        self.assertTrue(isinstance(form.base_fields.get('explanation'), forms.CharField))
+        self.assertTrue(isinstance(form.base_fields.get('mark'), forms.IntegerField))
+        self.assertTrue(isinstance(form.base_fields.get('answer'), forms.CharField))
 
     def testFormInitialValuesAndChoices(self):
         form = EssayQuestionUpdateForm(self.essayQuestion)

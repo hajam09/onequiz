@@ -1,3 +1,4 @@
+from django import forms
 from django.http import QueryDict
 
 from onequiz.operations import bakerOperations
@@ -17,6 +18,15 @@ class MultipleChoiceQuestionUpdateFormTest(BaseTest):
         self.choices = [
             (i, x['content'], x['isCorrect']) for i, x in enumerate(self.multipleChoiceQuestion.choices['choices'], 1)
         ]
+
+    def testFieldsAndType(self):
+        form = MultipleChoiceQuestionUpdateForm(self.multipleChoiceQuestion)
+        self.assertEqual(len(form.base_fields), 5)
+        self.assertTrue(isinstance(form.base_fields.get('figure'), forms.ImageField))
+        self.assertTrue(isinstance(form.base_fields.get('content'), forms.CharField))
+        self.assertTrue(isinstance(form.base_fields.get('explanation'), forms.CharField))
+        self.assertTrue(isinstance(form.base_fields.get('answerOrder'), forms.MultipleChoiceField))
+        self.assertTrue(isinstance(form.base_fields.get('mark'), forms.IntegerField))
 
     def testFormInitialValuesAndChoices(self):
         form = MultipleChoiceQuestionUpdateForm(self.multipleChoiceQuestion)

@@ -1,3 +1,5 @@
+from django import forms
+
 from onequiz.tests.BaseTest import BaseTest
 from quiz.forms import TrueOrFalseQuestionCreateForm
 
@@ -7,6 +9,15 @@ class TrueOrFalseQuestionCreateFormTest(BaseTest):
     def setUp(self, path='') -> None:
         self.basePath = path
         super(TrueOrFalseQuestionCreateFormTest, self).setUp('')
+
+    def testFieldsAndType(self):
+        form = TrueOrFalseQuestionCreateForm()
+        self.assertEqual(len(form.base_fields), 5)
+        self.assertTrue(isinstance(form.base_fields.get('figure'), forms.ImageField))
+        self.assertTrue(isinstance(form.base_fields.get('content'), forms.CharField))
+        self.assertTrue(isinstance(form.base_fields.get('explanation'), forms.CharField))
+        self.assertTrue(isinstance(form.base_fields.get('mark'), forms.IntegerField))
+        self.assertTrue(isinstance(form.base_fields.get('isCorrect'), forms.ChoiceField))
 
     def testIsCorrectChoicesProvided(self):
         form = TrueOrFalseQuestionCreateForm()

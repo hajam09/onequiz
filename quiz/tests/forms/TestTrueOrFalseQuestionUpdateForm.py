@@ -1,3 +1,5 @@
+from django import forms
+
 from onequiz.operations import bakerOperations
 from onequiz.tests.BaseTest import BaseTest
 from quiz.forms import TrueOrFalseQuestionUpdateForm
@@ -10,6 +12,15 @@ class TrueOrFalseQuestionUpdateFormTest(BaseTest):
         self.trueOrFalseQuestion = bakerOperations.createTrueOrFalseQuestion()
         self.trueOptionSelected = [('isCorrect', 'True', 'True', 'True'), ('isCorrect', 'False', 'False', 'False')]
         self.falseOptionSelected = [('isCorrect', 'True', 'True', 'False'), ('isCorrect', 'False', 'False', 'True')]
+
+    def testFieldsAndType(self):
+        form = TrueOrFalseQuestionUpdateForm()
+        self.assertEqual(len(form.base_fields), 5)
+        self.assertTrue(isinstance(form.base_fields.get('figure'), forms.ImageField))
+        self.assertTrue(isinstance(form.base_fields.get('content'), forms.CharField))
+        self.assertTrue(isinstance(form.base_fields.get('explanation'), forms.CharField))
+        self.assertTrue(isinstance(form.base_fields.get('mark'), forms.IntegerField))
+        self.assertTrue(isinstance(form.base_fields.get('isCorrect'), forms.ChoiceField))
 
     def testFormInitialValuesAndChoices(self):
         form = TrueOrFalseQuestionUpdateForm(self.trueOrFalseQuestion)

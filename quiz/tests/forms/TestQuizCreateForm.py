@@ -1,5 +1,6 @@
 import random
 
+from django import forms
 from django.http import QueryDict
 from faker import Faker
 
@@ -16,6 +17,25 @@ class QuizCreateFormTest(BaseTest):
         super(QuizCreateFormTest, self).setUp('')
         bakerOperations.createSubjectsAndTopics()
         self.topic = Topic.objects.select_related('subject').first()
+
+    def testFieldsAndType(self):
+        form = QuizCreateForm(self.request)
+        self.assertEqual(len(form.base_fields), 15)
+        self.assertTrue(isinstance(form.base_fields.get('name'), forms.CharField))
+        self.assertTrue(isinstance(form.base_fields.get('description'), forms.CharField))
+        self.assertTrue(isinstance(form.base_fields.get('link'), forms.CharField))
+        self.assertTrue(isinstance(form.base_fields.get('subject'), forms.MultipleChoiceField))
+        self.assertTrue(isinstance(form.base_fields.get('topic'), forms.MultipleChoiceField))
+        self.assertTrue(isinstance(form.base_fields.get('quizDuration'), forms.IntegerField))
+        self.assertTrue(isinstance(form.base_fields.get('maxAttempt'), forms.IntegerField))
+        self.assertTrue(isinstance(form.base_fields.get('difficulty'), forms.MultipleChoiceField))
+        self.assertTrue(isinstance(form.base_fields.get('passMark'), forms.DecimalField))
+        self.assertTrue(isinstance(form.base_fields.get('successText'), forms.CharField))
+        self.assertTrue(isinstance(form.base_fields.get('failText'), forms.CharField))
+        self.assertTrue(isinstance(form.base_fields.get('inRandomOrder'), forms.BooleanField))
+        self.assertTrue(isinstance(form.base_fields.get('answerAtEnd'), forms.BooleanField))
+        self.assertTrue(isinstance(form.base_fields.get('isExamPaper'), forms.BooleanField))
+        self.assertTrue(isinstance(form.base_fields.get('isDraft'), forms.BooleanField))
 
     def testInitialDropdownChoices(self):
         form = QuizCreateForm(self.request)

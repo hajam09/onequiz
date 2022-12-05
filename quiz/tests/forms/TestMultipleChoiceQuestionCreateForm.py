@@ -1,3 +1,4 @@
+from django import forms
 from django.http import QueryDict
 
 from onequiz.tests.BaseTest import BaseTest
@@ -11,6 +12,15 @@ class MultipleChoiceQuestionCreateFormTest(BaseTest):
         self.basePath = path
         super(MultipleChoiceQuestionCreateFormTest, self).setUp('')
         # TODO: Search for 'Answer Order is empty.' and remove its usage.
+
+    def testFieldsAndType(self):
+        form = MultipleChoiceQuestionCreateForm()
+        self.assertEqual(len(form.base_fields), 5)
+        self.assertTrue(isinstance(form.base_fields.get('figure'), forms.ImageField))
+        self.assertTrue(isinstance(form.base_fields.get('content'), forms.CharField))
+        self.assertTrue(isinstance(form.base_fields.get('explanation'), forms.CharField))
+        self.assertTrue(isinstance(form.base_fields.get('answerOrder'), forms.MultipleChoiceField))
+        self.assertTrue(isinstance(form.base_fields.get('mark'), forms.IntegerField))
 
     def testInitialValues(self):
         form = MultipleChoiceQuestionCreateForm()

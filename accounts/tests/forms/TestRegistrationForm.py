@@ -27,7 +27,23 @@ class RegistrationFormTest(BaseTest):
         for message in form.errors.as_data()['password2'][0]:
             self.assertEquals(message, 'Your passwords do not match!')
 
-    def testPasswordsNotStrong(self):
+    def testPasswordDoesNotHaveAlphabets(self):
+        testParams = self.TestParams('example@example.com', '1234567890', '1234567890')
+        form = RegistrationForm(data=testParams.getData())
+        self.assertFalse(form.is_valid())
+
+        for message in form.errors.as_data()['password2'][0]:
+            self.assertEquals(message, 'Your password is not strong enough.')
+
+    def testPasswordDoesNotHaveCapitalLetters(self):
+        testParams = self.TestParams('example@example.com', 'test_password', 'test_password')
+        form = RegistrationForm(data=testParams.getData())
+        self.assertFalse(form.is_valid())
+
+        for message in form.errors.as_data()['password2'][0]:
+            self.assertEquals(message, 'Your password is not strong enough.')
+
+    def testPasswordDoesNotHaveNumbers(self):
         testParams = self.TestParams('example@example.com', 'TEST_PASSWORD', 'TEST_PASSWORD')
         form = RegistrationForm(data=testParams.getData())
         self.assertFalse(form.is_valid())

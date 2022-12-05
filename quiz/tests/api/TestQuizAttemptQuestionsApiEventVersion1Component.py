@@ -69,15 +69,15 @@ class QuizAttemptQuestionsApiEventVersion1ComponentTest(BaseTestAjax):
             self.assertEqual(len(item), 7)
             self.assertEqual(len(item['response']), 3)
 
-            if item == 'EssayQuestion':
+            if item['type'] == 'EssayQuestion':
                 self.assertIn('id', item['response'])
                 self.assertIn('text', item['response'])
                 self.assertIn('mark', item['response'])
-            elif item == 'TrueOrFalseQuestion':
+            elif item['type'] == 'TrueOrFalseQuestion':
                 self.assertIn('id', item['response'])
                 self.assertIn('selectedOption', item['response'])
                 self.assertIn('mark', item['response'])
-            elif item == 'MultipleChoiceQuestion':
+            elif item['type'] == 'MultipleChoiceQuestion':
                 self.assertIn('id', item['response'])
                 self.assertIn('choices', item['response'])
                 self.assertIn('mark', item['response'])
