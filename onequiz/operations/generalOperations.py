@@ -61,7 +61,7 @@ class QuestionAndResponse:
     def getResponseForQuestion(self, question):
         data = {
             'id': question.id,
-            'figure': None,
+            'figure': question.figure.url if bool(question.figure) else None,
             'content': question.content,
             'explanation': question.explanation,
             'mark': question.mark,

@@ -30,6 +30,7 @@ class QuizAttemptViewTest(BaseTestViews):
         self.assertTemplateUsed(response, 'quiz/quizAttemptView.html')
         self.assertTrue(isinstance(response.context['quizAttempt'], QuizAttempt))
         self.assertTrue(response.context['quizAttempt'], self.quizAttempt)
+        self.assertEqual(response.context['mode'], QuizAttempt.Mode.EDIT)
 
     def testQuizAttemptDoesNotExist(self):
         path = reverse('quiz:quiz-attempt-view', kwargs={'attemptId': 0})
@@ -40,6 +41,16 @@ class QuizAttemptViewTest(BaseTestViews):
         anotherUser = bakerOperations.createUser()
         self.quizAttempt.user = anotherUser
         self.quizAttempt.save()
+
+        response = self.get()
+        self.assertEquals(response.status_code, 401)
+        self.assertEqual(response.content, str.encode('Unauthorized'))
+        self.assertEqual(response.reason_phrase, 'Unauthorized')
+
+    def testViewUserIsNotSameAsQuizCreator(self):
+        anotherUser = bakerOperations.createUser()
+        self.quiz.creator = anotherUser
+        self.quiz.save()
 
         response = self.get()
         self.assertEquals(response.status_code, 401)
@@ -59,3 +70,4 @@ class QuizAttemptViewTest(BaseTestViews):
         self.assertTemplateUsed(response, 'quiz/quizAttemptView.html')
         self.assertTrue(isinstance(response.context['quizAttempt'], QuizAttempt))
         self.assertTrue(response.context['quizAttempt'], self.quizAttempt)
+        self.assertEqual(response.context['mode'], QuizAttempt.Mode.MARK)

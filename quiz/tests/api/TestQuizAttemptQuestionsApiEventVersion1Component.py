@@ -57,6 +57,39 @@ class QuizAttemptQuestionsApiEventVersion1ComponentTest(BaseTestAjax):
         self.assertEqual(len(ajaxResponse['data']['questions']), 9)
         self.assertListEqual(ajaxResponse['data']['questions'], computedResponseList.getResponse())
 
+        for item in ajaxResponse['data']['questions']:
+            self.assertIn('id', item)
+            self.assertIn('figure', item)
+            self.assertIn('content', item)
+            self.assertIn('explanation', item)
+            self.assertIn('mark', item)
+            self.assertIn('type', item)
+            self.assertIn('response', item)
+            self.assertTrue(isinstance(item['response'], dict))
+            self.assertEqual(len(item), 7)
+            self.assertEqual(len(item['response']), 3)
+
+            if item == 'EssayQuestion':
+                self.assertIn('id', item['response'])
+                self.assertIn('text', item['response'])
+                self.assertIn('mark', item['response'])
+            elif item == 'TrueOrFalseQuestion':
+                self.assertIn('id', item['response'])
+                self.assertIn('selectedOption', item['response'])
+                self.assertIn('mark', item['response'])
+            elif item == 'MultipleChoiceQuestion':
+                self.assertIn('id', item['response'])
+                self.assertIn('choices', item['response'])
+                self.assertIn('mark', item['response'])
+                self.assertTrue(isinstance(item['response']['choices'], list))
+
+                for choice in item['response']['choices']:
+                    self.assertTrue(isinstance(choice, dict))
+                    self.assertIn('id', choice)
+                    self.assertIn('content', choice)
+                    self.assertIn('isChecked', choice)
+                    self.assertEqual(len(choice), 3)
+
     def testUpdateEssayQuestionResponses(self):
         quizQuestionList = [self.eq1, self.eq2, self.eq3]
         self.quiz.questions.add(*quizQuestionList)

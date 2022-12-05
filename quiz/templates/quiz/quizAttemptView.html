@@ -191,6 +191,9 @@
                 const style1 = {
                     borderRadius: 0,
                 }
+                const style2 = {
+                    width: '80%',
+                }
                 return (
                     <div>
                         <div className="row">
@@ -199,6 +202,13 @@
                             </div>
                             <div className="col-auto">{this.props.getQuestionComponentState().countdown}</div>
                         </div>
+                        {
+                            this.props.question.figure !== null ?
+                                <span>
+                                    <h5>Figure</h5>
+                                    <img className="rounded mx-auto d-block" src={this.props.question.figure} style={style2}></img>
+                                </span> : <span></span>
+                        }
                         <br></br>
                         {
                             this.props.question.content.trim().length !== 0 ?
