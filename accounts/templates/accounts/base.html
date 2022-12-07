@@ -80,6 +80,46 @@
 		{% endblock %}
     	<script src="https://cdn.jsdelivr.net/npm/popper.js@1.12.9/dist/umd/popper.min.js" crossorigin="anonymous"></script>
     	<script src="https://cdn.jsdelivr.net/npm/bootstrap@4.0.0/dist/js/bootstrap.min.js" crossorigin="anonymous"></script>
-	</body>
+    </body>
+    <script>
+
+        class FeatureFlag {
+            constructor(name, description, enabledFl) {
+                this.name = name;
+                this.description = description;
+                this.enabledFl = enabledFl;
+            }
+        }
+
+        const FeatureFlagType = {
+            INPUT_BORDER_COLOUR_MARK: 'INPUT_BORDER_COLOUR_MARK',
+            SAVE_QUIZ_ATTEMPT_RESPONSE_AS_DRAFT: 'SAVE_QUIZ_ATTEMPT_RESPONSE_AS_DRAFT',
+            ESSAY_QUESTION_IN_QUIZ_ATTEMPT: 'ESSAY_QUESTION_IN_QUIZ_ATTEMPT',
+        }
+
+        const featureFlags = [
+            new FeatureFlag(FeatureFlagType.INPUT_BORDER_COLOUR_MARK, '', false),
+            new FeatureFlag(FeatureFlagType.SAVE_QUIZ_ATTEMPT_RESPONSE_AS_DRAFT, '', false),
+            new FeatureFlag(FeatureFlagType.ESSAY_QUESTION_IN_QUIZ_ATTEMPT, '', false),
+        ];
+
+        class FeatureFlagUtils {
+            constructor() {
+                this.featureFlags = featureFlags;
+            }
+
+            isEnabled(type) {
+                for (const item of this.featureFlags) {
+                    if (item.name === type)
+                        return item.enabledFl;
+                }
+
+                throw new Error('Unknown FeatureFlag', type);
+            }
+        }
+
+        const featureFlagOperations = new FeatureFlagUtils();
+
+    </script>
 </html>
 </div>

@@ -110,6 +110,39 @@ class QuizMarkingOccurrenceApiEventVersion1Component(View):
         return JsonResponse(response, status=HTTPStatus.OK)
 
 
+class QuestionResponseUpdateApiEventVersion1Component(View):
+
+    def put(self, *args, **kwargs):
+        # TODO: FeatureFlag.SAVE_QUIZ_ATTEMPT_RESPONSE_AS_DRAFT
+        try:
+            put = json.loads(self.request.body)
+        except JSONDecodeError:
+            put = json.loads(self.request.body.decode().replace('"', "'").replace("'", '"'))
+
+        qaid = put.get('quizAttemptId')
+        qid = put.get('question').get('id')
+        rid = put.get('response').get('id')
+
+        quizAttempt = QuizAttempt.objects.select_related().prefetch_related('responses__question').get(id=qaid)
+        responseList = quizAttempt.responses.all()
+        responseInstance = next((r for r in responseList if r.question.id == qid and r.id == rid), None)
+
+        if put.get('question').get('type') == 'EssayQuestion':
+            responseInstance.essayresponse.answer = put.get('response').get('text')
+            responseInstance.essayresponse.save()
+        elif put.get('question').get('type') == 'TrueOrFalseQuestion':
+            responseInstance.trueorfalseresponse.isChecked = put.get('response').get('selectedOption')
+            responseInstance.trueorfalseresponse.save()
+        elif put.get('question').get('type') == 'MultipleChoiceQuestion':
+            responseInstance.multiplechoiceresponse.answers['answers'] = put.get('response').get('choices')
+            responseInstance.multiplechoiceresponse.save()
+
+        response = {
+            "success": True
+        }
+        return JsonResponse(response, status=HTTPStatus.OK)
+
+
 class QuizAttemptQuestionsApiEventVersion1Component(View):
 
     def get(self, *args, **kwargs):

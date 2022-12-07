@@ -673,7 +673,61 @@
                 return time + seconds + "s ";
             }
 
-            increaseCurrentIndex = () => {
+            saveCurrentQuestionsResponse = () => {
+                /*
+                * Call to this method should be placed at the top of where next/previous btn onClick function is.
+                * This call can be expensive as it makes HTTP request per question update, rather than bulk update.
+                * */
+
+                if (!featureFlagOperations.isEnabled(FeatureFlagType.SAVE_QUIZ_ATTEMPT_RESPONSE_AS_DRAFT))
+                    return;
+
+                let currentQuestion = this.state.questionList[this.state.currentIndex];
+                let questionId = currentQuestion.id;
+                let questionType = null;
+                let response = null;
+
+                if (currentQuestion instanceof EssayQuestion) {
+                    questionType = 'EssayQuestion';
+                    response = currentQuestion.response.getData();
+                } else if (currentQuestion instanceof TrueOrFalseQuestion) {
+                    questionType = 'TrueOrFalseQuestion';
+                    response = currentQuestion.response.getData();
+                } else if (currentQuestion instanceof MultipleChoiceQuestion) {
+                    questionType = 'MultipleChoiceQuestion';
+                    let choiceList = [];
+                    for (const choice of currentQuestion.response.choices) {
+                        choiceList.push(choice.getData());
+                    }
+                    response = {
+                        'id': currentQuestion.response.id,
+                        'choices': choiceList
+                    }
+                }
+
+                let data = {
+                    'quizAttemptId': '{{ quizAttempt.id }}',
+                    'question': {
+                        'id': questionId,
+                        'type': questionType,
+                    },
+                    'response': response,
+                }
+
+                fetch('{% url 'quiz:questionResponseUpdateApiEventVersion1Component' %}', {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Encoding': 'gzip',
+                        'Content-type': 'application/json',
+                        "X-CSRFToken": getCookie("csrftoken")
+                    },
+                    dataType: 'json',
+                    body: JSON.stringify(data)
+                })
+            }
+
+            showNextQuestion = () => {
+                this.saveCurrentQuestionsResponse();
                 this.setState({
                     currentIndex: this.state.currentIndex + 1
                 })
@@ -681,7 +735,8 @@
                 this.setProgressBarProperties(progress);
             }
 
-            decreaseCurrentIndex = () => {
+            showPreviousQuestion = () => {
+                this.saveCurrentQuestionsResponse();
                 this.setState({
                     currentIndex: this.state.currentIndex - 1
                 })
@@ -832,7 +887,7 @@
                 if (this.state.mode.canEdit()) {
                     if (this.state.currentIndex !== this.state.questionList.length) {
                         return (
-                            <button type="button" className="btn btn-primary" onClick={this.increaseCurrentIndex}>
+                            <button type="button" className="btn btn-primary" onClick={this.showNextQuestion}>
                                 Next
                             </button>
                         )
@@ -849,7 +904,7 @@
                         )
                     } else {
                         return (
-                            <button type="button" className="btn btn-primary" onClick={this.increaseCurrentIndex}>
+                            <button type="button" className="btn btn-primary" onClick={this.showNextQuestion}>
                                 Next
                             </button>
                         )
@@ -858,7 +913,7 @@
                 } else if (this.state.mode.canMark()) {
                     if (this.state.currentIndex !== this.state.questionList.length) {
                         return (
-                            <button type="button" className="btn btn-primary" onClick={this.increaseCurrentIndex}>
+                            <button type="button" className="btn btn-primary" onClick={this.showNextQuestion}>
                                 Next
                             </button>
                         )
@@ -874,7 +929,7 @@
             renderPreviousButton = () => {
                 if (this.state.currentIndex > 0)
                     return (
-                        <button type="button" className="btn btn-secondary" onClick={this.decreaseCurrentIndex}>
+                        <button type="button" className="btn btn-secondary" onClick={this.showPreviousQuestion}>
                             Previous
                         </button>
                     )
