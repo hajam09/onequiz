@@ -14,11 +14,26 @@ class EssayQuestionUpdateFormTest(BaseTest):
     def testFieldsAndType(self):
         form = EssayQuestionUpdateForm()
         self.assertEqual(len(form.base_fields), 5)
+
         self.assertTrue(isinstance(form.base_fields.get('figure'), forms.ImageField))
+        self.assertEqual(form.base_fields.get('figure').label, 'Figure (Optional)')
+        self.assertTrue(isinstance(form.base_fields.get('figure').widget, forms.ClearableFileInput))
+
         self.assertTrue(isinstance(form.base_fields.get('content'), forms.CharField))
+        self.assertEqual(form.base_fields.get('content').label, 'Content (Optional)')
+        self.assertTrue(isinstance(form.base_fields.get('content').widget, forms.Textarea))
+
         self.assertTrue(isinstance(form.base_fields.get('explanation'), forms.CharField))
+        self.assertEqual(form.base_fields.get('explanation').label, 'Explanation (Optional)')
+        self.assertTrue(isinstance(form.base_fields.get('explanation').widget, forms.Textarea))
+
         self.assertTrue(isinstance(form.base_fields.get('mark'), forms.IntegerField))
+        self.assertEqual(form.base_fields.get('mark').label, 'Mark')
+        self.assertTrue(isinstance(form.base_fields.get('mark').widget, forms.NumberInput))
+
         self.assertTrue(isinstance(form.base_fields.get('answer'), forms.CharField))
+        self.assertEqual(form.base_fields.get('answer').label, 'Answer')
+        self.assertTrue(isinstance(form.base_fields.get('answer').widget, forms.Textarea))
 
     def testFormInitialValuesAndChoices(self):
         form = EssayQuestionUpdateForm(self.essayQuestion)

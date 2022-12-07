@@ -13,11 +13,26 @@ class TrueOrFalseQuestionCreateFormTest(BaseTest):
     def testFieldsAndType(self):
         form = TrueOrFalseQuestionCreateForm()
         self.assertEqual(len(form.base_fields), 5)
+
         self.assertTrue(isinstance(form.base_fields.get('figure'), forms.ImageField))
+        self.assertEqual(form.base_fields.get('figure').label, 'Figure (Optional)')
+        self.assertTrue(isinstance(form.base_fields.get('figure').widget, forms.ClearableFileInput))
+
         self.assertTrue(isinstance(form.base_fields.get('content'), forms.CharField))
+        self.assertEqual(form.base_fields.get('content').label, 'Content (Optional)')
+        self.assertTrue(isinstance(form.base_fields.get('content').widget, forms.Textarea))
+
         self.assertTrue(isinstance(form.base_fields.get('explanation'), forms.CharField))
+        self.assertEqual(form.base_fields.get('explanation').label, 'Explanation (Optional)')
+        self.assertTrue(isinstance(form.base_fields.get('explanation').widget, forms.Textarea))
+
         self.assertTrue(isinstance(form.base_fields.get('mark'), forms.IntegerField))
+        self.assertEqual(form.base_fields.get('mark').label, 'Mark')
+        self.assertTrue(isinstance(form.base_fields.get('mark').widget, forms.NumberInput))
+
         self.assertTrue(isinstance(form.base_fields.get('isCorrect'), forms.ChoiceField))
+        self.assertEqual(form.base_fields.get('isCorrect').label, 'Is the answer True or False?')
+        self.assertTrue(isinstance(form.base_fields.get('isCorrect').widget, forms.RadioSelect))
 
     def testIsCorrectChoicesProvided(self):
         form = TrueOrFalseQuestionCreateForm()

@@ -22,6 +22,12 @@ class TopicObjectApiEventVersion1ComponentTest(BaseTestAjax):
         self.assertIsNotNone(ajaxResponse['data']['topics'])
         self.assertEqual(20, len(ajaxResponse['data']['topics']))
 
+        for item in ajaxResponse['data']['topics']:
+            self.assertIn('id', item)
+            self.assertIn('name', item)
+            self.assertIn('description', item)
+            self.assertEqual(len(item), 3)
+
         self.assertListEqual(
             [{'id': t.id, 'name': t.name, 'description': t.description} for t in Topic.objects.all()],
             ajaxResponse['data']['topics']

@@ -70,6 +70,14 @@ class QuestionResponseUpdateApiEventVersion1Component(BaseTestAjax):
             testParams.response.multiplechoiceresponse.answers['answers'], payload['response']['choices']
         )
 
+        for choice in testParams.response.multiplechoiceresponse.answers['answers']:
+            self.assertTrue(isinstance(choice, dict))
+            self.assertEqual(len(choice), 3)
+            self.assertIn('id', choice)
+            self.assertIn('content', choice)
+            self.assertIn('isChecked', choice)
+            self.assertTrue(isinstance(eval(choice['isChecked']), bool))
+
     class TestParams:
         def __init__(self, quizAttempt, question):
             self.quizAttempt = quizAttempt
