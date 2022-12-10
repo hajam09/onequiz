@@ -348,17 +348,28 @@ class QuizAttempt(BaseModel):
         verbose_name = 'QuizAttempt'
         verbose_name_plural = 'QuizAttempts'
 
+    def getAttemptUrl(self):
+        return reverse('quiz:quiz-attempt-view', kwargs={'attemptId': self.id})
+
+    def getAttemptResultUrl(self):
+        return reverse('quiz:quiz-attempt-result-view', kwargs={'attemptId': self.id})
+
     def getQuizEndTime(self, uiFormat=True):
         time = (self.createdDttm + datetime.timedelta(minutes=self.quiz.quizDuration))
         return time.strftime('%b %d, %Y %H:%M:%S') if uiFormat else time
 
+    def hasQuizEnded(self):
+        unEditStatus = [self.Status.SUBMITTED, self.Status.IN_REVIEW, self.Status.MARKED]
+        return timezone.now() >= self.getQuizEndTime(False) or self.status in unEditStatus
+
     def getPermissionMode(self, user):
         viewStatues = [self.Status.SUBMITTED, self.Status.IN_REVIEW, self.Status.MARKED]
-        if self.user == user and timezone.now() < self.getQuizEndTime(False) and self.status in [self.Status.NOT_ATTEMPTED, self.Status.IN_PROGRESS]:
+        editStatues = [self.Status.NOT_ATTEMPTED, self.Status.IN_PROGRESS]
+        if self.user == user and not self.hasQuizEnded() and self.status in editStatues:
             mode = self.Mode.EDIT
-        elif self.quiz.creator == user and (timezone.now() >= self.getQuizEndTime(False) or self.status in viewStatues):
+        elif self.quiz.creator == user and self.hasQuizEnded() and self.status != self.Status.MARKED:
             mode = self.Mode.MARK
-        elif self.user == user and timezone.now() >= self.getQuizEndTime(False) and self.status in viewStatues:
+        elif self.user == user and self.hasQuizEnded() and self.status in viewStatues:
             mode = self.Mode.VIEW
         else:
             raise NotImplementedError('Cannot find a permission mode for quiz attempt: ', self.id)

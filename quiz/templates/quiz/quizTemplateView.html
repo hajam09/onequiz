@@ -5,25 +5,29 @@
 
     <br>
     <div class="container" style="color: black;">
-        <div class="row">
-            <div class="col-sm">
-                <a class="btn btn-primary btn-sm btn-block"
-                   href="{% url 'quiz:create-essay-question-view' quizId=quizId %}" role="button">Create Essay
-                    Question</a>
+        {% if quizId %}
+            <div class="row">
+                <div class="col-sm">
+                    <a class="btn btn-primary btn-sm btn-block"
+                       href="{% url 'quiz:create-essay-question-view' quizId=quizId %}" role="button">Create Essay
+                        Question</a>
+                </div>
+                <div class="col-sm">
+                    <a class="btn btn-primary btn-sm btn-block"
+                       href="{% url 'quiz:create-multiple-choice-question-view' quizId=quizId %}" role="button">Create
+                        Multiple Choice
+                        Question</a>
+                </div>
+                <div class="col-sm">
+                    <a class="btn btn-primary btn-sm btn-block"
+                       href="{% url 'quiz:create-true-or-false-question-view' quizId=quizId %}" role="button">Create
+                        True or
+                        False
+                        Question</a>
+                </div>
             </div>
-            <div class="col-sm">
-                <a class="btn btn-primary btn-sm btn-block"
-                   href="{% url 'quiz:create-multiple-choice-question-view' quizId=quizId %}" role="button">Create
-                    Multiple Choice
-                    Question</a>
-            </div>
-            <div class="col-sm">
-                <a class="btn btn-primary btn-sm btn-block"
-                   href="{% url 'quiz:create-true-or-false-question-view' quizId=quizId %}" role="button">Create True or
-                    False
-                    Question</a>
-            </div>
-        </div>
+        {% endif %}
+
         <br>
         <div class="row">
             <form method="post" class="form-control">

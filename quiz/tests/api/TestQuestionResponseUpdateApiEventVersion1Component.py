@@ -1,4 +1,5 @@
 import json
+from unittest.mock import patch
 
 from django.urls import reverse
 
@@ -32,7 +33,22 @@ class QuestionResponseUpdateApiEventVersion1Component(BaseTestAjax):
         self.assertEqual(200, response.status_code)
         return ajaxResponse['redirectUrl'].split('/')[3]
 
-    def testUpdateResponseForEssayQuestion(self):
+    @patch('quiz.api.featureFlagOperations')
+    def testWhenFeatureFlagIsOffReturnFalse(self, mockFeatureFlagOperations):
+        mockFeatureFlagOperations.isEnabled.return_value = False
+        testParams = self.TestParams(self.quizAttempt, self.eq)
+        payload = testParams.getResponseForQuestion()
+
+        response = self.put(data=payload)
+        ajaxResponse = json.loads(response.content)
+
+        self.assertEqual(response.status_code, 200)
+        self.assertFalse(ajaxResponse['success'])
+        self.assertEqual(ajaxResponse['message'], 'Feature flag SAVE_QUIZ_ATTEMPT_RESPONSE_AS_DRAFT not enabled.')
+
+    @patch('quiz.api.featureFlagOperations')
+    def testUpdateResponseForEssayQuestion(self, mockFeatureFlagOperations):
+        mockFeatureFlagOperations.isEnabled.return_value = True
         testParams = self.TestParams(self.quizAttempt, self.eq)
         payload = testParams.getResponseForQuestion()
 
@@ -44,7 +60,9 @@ class QuestionResponseUpdateApiEventVersion1Component(BaseTestAjax):
         self.assertTrue(ajaxResponse['success'])
         self.assertEqual(testParams.response.essayresponse.answer, payload['response']['text'])
 
-    def testUpdateResponseForTrueOrFalseQuestion(self):
+    @patch('quiz.api.featureFlagOperations')
+    def testUpdateResponseForTrueOrFalseQuestion(self, mockFeatureFlagOperations):
+        mockFeatureFlagOperations.isEnabled.return_value = True
         testParams = self.TestParams(self.quizAttempt, self.tf)
         payload = testParams.getResponseForQuestion()
 
@@ -56,7 +74,9 @@ class QuestionResponseUpdateApiEventVersion1Component(BaseTestAjax):
         self.assertTrue(ajaxResponse['success'])
         self.assertEqual(testParams.response.trueorfalseresponse.isChecked, eval(payload['response']['selectedOption']))
 
-    def testUpdateResponseForMultipleChoiceQuestion(self):
+    @patch('quiz.api.featureFlagOperations')
+    def testUpdateResponseForMultipleChoiceQuestion(self, mockFeatureFlagOperations):
+        mockFeatureFlagOperations.isEnabled.return_value = True
         testParams = self.TestParams(self.quizAttempt, self.mc)
         payload = testParams.getResponseForQuestion()
 

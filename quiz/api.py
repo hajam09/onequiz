@@ -7,6 +7,7 @@ from django.http import JsonResponse
 from django.urls import reverse
 from django.views import View
 
+from onequiz.operations.featureFlagOperations import featureFlagOperations, FeatureFlagType
 from onequiz.operations.generalOperations import (
     QuestionAndResponse, QuizAttemptAutomaticMarking, QuizAttemptManualMarking
 )
@@ -35,6 +36,17 @@ class QuizAttemptObjectApiEventVersion1Component(View):
 
     def post(self, *args, **kwargs):
         quizId = self.request.GET.get('quizId')
+        existingQuizAttempt = QuizAttempt.objects.filter(
+            quiz_id=quizId, user=self.request.user, status=QuizAttempt.Status.IN_PROGRESS
+        )
+        if existingQuizAttempt.exists():
+            response = {
+                "success": True,
+                "message": "You already have an attempt that is in progress.",
+                "redirectUrl": reverse('quiz:quiz-attempt-view', kwargs={'attemptId': existingQuizAttempt[0].id})
+            }
+            return JsonResponse(response, status=HTTPStatus.OK)
+
         newQuizAttempt = QuizAttempt.objects.create(user=self.request.user, quiz_id=quizId)
         questionList = newQuizAttempt.quiz.getQuestions()
         newBulkResponseList = []
@@ -113,7 +125,13 @@ class QuizMarkingOccurrenceApiEventVersion1Component(View):
 class QuestionResponseUpdateApiEventVersion1Component(View):
 
     def put(self, *args, **kwargs):
-        # TODO: FeatureFlag.SAVE_QUIZ_ATTEMPT_RESPONSE_AS_DRAFT
+        if not featureFlagOperations.isEnabled(FeatureFlagType.SAVE_QUIZ_ATTEMPT_RESPONSE_AS_DRAFT):
+            response = {
+                "success": False,
+                "message": f'Feature flag {FeatureFlagType.SAVE_QUIZ_ATTEMPT_RESPONSE_AS_DRAFT.value} not enabled.'
+            }
+            return JsonResponse(response, status=HTTPStatus.OK)
+
         try:
             put = json.loads(self.request.body)
         except JSONDecodeError:

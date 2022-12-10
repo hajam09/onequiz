@@ -111,12 +111,12 @@ option:active, option:checked, select:focus::-ms-value {
 
 .multiple-choice [type=radio] + label::after {
     content: "";
-    border: 10px solid;
+    border: 9px solid;
     width: 0;
     height: 0;
     position: absolute;
-    top: 9px;
-    left: 9px;
+    top: 8px;
+    left: 8px;
     border-radius: 50%;
     zoom: 1;
     filter: alpha(opacity=0);
@@ -139,8 +139,8 @@ option:active, option:checked, select:focus::-ms-value {
     border-width: 0 0 5px 5px;
     background: 0 0;
     border-top-color: transparent;
-    width: 17px;
-    height: 7px;
+    width: 22px;
+    height: 12px;
     position: absolute;
     top: 10px;
     left: 8px;

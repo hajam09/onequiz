@@ -43,9 +43,9 @@ class QuizAttemptViewTest(BaseTestViews):
         self.quizAttempt.save()
 
         response = self.get()
-        self.assertEquals(response.status_code, 401)
-        self.assertEqual(response.content, str.encode('Unauthorized'))
-        self.assertEqual(response.reason_phrase, 'Unauthorized')
+        self.assertEquals(response.status_code, 403)
+        self.assertEqual(response.content, str.encode('Forbidden'))
+        self.assertEqual(response.reason_phrase, 'Forbidden')
 
     def testViewUserIsNotSameAsQuizCreator(self):
         anotherUser = bakerOperations.createUser()
@@ -53,9 +53,9 @@ class QuizAttemptViewTest(BaseTestViews):
         self.quiz.save()
 
         response = self.get()
-        self.assertEquals(response.status_code, 401)
-        self.assertEqual(response.content, str.encode('Unauthorized'))
-        self.assertEqual(response.reason_phrase, 'Unauthorized')
+        self.assertEquals(response.status_code, 403)
+        self.assertEqual(response.content, str.encode('Forbidden'))
+        self.assertEqual(response.reason_phrase, 'Forbidden')
 
     @patch('quiz.views.QuizAttempt.getQuizEndTime')
     def testUpdateStatusWhenDurationEndedAndNotSubmitted(self, mockGetQuizEndTime):

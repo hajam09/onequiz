@@ -1,3 +1,4 @@
+from django.contrib.auth.decorators import login_required
 from django.urls import path
 
 from quiz import views
@@ -17,7 +18,7 @@ urlpatterns = [
     path('my-quizzes/', views.userCreatedQuizzesView, name='user-created-quizzes-view'),
     path('quiz-attempt/<int:attemptId>/', views.quizAttemptView, name='quiz-attempt-view'),
     path('quiz-attempt/<int:attemptId>/result', views.quizAttemptResultView, name='quiz-attempt-result-view'),
-    path('my-attempted-quizzes/', views.attemptedQuizzesView, name='attempted-quizzes-view'),
+    path('my-attempted-quizzes/', login_required(views.AttemptedQuizzesView.as_view()), name='attempted-quizzes-view'),
 ]
 
 urlpatterns += [

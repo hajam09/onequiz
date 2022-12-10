@@ -26,6 +26,26 @@ class QuizAttemptObjectApiEventVersion1ComponentTest(BaseTestAjax):
             bakerOperations.createMultipleChoiceQuestionAndAnswers(None),
         ])
 
+    def createQuizAttemptAndTheResponseObjects(self):
+        path = reverse('quiz:quizAttemptObjectApiEventVersion1Component') + f'?quizId={self.quiz.id}'
+        response = self.post(path=path)
+        ajaxResponse = json.loads(response.content)
+        self.assertEqual(200, response.status_code)
+        return ajaxResponse['redirectUrl'].split('/')[3]
+
+    def testWhenAnotherAttemptIsInProgressThenReturnItsRedirectUrl(self):
+        quizAttemptId = self.createQuizAttemptAndTheResponseObjects()
+        path = reverse('quiz:quizAttemptObjectApiEventVersion1Component') + f'?quizId={self.quiz.id}'
+        response = self.post(path=path)
+        ajaxResponse = json.loads(response.content)
+
+        self.assertEqual(200, response.status_code)
+        self.assertTrue(ajaxResponse['success'])
+        self.assertEqual(ajaxResponse['message'], 'You already have an attempt that is in progress.')
+
+        self.assertIsNotNone(ajaxResponse['redirectUrl'])
+        self.assertEqual(ajaxResponse['redirectUrl'], f'/quiz/quiz-attempt/{quizAttemptId}/')
+
     def testStartQuizAttemptForNonExistingQuiz(self):
         # TODO: Not Implemented
         pass

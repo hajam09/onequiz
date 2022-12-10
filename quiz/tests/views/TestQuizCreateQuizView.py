@@ -22,7 +22,7 @@ class QuizCreateQuizViewTest(BaseTestViews):
         self.assertEquals(response.status_code, 200)
         self.assertTrue(isinstance(response.context['form'], QuizCreateForm))
         self.assertTrue(response.context['formTitle'], 'Create Quiz')
-        self.assertTemplateUsed(response, 'quiz/createQuizView.html')
+        self.assertTemplateUsed(response, 'quiz/quizTemplateView.html')
 
     def testFormIsInvalidAndObjectIsNotCreated(self):
         testParams = self.TestParams(self.topic)
@@ -33,7 +33,7 @@ class QuizCreateQuizViewTest(BaseTestViews):
         self.assertEqual(0, Quiz.objects.count())
         self.assertTrue(isinstance(response.context['form'], QuizCreateForm))
         self.assertTrue(response.context['formTitle'], 'Create Quiz')
-        self.assertTemplateUsed(response, 'quiz/createQuizView.html')
+        self.assertTemplateUsed(response, 'quiz/quizTemplateView.html')
 
     def testFormIsValidAndObjectIsCreated(self):
         testParams = self.TestParams(self.topic)
@@ -60,7 +60,7 @@ class QuizCreateQuizViewTest(BaseTestViews):
         self.assertEquals(response.status_code, 200)
         self.assertTrue(isinstance(response.context['form'], QuizCreateForm))
         self.assertTrue(response.context['formTitle'], 'Create Quiz')
-        self.assertTemplateUsed(response, 'quiz/createQuizView.html')
+        self.assertTemplateUsed(response, 'quiz/quizTemplateView.html')
 
     class TestParams:
 
