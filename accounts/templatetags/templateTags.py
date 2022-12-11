@@ -9,7 +9,7 @@ register = template.Library()
 @register.simple_tag
 def navigationPanel(request):
     links = [
-        linkItem('Home', '', None),
+        linkItem('Home', reverse('quiz:index-view'), None),
     ]
 
     if request.user.is_authenticated:

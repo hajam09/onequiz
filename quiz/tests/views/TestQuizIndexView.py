@@ -1,3 +1,6 @@
+import random
+
+from django.contrib.auth.models import User
 from django.db.models import QuerySet
 from django.urls import reverse
 
@@ -6,18 +9,21 @@ from onequiz.tests.BaseTestViews import BaseTestViews
 from quiz.models import Topic, Quiz
 
 
-class QuizUserCreatedQuizzesViewTest(BaseTestViews):
-
-    def setUp(self, path=reverse('quiz:user-created-quizzes-view')) -> None:
-        super(QuizUserCreatedQuizzesViewTest, self).setUp(path)
+class QuizIndexViewTest(BaseTestViews):
+    def setUp(self, path=reverse('quiz:index-view')) -> None:
+        super(QuizIndexViewTest, self).setUp(path)
         bakerOperations.createSubjectsAndTopics(1, 1)
+        bakerOperations.createUsers(maxLimit=2)
+
+        allUsers = User.objects.all()
         self.topic = Topic.objects.select_related('subject').first()
         self.quizList = [
-            bakerOperations.createQuiz(creator=self.request.user, topic=self.topic, save=False) for _ in range(5)
+            bakerOperations.createQuiz(creator=random.choice(allUsers), topic=self.topic, save=False)
+            for _ in range(allUsers.count())
         ]
         Quiz.objects.bulk_create(self.quizList)
 
-    def testUserCreatedQuizzesViewGet(self):
+    def testIndexViewGet(self):
         response = self.get()
         self.assertEquals(response.status_code, 200)
         self.assertTrue(isinstance(response.context['quizList'], QuerySet))

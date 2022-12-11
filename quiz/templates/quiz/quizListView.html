@@ -10,6 +10,13 @@
         .badge {
             border-radius: 1rem;
         }
+
+        .btn-group-xs > .btn, .btn-xs {
+            padding: .25rem .4rem;
+            font-size: .875rem;
+            line-height: .5;
+            border-radius: .2rem;
+        }
     </style>
     <br>
 
@@ -18,10 +25,10 @@
             <div class="row">
                 <div class="col">
                     <input type="text" id="query" name="query" class="form-control col"
-                           placeholder="Search for your quiz"/>
+                           placeholder="Search for a quiz..."/>
                 </div>
                 <div class="col-auto">
-                    <input type="submit" class="btn btn-secondary btn-sm"/>
+                    <input type="submit" class="btn btn-secondary btn-sm" value="Search"/>
                 </div>
             </div>
         </form>
@@ -34,9 +41,10 @@
                 <h6>
                     <span class="badge badge-primary">Subject: {{ quiz.topic.subject }}</span>
                     <span class="badge badge-secondary">Topic: {{ quiz.topic }}</span>
-                    <a href="#" class="float-right" onclick=beginQuizAttempt('{{ quiz.id }}')>
-                        <small>Click here to attempt this quiz.</small>
-                    </a>
+                    <button type="button" class="btn btn-Dark btn-xs float-right"
+                            onclick=beginQuizAttempt('{{ quiz.id }}')>
+                        <small>Click here to attempt this quiz</small>
+                    </button>
                 </h6>
             </div>
             <br>

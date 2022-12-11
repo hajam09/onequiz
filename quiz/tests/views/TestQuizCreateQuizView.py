@@ -14,7 +14,7 @@ class QuizCreateQuizViewTest(BaseTestViews):
 
     def setUp(self, path=reverse('quiz:create-quiz')) -> None:
         super(QuizCreateQuizViewTest, self).setUp(path)
-        bakerOperations.createSubjectsAndTopics()
+        bakerOperations.createSubjectsAndTopics(1, 1)
         self.topic = Topic.objects.select_related('subject').first()
 
     def testCreateQuizViewGet(self):

@@ -14,7 +14,7 @@ class QuizUpdateFormTest(BaseTest):
 
     def setUp(self, path='') -> None:
         super(QuizUpdateFormTest, self).setUp('')
-        bakerOperations.createSubjectsAndTopics()
+        bakerOperations.createSubjectsAndTopics(1, 1)
         self.topic = Topic.objects.select_related('subject').first()
         self.quiz = bakerOperations.createQuiz(self.request.user, self.topic)
 

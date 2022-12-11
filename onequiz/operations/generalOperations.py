@@ -1,11 +1,14 @@
+import operator
 import os
 import random
 import re
+from functools import reduce
 
 from django.conf import settings
+from django.db.models import Q
 from django.utils import timezone
 
-from quiz.models import EssayQuestion, MultipleChoiceQuestion, TrueOrFalseQuestion, Response, Result, QuizAttempt
+from quiz.models import EssayQuestion, MultipleChoiceQuestion, TrueOrFalseQuestion, Response, Result, Quiz
 
 
 def isPasswordStrong(password):
@@ -44,6 +47,21 @@ def parseStringToUrl(link):
     link = re.sub('\s+', '-', link).lower()
     link = ''.join(letter for letter in link if letter.isalnum() or letter == '-')
     return link
+
+
+def performComplexQuizSearch(query, filterList=None):
+    filterList = filterList or []
+    attributesToSearch = [
+        'name', 'description', 'url',
+        'topic__name', 'topic__description',
+        'topic__subject__name', 'topic__subject__description'
+    ]
+
+    filterList.append(reduce(operator.or_, [Q(**{'deleteFl': False})]))
+    if query and query.strip():
+        filterList.append(reduce(operator.or_, [Q(**{f'{v}__icontains': query}) for v in attributesToSearch]))
+
+    return Quiz.objects.filter(reduce(operator.and_, filterList)).select_related('topic__subject').distinct()
 
 
 class QuestionAndResponse:

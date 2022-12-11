@@ -12,7 +12,7 @@ class QuizQuestionDetailViewTest(BaseTestViews):
 
     def setUp(self, path='') -> None:
         super(QuizQuestionDetailViewTest, self).setUp('')
-        bakerOperations.createSubjectsAndTopics()
+        bakerOperations.createSubjectsAndTopics(1, 1)
         self.topic = Topic.objects.select_related('subject').first()
         self.quiz = bakerOperations.createQuiz(self.request.user, self.topic)
         self.essayQuestion = bakerOperations.createEssayQuestion()

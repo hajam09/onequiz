@@ -15,7 +15,7 @@ class QuizCreateFormTest(BaseTest):
     def setUp(self, path='') -> None:
         self.basePath = path
         super(QuizCreateFormTest, self).setUp('')
-        bakerOperations.createSubjectsAndTopics()
+        bakerOperations.createSubjectsAndTopics(1, 1)
         self.topic = Topic.objects.select_related('subject').first()
 
     def testFieldsAndType(self):

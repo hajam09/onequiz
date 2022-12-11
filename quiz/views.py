@@ -6,6 +6,7 @@ from django.http import Http404, HttpResponseForbidden
 from django.shortcuts import render, redirect
 from django.views.generic import ListView
 
+from onequiz.operations import generalOperations
 from quiz.forms import (
     EssayQuestionCreateForm, EssayQuestionUpdateForm, MultipleChoiceQuestionCreateForm,
     MultipleChoiceQuestionUpdateForm, QuizCreateForm, TrueOrFalseQuestionCreateForm,
@@ -17,7 +18,10 @@ from quiz.models import (
 
 
 def indexView(request):
-    return render(request, 'quiz/indexView.html')
+    context = {
+        'quizList': generalOperations.performComplexQuizSearch(request.GET.get('query'))
+    }
+    return render(request, 'quiz/quizListView.html', context)
 
 
 def createEssayQuestionView(request, quizId):
@@ -112,11 +116,11 @@ def createQuizView(request):
 
 def quizDetailView(request, quizId):
     try:
-        quiz = Quiz.objects.get(id=quizId, creator=request.user)
+        quiz = Quiz.objects.select_related('topic').get(id=quizId, creator=request.user)
     except Quiz.DoesNotExist:
         raise Http404
 
-    quizQuestions = quiz.getQuestions()
+    quizQuestions = quiz.getQuestions()  # OR Question.objects.filter(quizQuestions=quizId).select_subclasses()
 
     if request.method == "POST":
         form = QuizUpdateForm(request, quiz, request.POST, request.FILES)
@@ -191,32 +195,16 @@ def questionDetailView(request, quizId, questionId):
 
 
 def userCreatedQuizzesView(request):
-    query = request.GET.get('query')
-    qFilterSet = []
-    attributesToSearch = [
-        'name', 'description', 'url',
-        'topic__name', 'topic__description',
-        'topic__subject__name', 'topic__subject__description'
-    ]
-
-    if query and query.strip():
-        qFilterSet.append(
-            reduce(
-                operator.or_, [Q(**{f'{v}__icontains': query}) for v in attributesToSearch]
-            )
-        )
-
-    qFilterSet.append(
+    filterList = [
         reduce(
             operator.or_, [Q(**{'creator_id': request.user.id})]
         )
-    )
+    ]
 
-    quizList = Quiz.objects.filter(reduce(operator.and_, qFilterSet)).select_related('topic__subject').distinct()
     context = {
-        'quizList': quizList
+        'quizList': generalOperations.performComplexQuizSearch(request.GET.get('query'), filterList)
     }
-    return render(request, 'quiz/userCreatedQuizzesView.html', context)
+    return render(request, 'quiz/quizListView.html', context)
 
 
 def quizAttemptView(request, attemptId):

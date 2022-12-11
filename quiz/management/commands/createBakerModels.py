@@ -13,7 +13,7 @@ class Command(BaseCommand):
     help = 'Create Baker Model'
 
     def handle(self, *args, **kwargs):
-        bakerOperations.createSubjectsAndTopics()
+        bakerOperations.createSubjectsAndTopics(1, 1)
         bakerOperations.createUsers()
 
         allUsers = User.objects.all()
