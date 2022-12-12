@@ -2,32 +2,20 @@
 {% load static %}
 {% block content %}
     <link type="text/css" rel="stylesheet" href="{% static 'css/baseFormStyle.css' %}">
-
     <br>
     <div class="container" style="color: black;">
         {% if quizId %}
             <div class="row">
-                <div class="col-sm">
-                    <a class="btn btn-primary btn-sm btn-block"
-                       href="{% url 'quiz:create-essay-question-view' quizId=quizId %}" role="button">Create Essay
-                        Question</a>
+                <div class="col">
+                    <a type="button" class="btn btn-outline-dark btn-sm btn-block"
+                       href="{% url 'quiz:quiz-detail-view' quizId=quizId %}">Quiz Detail</a>
                 </div>
-                <div class="col-sm">
-                    <a class="btn btn-primary btn-sm btn-block"
-                       href="{% url 'quiz:create-multiple-choice-question-view' quizId=quizId %}" role="button">Create
-                        Multiple Choice
-                        Question</a>
-                </div>
-                <div class="col-sm">
-                    <a class="btn btn-primary btn-sm btn-block"
-                       href="{% url 'quiz:create-true-or-false-question-view' quizId=quizId %}" role="button">Create
-                        True or
-                        False
-                        Question</a>
+                <div class="col">
+                    <a type="button" class="btn btn-outline-dark btn-sm btn-block"
+                       href="{% url 'quiz:quiz-attempts-for-quiz-view' quizId=quizId %}">Quiz Attempts</a>
                 </div>
             </div>
         {% endif %}
-
         <br>
         <div class="row">
             <form method="post" class="form-control">
@@ -72,7 +60,30 @@
                 </div>
             </form>
         </div>
-        <br><br><br>
+        <hr>
+        {% if quizId %}
+            <div class="row">
+                <div class="col-sm">
+                    <a class="btn btn-primary btn-sm btn-block"
+                       href="{% url 'quiz:create-essay-question-view' quizId=quizId %}" role="button">Create Essay
+                        Question</a>
+                </div>
+                <div class="col-sm">
+                    <a class="btn btn-primary btn-sm btn-block"
+                       href="{% url 'quiz:create-multiple-choice-question-view' quizId=quizId %}" role="button">Create
+                        Multiple Choice
+                        Question</a>
+                </div>
+                <div class="col-sm">
+                    <a class="btn btn-primary btn-sm btn-block"
+                       href="{% url 'quiz:create-true-or-false-question-view' quizId=quizId %}" role="button">Create
+                        True or
+                        False
+                        Question</a>
+                </div>
+            </div>
+        {% endif %}
+        <hr>
         {% for question in quizQuestions %}
             <div class="card">
                 <div class="card-body" style="padding: 1rem;">

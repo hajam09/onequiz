@@ -10,6 +10,7 @@ register = template.Library()
 def navigationPanel(request):
     links = [
         linkItem('Home', reverse('quiz:index-view'), None),
+        linkItem('Create a Quiz', reverse('quiz:create-quiz'), None),
     ]
 
     if request.user.is_authenticated:

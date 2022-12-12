@@ -7,9 +7,27 @@
         .container {
             color: black;
         }
+
+        .btn-group-xs > .btn, .btn-xs {
+            padding: .25rem .4rem;
+            font-size: .875rem;
+            line-height: .5;
+            border-radius: .2rem;
+        }
     </style>
 
     <div class="container">
+        <div class="row">
+            <div class="col">
+                <a type="button" class="btn btn-outline-dark btn-sm btn-block"
+                   href="{% url 'quiz:quiz-detail-view' quizId=quizId %}">Quiz Detail</a>
+            </div>
+            <div class="col">
+                <a type="button" class="btn btn-outline-dark btn-sm btn-block"
+                   href="{% url 'quiz:quiz-attempts-for-quiz-view' quizId=quizId %}">Quiz Attempts</a>
+            </div>
+        </div>
+        <br>
         <table class="table">
             <thead class="thead-dark">
             <tr>
@@ -25,7 +43,27 @@
                     <th scope="row">{{ quizAttempt.user.get_full_name }}</th>
                     <td>{{ quizAttempt.createdDttm }}</td>
                     <td>{{ quizAttempt.get_status_display }}</td>
-                    <td></td>
+                    <td>
+                        {% if quizAttempt.status == 'MARKED' %}
+                            <a type="button" href="{{ quizAttempt.getAttemptUrl }}" class="btn btn-primary btn-sm"
+                               data-toggle="tooltip" data-placement="top" title="View this attempt">
+                                <i class="fa fa-eye"></i>
+                            </a>
+                        {% elif quizAttempt.status == 'SUBMITTED' %}
+                            <a type="button" href="{{ quizAttempt.getAttemptUrl }}" class="btn btn-warning btn-sm"
+                               data-toggle="tooltip" data-placement="top" title="Mark this attempt">
+                                <i class="fa fa-check"></i>
+                            </a>
+                        {% endif %}
+                        <a type="button" class="btn btn-info btn-sm" data-toggle="tooltip" data-placement="top"
+                           title="Flag this attempt">
+                            <i class="far fa-flag"></i>
+                        </a>
+                        <a type="button" class="btn btn-danger btn-sm" data-toggle="tooltip" data-placement="top"
+                           title="Delete this attempt">
+                            <i class="fas fa-trash"></i>
+                        </a>
+                    </td>
                 </tr>
             {% endfor %}
             </tbody>
