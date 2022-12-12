@@ -31,7 +31,7 @@ class AccountsLoginViewTest(BaseTestViews):
         sessionKey = self.getSessionKey()
 
         self.assertEqual(response.status_code, 200)
-        self.assertRedirects(response, '/quiz/')
+        self.assertRedirects(response, '/')
         self.assertIn('_auth_user_id', self.client.session)
         self.assertEqual(int(self.client.session['_auth_user_id']), self.user.pk)
         self.assertEqual(cache.get(sessionKey), None)

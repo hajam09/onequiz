@@ -31,7 +31,7 @@ class QuestionResponseUpdateApiEventVersion1Component(BaseTestAjax):
         response = self.post(path=path)
         ajaxResponse = json.loads(response.content)
         self.assertEqual(200, response.status_code)
-        return ajaxResponse['redirectUrl'].split('/')[3]
+        return ajaxResponse['redirectUrl'].split('/')[2]
 
     @patch('quiz.api.featureFlagOperations')
     def testWhenFeatureFlagIsOffReturnFalse(self, mockFeatureFlagOperations):

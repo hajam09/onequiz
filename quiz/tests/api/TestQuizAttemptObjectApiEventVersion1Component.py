@@ -31,7 +31,7 @@ class QuizAttemptObjectApiEventVersion1ComponentTest(BaseTestAjax):
         response = self.post(path=path)
         ajaxResponse = json.loads(response.content)
         self.assertEqual(200, response.status_code)
-        return ajaxResponse['redirectUrl'].split('/')[3]
+        return ajaxResponse['redirectUrl'].split('/')[2]
 
     def testWhenAnotherAttemptIsInProgressThenReturnItsRedirectUrl(self):
         quizAttemptId = self.createQuizAttemptAndTheResponseObjects()
@@ -44,7 +44,7 @@ class QuizAttemptObjectApiEventVersion1ComponentTest(BaseTestAjax):
         self.assertEqual(ajaxResponse['message'], 'You already have an attempt that is in progress.')
 
         self.assertIsNotNone(ajaxResponse['redirectUrl'])
-        self.assertEqual(ajaxResponse['redirectUrl'], f'/quiz/quiz-attempt/{quizAttemptId}/')
+        self.assertEqual(ajaxResponse['redirectUrl'], f'/quiz-attempt/{quizAttemptId}/')
 
     def testStartQuizAttemptForNonExistingQuiz(self):
         # TODO: Not Implemented
@@ -59,7 +59,7 @@ class QuizAttemptObjectApiEventVersion1ComponentTest(BaseTestAjax):
         self.assertTrue(ajaxResponse['success'])
         self.assertIsNotNone(ajaxResponse['redirectUrl'])
 
-        quizAttemptId = ajaxResponse['redirectUrl'].split('/')[3]
+        quizAttemptId = ajaxResponse['redirectUrl'].split('/')[2]
         quizAttempt = QuizAttempt.objects.get(id=quizAttemptId)
         self.assertEqual(QuizAttempt.Status.IN_PROGRESS, quizAttempt.status)
         self.assertEqual(quizAttempt.quiz.getQuestions().count(), quizAttempt.responses.count())
