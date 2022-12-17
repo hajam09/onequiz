@@ -1,6 +1,7 @@
 import operator
 from functools import reduce
 
+from django.contrib.auth.decorators import login_required
 from django.db.models import Q
 from django.http import Http404, HttpResponseForbidden
 from django.shortcuts import render, redirect
@@ -24,6 +25,7 @@ def indexView(request):
     return render(request, 'quiz/quizListView.html', context)
 
 
+@login_required
 def createEssayQuestionView(request, quizId):
     try:
         quiz = Quiz.objects.get(id=quizId, creator=request.user)
@@ -48,6 +50,7 @@ def createEssayQuestionView(request, quizId):
     return render(request, 'quiz/essayQuestionTemplateView.html', context)
 
 
+@login_required
 def createMultipleChoiceQuestionView(request, quizId):
     try:
         quiz = Quiz.objects.get(id=quizId, creator=request.user)
@@ -72,6 +75,7 @@ def createMultipleChoiceQuestionView(request, quizId):
     return render(request, 'quiz/multipleChoiceQuestionTemplateView.html', context)
 
 
+@login_required
 def createTrueOrFalseQuestionView(request, quizId):
     try:
         quiz = Quiz.objects.get(id=quizId, creator=request.user)
@@ -96,6 +100,7 @@ def createTrueOrFalseQuestionView(request, quizId):
     return render(request, 'quiz/trueOrFalseQuestionTemplateView.html', context)
 
 
+@login_required
 def createQuizView(request):
     if request.method == "POST":
         form = QuizCreateForm(request, request.POST)
@@ -141,6 +146,7 @@ def quizDetailView(request, quizId):
     return render(request, 'quiz/quizTemplateView.html', context)
 
 
+@login_required
 def questionDetailView(request, quizId, questionId):
     try:
         question = Question.objects.get_subclass(id=questionId, quizQuestions=quizId)
@@ -194,6 +200,7 @@ def questionDetailView(request, quizId, questionId):
     return render(request, template, context)
 
 
+@login_required
 def userCreatedQuizzesView(request):
     filterList = [
         reduce(
@@ -207,6 +214,7 @@ def userCreatedQuizzesView(request):
     return render(request, 'quiz/quizListView.html', context)
 
 
+@login_required
 def quizAttemptView(request, attemptId):
     try:
         quizAttempt = QuizAttempt.objects.select_related('user', 'quiz__creator').get(id=attemptId)
@@ -228,6 +236,7 @@ def quizAttemptView(request, attemptId):
     return render(request, 'quiz/quizAttemptView.html', context)
 
 
+@login_required
 def quizAttemptResultView(request, attemptId):
     result = Result.objects.select_related('quizAttempt__quiz').filter(quizAttempt__id=attemptId).order_by('-id')
     if result.count() == 0:
@@ -261,6 +270,7 @@ class AttemptedQuizzesView(ListView):
         return QuizAttempt.objects.select_related('quiz__topic__subject').filter(user=self.request.user)
 
 
+@login_required
 def quizAttemptsForQuizView(request, quizId):
     quizAttemptList = QuizAttempt.objects.select_related('user').filter(quiz_id=quizId)
     # types of actions: View this attempt, Mark this attempt / View results, Flag this attempt, Delete this attempt.

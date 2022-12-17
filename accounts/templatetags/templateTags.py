@@ -10,17 +10,20 @@ register = template.Library()
 def navigationPanel(request):
     links = [
         linkItem('Home', reverse('quiz:index-view'), None),
-        linkItem('Create a Quiz', reverse('quiz:create-quiz'), None),
     ]
 
     if request.user.is_authenticated:
-        links.append(
-            linkItem('Account', '', None, [
-                linkItem('History', reverse('quiz:attempted-quizzes-view'), Icon('', 'fas fa-book-open', '15')),
-                linkItem('My Quizzes', reverse('quiz:user-created-quizzes-view'), Icon('', 'fas fa-question', '15')),
-                None,
-                linkItem('Logout', reverse('accounts:logout'), Icon('', 'fas fa-sign-out-alt', '15')),
-            ]),
+        links.extend(
+            [
+                linkItem('Create a Quiz', reverse('quiz:create-quiz'), None),
+                linkItem('Account', '', None, [
+                    linkItem('History', reverse('quiz:attempted-quizzes-view'), Icon('', 'fas fa-book-open', '15')),
+                    linkItem('My Quizzes', reverse('quiz:user-created-quizzes-view'),
+                             Icon('', 'fas fa-question', '15')),
+                    None,
+                    linkItem('Logout', reverse('accounts:logout'), Icon('', 'fas fa-sign-out-alt', '15')),
+                ]),
+            ]
         )
     else:
         links.append(
