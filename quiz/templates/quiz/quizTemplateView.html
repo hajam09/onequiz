@@ -110,7 +110,16 @@
         <br><br><br>
     </div>
 
-    <script>
+	<script>
+
+        window.addEventListener('load', function () {
+            let isSubjectDropdownEmpty = $('#id_subject').has('option').length === 0;
+            let isTopicDropdownEmpty = $('#id_topic').has('option').length === 0;
+            let isDifficultyDropdownEmpty = $('#id_difficulty').has('option').length === 0;
+            if (isSubjectDropdownEmpty || isTopicDropdownEmpty || isDifficultyDropdownEmpty) {
+                location.reload();
+            }
+        })
 
         $("#id_subject").on('change', function () {
             let subjectId = $(this).val();

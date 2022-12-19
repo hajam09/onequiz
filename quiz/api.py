@@ -63,7 +63,7 @@ class QuizAttemptObjectApiEventVersion1Component(View):
                 newBulkResponseList.append(
                     TrueOrFalseResponse.objects.create(
                         question_id=question.id,
-                        isChecked=None
+                        trueSelected=None
                     )
                 )
             elif isinstance(question, MultipleChoiceQuestion):
@@ -149,7 +149,7 @@ class QuestionResponseUpdateApiEventVersion1Component(View):
             responseInstance.essayresponse.answer = put.get('response').get('text')
             responseInstance.essayresponse.save()
         elif put.get('question').get('type') == 'TrueOrFalseQuestion':
-            responseInstance.trueorfalseresponse.isChecked = put.get('response').get('selectedOption')
+            responseInstance.trueorfalseresponse.trueSelected = put.get('response').get('selectedOption')
             responseInstance.trueorfalseresponse.save()
         elif put.get('question').get('type') == 'MultipleChoiceQuestion':
             responseInstance.multiplechoiceresponse.answers['answers'] = put.get('response').get('choices')
@@ -210,7 +210,7 @@ class QuizAttemptQuestionsApiEventVersion1Component(View):
             elif response['type'] == 'TrueOrFalseQuestion':
                 existingResponseObject = next((o for o in responseList if o.id == response['response']['id']))
                 if existingResponseObject is not None:
-                    existingResponseObject.trueorfalseresponse.isChecked = response['response']['selectedOption']
+                    existingResponseObject.trueorfalseresponse.trueSelected = response['response']['selectedOption']
                     trueOrFalseResponseObjects.append(existingResponseObject.trueorfalseresponse)
             elif response['type'] == 'MultipleChoiceQuestion':
                 existingResponseObject = next((o for o in responseList if o.id == response['response']['id']))
@@ -221,7 +221,7 @@ class QuizAttemptQuestionsApiEventVersion1Component(View):
                 continue
 
         EssayResponse.objects.bulk_update(essayResponseObjects, ['answer'])
-        TrueOrFalseResponse.objects.bulk_update(trueOrFalseResponseObjects, ['isChecked'])
+        TrueOrFalseResponse.objects.bulk_update(trueOrFalseResponseObjects, ['trueSelected'])
         MultipleChoiceResponse.objects.bulk_update(multipleChoiceResponseObjects, ['answers'])
 
         quizAttemptAutomaticMarking = QuizAttemptAutomaticMarking(quizAttempt, quizAttempt.quiz.getQuestions(), responseList)

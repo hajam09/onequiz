@@ -1,7 +1,6 @@
 import datetime
 import random
 
-import jsonfield
 from django.contrib.auth.models import User
 from django.core.validators import MinValueValidator, MaxValueValidator
 from django.db import models
@@ -78,20 +77,6 @@ class Question(BaseModel):
 class EssayQuestion(Question):
     answer = models.TextField()
 
-    def checkIfCorrect(self, guess):
-        return False
-
-    def getAnswers(self):
-        return False
-
-    def getAnswersList(self):
-        return False
-
-    def answerChoiceToString(self, guess):
-        return str(guess)
-
-
-
     class Meta:
         verbose_name = 'EssayQuestion'
         verbose_name_plural = 'EssayQuestions'
@@ -104,11 +89,7 @@ class MultipleChoiceQuestion(Question):
         NONE = 'NONE', _('None')
 
     answerOrder = models.CharField(max_length=30, choices=Order.choices, default=Order.RANDOM)
-    choices = jsonfield.JSONField()
-
-    def checkIfCorrect(self, pk):
-        answer = Answer.objects.get(id=pk)
-        return answer.isCorrect
+    choices = models.JSONField()
 
     def orderAnswers(self, queryset):
         if self.answerOrder == self.Order.SEQUENTIAL:
@@ -119,18 +100,6 @@ class MultipleChoiceQuestion(Question):
             return queryset.order_by()
         return queryset
 
-    def get_answers(self):
-        return self.orderAnswers(Answer.objects.filter(question=self))
-
-    def getAnswers(self):
-        return Answer.objects.filter(question=self)
-
-    def getAnswersList(self):
-        return [(answer.id, answer.content) for answer in self.orderAnswers(Answer.objects.filter(question=self))]
-
-    def answerChoiceToString(self, guess):
-        return Answer.objects.get(id=guess).content
-
     class Meta:
         verbose_name = 'MultipleChoiceQuestion'
         verbose_name_plural = 'MultipleChoiceQuestions'
@@ -139,51 +108,9 @@ class MultipleChoiceQuestion(Question):
 class TrueOrFalseQuestion(Question):
     isCorrect = models.BooleanField(default=False)
 
-    def checkIfCorrect(self, guess):
-        if guess == "True":
-            guessBool = True
-        elif guess == "False":
-            guessBool = False
-        else:
-            return False
-
-        return guessBool == self.isCorrect
-
-    def getAnswers(self):
-        context = [
-            {'correct': self.checkIfCorrect("True"), 'content': 'True'},
-            {'correct': self.checkIfCorrect("False"), 'content': 'False'}
-        ]
-        return context
-
-    def getAnswersList(self):
-        return [(True, True), (False, False)]
-
-    def answerChoiceToString(self, guess):
-        return str(guess)
-
     class Meta:
         verbose_name = 'TrueOrFalseQuestion'
         verbose_name_plural = 'TrueOrFalseQuestions'
-
-
-# TODO: Remove
-class Answer(BaseModel):
-    question = models.ForeignKey(Question, on_delete=models.CASCADE, related_name='answers')
-    content = models.TextField()
-    isCorrect = models.BooleanField(default=False)
-
-    def __str__(self):
-        return self.content
-
-    class Meta:
-        verbose_name = 'Answer'
-        verbose_name_plural = 'Answers'
-
-    # def ifCorrect(self, userAnswer):
-    #     stripeText = re.sub(' +', ' ', self.content)
-    #     stripeUserAnswer = re.sub(' +', ' ', userAnswer)
-    #     return stripeText.casefold() == stripeUserAnswer.casefold()
 
 
 class Quiz(BaseModel):
@@ -227,67 +154,6 @@ class Quiz(BaseModel):
     def getUrl(self):
         return reverse('quiz:quiz-detail-view', kwargs={'quizId': self.id})
 
-    # @property
-    # def getQuestions(self):
-    #     questions = list(self.questions.all())
-    #     if self.inRandomOrder:
-    #         random.shuffle(questions)
-    #     return questions
-
-    @property
-    def getMaxScore(self):
-        return self.getQuestions().count()
-
-
-# class ProgressManager(models.Manager):
-#
-#     def newProgress(self, user):
-#         newProgress = self.create(user=user, score='')
-#         newProgress.save()
-#         return newProgress
-#
-#
-# class Progress(BaseModel):
-#     """
-#        Progress is used to track an individual signed in users score on different
-#        quiz's and categories
-#        Data stored in csv using the format:
-#            category, score, possible, category, score, possible, ...
-#     """
-#     user = models.OneToOneField(User, on_delete=models.CASCADE)
-
-
-# class Question(BaseModel):
-#     class AnswerType(models.TextChoices):
-#         TEXT = 'TEXT', _('Text')  # free text -> answer depends on the user.
-#         RADIO_BOX = 'RADIO_BOX', _('Radio box')  # radio box options -> single correct answer from multiple choices.
-#         CHECK_BOX = 'CHECK_BOX', _('Check box')  # check box options -> multiple correct answers from multiple choices
-#
-#     quiz = models.ForeignKey(Quiz, on_delete=models.CASCADE, related_name='questions')
-#     figure = models.ImageField(blank=True, null=True, upload_to='uploads/%Y/%m/%d')
-#     content = models.TextField()
-#     answerType = models.CharField(max_length=64, choices=AnswerType.choices)
-#     explanation = models.TextField(max_length=2048, blank=True, null=True)
-#
-#     objects = InheritanceManager()
-#
-#     @property
-#     def getAnswers(self):
-#         return self.answers.all()
-
-
-# class Answer(BaseModel):
-#     content = models.TextField()
-#     isCorrect = models.BooleanField(default=False)
-#     question = models.ForeignKey(Question, on_delete=models.CASCADE, related_name='answers')
-#     marks = models.SmallIntegerField(blank=True, null=True, default=1)
-
-# def ifCorrect(self, userAnswer):
-#     stripeText = re.sub(' +', ' ', self.content)
-#     stripeUserAnswer = re.sub(' +', ' ', userAnswer)
-#     return stripeText.casefold() == stripeUserAnswer.casefold()
-
-
 
 class Response(BaseModel):
     question = models.ForeignKey(Question, on_delete=models.CASCADE)
@@ -310,7 +176,7 @@ class EssayResponse(Response):
 
 
 class MultipleChoiceResponse(Response):
-    answers = jsonfield.JSONField()
+    answers = models.JSONField()
 
     class Meta:
         verbose_name = 'MultipleChoiceResponse'
@@ -318,8 +184,7 @@ class MultipleChoiceResponse(Response):
 
 
 class TrueOrFalseResponse(Response):
-    # TODO: change this to isTrueChecked
-    isChecked = models.BooleanField(blank=True, null=True, default=False)
+    trueSelected = models.BooleanField(blank=True, null=True)
 
     class Meta:
         verbose_name = 'TrueOrFalseResponse'

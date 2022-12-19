@@ -130,7 +130,7 @@ class QuestionAndResponse:
             'type': 'TrueOrFalseQuestion',
             'response': {
                 'id': responseObject.trueorfalseresponse.id,
-                'selectedOption': responseObject.trueorfalseresponse.isChecked,
+                'selectedOption': responseObject.trueorfalseresponse.trueSelected,
                 'mark': self.parseResponseMark(responseObject.trueorfalseresponse.mark)
             }
         }
@@ -246,7 +246,7 @@ class QuizAttemptAutomaticMarking:
                 continue
             elif isinstance(question, TrueOrFalseQuestion):
                 actualAnswer = question.isCorrect
-                providedAnswer = responseObject.trueorfalseresponse.isChecked
+                providedAnswer = responseObject.trueorfalseresponse.trueSelected
                 awardedMark = question.mark if actualAnswer == providedAnswer else 0
                 if awardedMark == question.mark:
                     numberOfCorrectAnswers += 1

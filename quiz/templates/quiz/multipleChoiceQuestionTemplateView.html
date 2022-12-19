@@ -65,7 +65,13 @@
         </form>
         <br><br>
     </div>
-    <script type="text/babel">
+	<script type="text/babel">
+
+        window.addEventListener('load', function () {
+            if ($('#id_answerOrder').has('option').length === 0) {
+                location.reload();
+            }
+        })
 
         function showAnswerListError() {
             let fieldErrorListElement = $('#fieldErrorList');
