@@ -1,20 +1,10 @@
 {% extends "accounts/base.html" %}
 {% load static %}
 {% block content %}
-    <script crossorigin src="https://unpkg.com/react@17/umd/react.development.js"></script>
-    <script crossorigin src="https://unpkg.com/react-dom@17/umd/react-dom.development.js"></script>
-    <script src="https://unpkg.com/babel-standalone@6/babel.min.js"></script>
-    <style>
-        .container {
-            color: black;
-        }
-    </style>
-
     <link type="text/css" rel="stylesheet" href="{% static 'css/baseFormStyle.css' %}">
     <br>
     <div class="container">
         <div class="row form-control" id="question-container">
-
         </div>
     </div>
 
@@ -164,7 +154,9 @@
                         <div className="col-auto">
                             <input type="number" className="form-control" ref="awardedMarkInputRef"
                                    value={this.props.awardedMark == null ? '' : this.props.awardedMark}
-                                   onChange={this.updateMarkForThisQuestion} style={style1}></input>
+                                   onChange={this.updateMarkForThisQuestion} style={style1}
+                                   disabled={!this.props.getQuestionComponentState().mode.canMark()}
+                            ></input>
                         </div>
                         <b style={style2}>/</b>
                         <div className="col-auto">
@@ -176,7 +168,60 @@
             }
         }
 
-        class EssayQuestionComponent extends React.Component {
+        class BaseQuestionComponent extends React.Component {
+            constructor(props) {
+                super(props);
+            }
+
+            renderQuestionFigureContainer = () => {
+                const style2 = {width: '80%'}
+                if (this.props.question.figure !== null) {
+                    return (<span>
+						<h5>Figure</h5>
+							<img className="rounded mx-auto d-block" src={this.props.question.figure}
+                                 style={style2} alt="Figure could be found"></img>
+						</span>
+                    )
+                }
+                return (<span></span>)
+            }
+
+            renderQuestionContentContainer = () => {
+                if (this.props.question.content.trim().length !== 0) {
+                    return (
+                        <span><h5>Content / Question</h5><p>{this.props.question.content}</p></span>
+                    )
+                }
+                return (<span></span>)
+            }
+
+            renderResponseContainer = () => {
+                // noop
+            }
+
+            render = () => {
+                return (
+                    <div>
+                        <div className="row">
+                            <div className="col">
+                                <h3>Question {this.props.getQuestionComponentState().currentIndex + 1} of {this.props.getQuestionComponentState().questionLength}</h3>
+                            </div>
+                            <div className="col-auto">{this.props.getQuestionComponentState().countdown}</div>
+                        </div>
+                        {this.renderQuestionFigureContainer()}
+                        <br></br>
+                        {this.renderQuestionContentContainer()}
+                        <br></br>
+                        <br></br>
+                        {this.renderResponseContainer()}
+                        <br></br>
+                        {this.props.getScoreComponentObject(this.props.question.id, this.props.question.response.awardedMark, this.props.question.maximumMark)}
+                    </div>
+                )
+            }
+        }
+
+        class EssayQuestionComponent extends BaseQuestionComponent {
             constructor(props) {
                 super(props);
             }
@@ -187,57 +232,27 @@
                 this.props.updateEssayAnswerForQuestion(questionId, newText)
             }
 
-            render() {
+            renderResponseContainer = () => {
                 const style1 = {
                     borderRadius: 0,
                 }
-                const style2 = {
-                    width: '80%',
-                }
                 return (
                     <div>
-                        <div className="row">
-                            <div className="col">
-                                <h3>Question {this.props.getQuestionComponentState().currentIndex + 1} of {this.props.getQuestionComponentState().questionLength}</h3>
-                            </div>
-                            <div className="col-auto">{this.props.getQuestionComponentState().countdown}</div>
-                        </div>
-                        {
-                            this.props.question.figure !== null ?
-                                <span>
-                                    <h5>Figure</h5>
-                                    <img className="rounded mx-auto d-block" src={this.props.question.figure} style={style2}></img>
-                                </span> : <span></span>
-                        }
-                        <br></br>
-                        {
-                            this.props.question.content.trim().length !== 0 ?
-                                <span><h5>Content / Question</h5><p>{this.props.question.content}</p></span> :
-                                <span></span>
-                        }
-                        <br></br>
-                        <br></br>
                         <h5>Your Answer</h5>
                         <textarea name="answer" ref="answerInputRef" value={this.props.question.response.text} cols="40"
                                   disabled={!this.props.getQuestionComponentState().mode.canEdit()}
                                   rows="5" onChange={this.updateAnswerForThisQuestion}
                                   className="form-control col" style={style1}></textarea>
-                        <br></br>
-                        {
-                            this.props.getQuestionComponentState().mode.canMark() ? <span> <div className="row"> <div
-                                    className="col"> <div className="text-right"><ScoreComponent
-                                    questionId={this.props.question.id}
-                                    updateAwardedMarkForQuestion={this.props.updateAwardedMarkForQuestion}
-                                    awardedMark={this.props.question.response.awardedMark}
-                                    maximumMark={this.props.question.maximumMark}/></div> </div> </div> <br></br> </span> :
-                                <span></span>
-                        }
                     </div>
                 )
             }
+
+            render() {
+                return super.render();
+            }
         }
 
-        class TrueOrFalseQuestionComponent extends React.Component {
+        class TrueOrFalseQuestionComponent extends BaseQuestionComponent {
             constructor(props) {
                 super(props);
                 this.state = {
@@ -255,23 +270,9 @@
                 this.props.updateTrueOrFalseAnswerForQuestion(questionId, false);
             }
 
-            render() {
+            renderResponseContainer = () => {
                 return (
                     <div>
-                        <div className="row">
-                            <div className="col">
-                                <h3>Question {this.props.getQuestionComponentState().currentIndex + 1} of {this.props.getQuestionComponentState().questionLength}</h3>
-                            </div>
-                            <div className="col-auto">{this.props.getQuestionComponentState().countdown}</div>
-                        </div>
-                        <br></br>
-                        {
-                            this.props.question.content.trim().length !== 0 ?
-                                <span><h5>Content / Question</h5><p>{this.props.question.content}</p></span> :
-                                <span></span>
-                        }
-                        <br></br>
-                        <br></br>
                         <h5>Is the answer True or False?</h5>
                         <fieldset className="inline">
                             <div className="multiple-choice">
@@ -290,18 +291,12 @@
                                 <label className="form-label">False</label>
                             </div>
                         </fieldset>
-                        {
-                            this.props.getQuestionComponentState().mode.canMark() ? <span> <div className="row"> <div
-                                    className="col"> <div className="text-right"><ScoreComponent
-                                    questionId={this.props.question.id}
-                                    updateAwardedMarkForQuestion={this.props.updateAwardedMarkForQuestion}
-                                    awardedMark={this.props.question.response.awardedMark}
-                                    maximumMark={this.props.question.maximumMark}/></div> </div> </div> <br></br> </span> :
-                                <span></span>
-                        }
-                        <br></br>
                     </div>
                 )
+            }
+
+            render() {
+                return super.render();
             }
         }
 
@@ -337,45 +332,24 @@
             }
         }
 
-        class MultipleChoiceQuestionComponent extends React.Component {
+        class MultipleChoiceQuestionComponent extends BaseQuestionComponent {
             constructor(props) {
                 super(props);
             }
 
-            render() {
+            renderResponseContainer = () => {
                 return (
                     <div>
-                        <div className="row">
-                            <div className="col">
-                                <h3>Question {this.props.getQuestionComponentState().currentIndex + 1} of {this.props.getQuestionComponentState().questionLength}</h3>
-                            </div>
-                            <div className="col-auto">{this.props.getQuestionComponentState().countdown}</div>
-                        </div>
-                        <br></br>
-                        {
-                            this.props.question.content.trim().length !== 0 ?
-                                <span><h5>Content / Question</h5><p>{this.props.question.content}</p></span> :
-                                <span></span>
-                        }
-                        <br></br>
-                        <br></br>
-
                         <h5>Select the correct answers.</h5>
                         {this.props.question.response.choices.map((item) => <AnswerOptionComponent key={item.id}
                                                                                                    updateMultipleChoiceQuestionAnswerOptionForQuestion={this.props.updateMultipleChoiceQuestionAnswerOptionForQuestion}
                                                                                                    choice={item}/>)}
-                        {
-                            this.props.getQuestionComponentState().mode.canMark() ? <span> <div className="row"> <div
-                                    className="col"> <div className="text-right"><ScoreComponent
-                                    questionId={this.props.question.id}
-                                    updateAwardedMarkForQuestion={this.props.updateAwardedMarkForQuestion}
-                                    awardedMark={this.props.question.response.awardedMark}
-                                    maximumMark={this.props.question.maximumMark}/></div> </div> </div> <br></br> </span> :
-                                <span></span>
-                        }
-                        <br></br>
                     </div>
                 )
+            }
+
+            render() {
+                return super.render();
             }
         }
 
@@ -790,7 +764,7 @@
                     .then((json) => {
                         if (json.success) {
                             let redirectUrl = this.state.quizResultView;
-                            this.redirectAfterNSeconds(5, redirectUrl);
+                            this.redirectAfterNSeconds(3, redirectUrl);
                             alert('You have marked this quiz. You will be redirected to the results page.')
                         }
                     })
@@ -837,6 +811,7 @@
                         }
 
                     } else {
+                        // Skip if unknown question type is found.
                         continue;
                     }
 
@@ -859,7 +834,7 @@
                     .then((json) => {
                         if (json.success) {
                             let redirectUrl = this.state.quizResultView;
-                            this.redirectAfterNSeconds(5, redirectUrl);
+                            this.redirectAfterNSeconds(3, redirectUrl);
                             alert('You have submitted your quiz. You will be redirected to the results page.')
                         }
                     })
@@ -883,49 +858,6 @@
                 return true;
             }
 
-            renderSubmitOrNextButton = () => {
-                if (this.state.mode.canEdit()) {
-                    if (this.state.currentIndex !== this.state.questionList.length) {
-                        return (
-                            <button type="button" className="btn btn-primary" onClick={this.showNextQuestion}>
-                                Next
-                            </button>
-                        )
-                    } else {
-                        return (
-                            <button type="button" className="btn btn-success" onClick={this.submitQuiz}>Submit</button>
-                        )
-                    }
-
-                } else if (this.state.mode.canView()) {
-                    if (this.state.currentIndex === this.state.questionList.length - 1) {
-                        return (
-                            <a type="button" href={this.state.quizResultView} className="btn btn-info">View Results</a>
-                        )
-                    } else {
-                        return (
-                            <button type="button" className="btn btn-primary" onClick={this.showNextQuestion}>
-                                Next
-                            </button>
-                        )
-                    }
-
-                } else if (this.state.mode.canMark()) {
-                    if (this.state.currentIndex !== this.state.questionList.length) {
-                        return (
-                            <button type="button" className="btn btn-primary" onClick={this.showNextQuestion}>
-                                Next
-                            </button>
-                        )
-                    } else if (this.isMarkingValid()) {
-                        return (
-                            <button type="button" className="btn btn-success"
-                                    onClick={this.confirmAwardMarks}>Confirm</button>
-                        )
-                    }
-                }
-            }
-
             renderPreviousButton = () => {
                 if (this.state.currentIndex > 0)
                     return (
@@ -933,7 +865,33 @@
                             Previous
                         </button>
                     )
-                return <span></span>
+                return (<span></span>)
+            }
+
+            renderSubmitOrNextButton = () => {
+
+                let nxtBtn = <button type="button" className="btn btn-primary"
+                                     onClick={this.showNextQuestion}> Next </button>;
+                let smtBtn = <button type="button" className="btn btn-success"
+                                     onClick={this.submitQuiz}>Submit</button>;
+                let cfmBtn = <button type="button" className="btn btn-success"
+                                     onClick={this.confirmAwardMarks}>Confirm</button>;
+                let vrsBtn = <a type="button" className="btn btn-info" href={this.state.quizResultView}>View
+                    Results</a>;
+
+                if (this.state.mode.canEdit()) {
+                    return this.state.currentIndex !== this.state.questionList.length ? nxtBtn : smtBtn;
+
+                } else if (this.state.mode.canView()) {
+                    return this.state.currentIndex === this.state.questionList.length - 1 ? vrsBtn : nxtBtn;
+
+                } else if (this.state.mode.canMark()) {
+                    if (this.state.currentIndex !== this.state.questionList.length) {
+                        return nxtBtn
+                    } else if (this.isMarkingValid()) {
+                        return cfmBtn
+                    }
+                }
             }
 
             getQuizReviewComponent = () => {
@@ -984,17 +942,38 @@
                     return (
                         <span>
                             <div className="progress">
-                            <div
-                                className={"progress-bar progress-bar-striped progress-bar-animated bg-" + this.state.progress.clazz}
-                                role="progressbar" style={style1} aria-valuenow="100" aria-valuemin="0"
-                                aria-valuemax="100">{this.state.progress.percentage > 100 ? 100 : this.state.progress.percentage} %
+                                <div
+                                    className={"progress-bar progress-bar-striped progress-bar-animated bg-" + this.state.progress.clazz}
+                                    role="progressbar" style={style1} aria-valuenow="100" aria-valuemin="0"
+                                    aria-valuemax="100">{this.state.progress.percentage > 100 ? 100 : this.state.progress.percentage} %
+                                </div>
                             </div>
-                        </div>
-                        <br></br>
+                            <br></br>
                         </span>
                     )
                 }
                 return <span></span>
+            }
+
+            getScoreComponentObject = (questionId, awardedMark, maximumMark) => {
+                let canMark = this.getQuestionComponentState().mode.canMark();
+                let isMarked = this.getQuestionComponentState().mode.canView() && '{{ quizAttempt.status }}' === 'MARKED';
+                if (canMark || isMarked) {
+                    return (
+                        <span>
+                            <div className="row"><div className="col"><div className="text-right">
+                                <ScoreComponent
+                                    questionId={questionId}
+                                    updateAwardedMarkForQuestion={this.updateAwardedMarkForQuestion}
+                                    awardedMark={awardedMark}
+                                    maximumMark={maximumMark}
+                                    getQuestionComponentState={this.getQuestionComponentState}/>
+                                </div></div></div>
+                                <br></br>
+                            </span>
+                    )
+                }
+                return (<span></span>)
             }
 
             getCurrentQuizQuestionComponent = () => {
@@ -1002,32 +981,26 @@
                 if (currentQuestion instanceof EssayQuestion) {
                     return (
                         <EssayQuestionComponent question={currentQuestion}
+                                                getScoreComponentObject={this.getScoreComponentObject}
                                                 getQuestionComponentState={this.getQuestionComponentState}
-                                                updateAwardedMarkForQuestion={this.updateAwardedMarkForQuestion}
                                                 updateEssayAnswerForQuestion={this.updateEssayAnswerForQuestion}/>
                     )
                 } else if (currentQuestion instanceof TrueOrFalseQuestion) {
                     return (
                         <TrueOrFalseQuestionComponent question={currentQuestion}
+                                                      getScoreComponentObject={this.getScoreComponentObject}
                                                       getQuestionComponentState={this.getQuestionComponentState}
-                                                      updateAwardedMarkForQuestion={this.updateAwardedMarkForQuestion}
                                                       updateTrueOrFalseAnswerForQuestion={this.updateTrueOrFalseAnswerForQuestion}/>
                     )
                 } else if (currentQuestion instanceof MultipleChoiceQuestion) {
                     return (
                         <MultipleChoiceQuestionComponent question={currentQuestion}
+                                                         getScoreComponentObject={this.getScoreComponentObject}
                                                          getQuestionComponentState={this.getQuestionComponentState}
-                                                         updateAwardedMarkForQuestion={this.updateAwardedMarkForQuestion}
                                                          updateMultipleChoiceQuestionAnswerOptionForQuestion={this.updateMultipleChoiceQuestionAnswerOptionForQuestion}/>
                     )
                 }
-                /*
-                this.state.questionList[this.state.currentIndex] instanceof EssayQuestion ? this.renderEssayQuestionComponent() :
-                                this.state.questionList[this.state.currentIndex] instanceof TrueOrFalseQuestion ? this.renderTrueOrFalseQuestionComponent() :
-                                    this.state.questionList[this.state.currentIndex] instanceof MultipleChoiceQuestion ? this.renderMultipleChoiceQuestionComponent() :
-                                        <span></span>
-                * */
-                return <span></span>
+                return (<span></span>)
             }
 
             render() {
@@ -1045,4 +1018,13 @@
 
         ReactDOM.render(<QuestionComponent/>, document.getElementById('question-container'));
     </script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"
+            integrity="sha512-8Q6Y9XnTbOE+JNvjBQwJ2H8S+UV4uA6hiRykhdtIyDYZ2TprdNmWOUaKdGzOhyr4dCyk287OejbPvwl7lrfqrQ=="
+            crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"
+            integrity="sha512-MOCpqoRoisCTwJ8vQQiciZv0qcpROCidek3GTFS6KTk2+y7munJIlKCVkFCYY+p3ErYFXCjmFjnfTTRSC1OHWQ=="
+            crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/6.26.0/babel.min.js"
+            integrity="sha512-kp7YHLxuJDJcOzStgd6vtpxr4ZU9kjn77e6dBsivSz+pUuAuMlE2UTdKB7jjsWT84qbS8kdCWHPETnP/ctrFsA=="
+            crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 {% endblock %}
