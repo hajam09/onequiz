@@ -1,9 +1,9 @@
 {% extends "accounts/base.html" %}
 {% load static %}
 {% block content %}
-    <link type="text/css" rel="stylesheet" href="{% static 'css/form.css' %}">
-    <br>
-    <style>
+	<link type="text/css" rel="stylesheet" href="{% static 'css/form.css' %}">
+	<br>
+	<style>
         .container {
             color: black;
         }
@@ -14,59 +14,59 @@
             line-height: .5;
             border-radius: .2rem;
         }
-    </style>
+	</style>
 
-    <div class="container">
-        <div class="row">
-            <div class="col">
-                <a type="button" class="btn btn-outline-dark btn-sm btn-block"
-                   href="{% url 'quiz:quiz-detail-view' quizId=quizId %}">Quiz Detail</a>
-            </div>
-            <div class="col">
-                <a type="button" class="btn btn-outline-dark btn-sm btn-block"
-                   href="{% url 'quiz:quiz-attempts-for-quiz-view' quizId=quizId %}">Quiz Attempts</a>
-            </div>
-        </div>
-        <br>
-        <table class="table">
-            <thead class="thead-dark">
-            <tr>
-                <th scope="col">Attempted by</th>
-                <th scope="col">Date and Time</th>
-                <th scope="col">Status</th>
-                <th scope="col">Actions</th>
-            </tr>
-            </thead>
-            <tbody>
-            {% for quizAttempt in quizAttemptList %}
-                <tr>
-                    <th scope="row">{{ quizAttempt.user.get_full_name }}</th>
-                    <td>{{ quizAttempt.createdDttm }}</td>
-                    <td>{{ quizAttempt.get_status_display }}</td>
-                    <td>
-                        {% if quizAttempt.status == 'MARKED' %}
-                            <a type="button" href="{{ quizAttempt.getAttemptUrl }}" class="btn btn-primary btn-sm"
-                               data-toggle="tooltip" data-placement="top" title="View this attempt">
-                                <i class="fa fa-eye"></i>
-                            </a>
-                        {% elif quizAttempt.status == 'SUBMITTED' %}
-                            <a type="button" href="{{ quizAttempt.getAttemptUrl }}" class="btn btn-warning btn-sm"
-                               data-toggle="tooltip" data-placement="top" title="Mark this attempt">
-                                <i class="fa fa-check"></i>
-                            </a>
-                        {% endif %}
-                        <a type="button" class="btn btn-info btn-sm" data-toggle="tooltip" data-placement="top"
-                           title="Flag this attempt">
-                            <i class="far fa-flag"></i>
-                        </a>
-                        <a type="button" class="btn btn-danger btn-sm" data-toggle="tooltip" data-placement="top"
-                           title="Delete this attempt">
-                            <i class="fas fa-trash"></i>
-                        </a>
-                    </td>
-                </tr>
-            {% endfor %}
-            </tbody>
-        </table>
-    </div>
+	<div class="container">
+		<div class="row">
+			<div class="col">
+				<a type="button" class="btn btn-outline-dark btn-sm btn-block"
+				   href="{% url 'quiz:quiz-detail-view' quizId=quizId %}">Quiz Detail</a>
+			</div>
+			<div class="col">
+				<a type="button" class="btn btn-outline-dark btn-sm btn-block"
+				   href="{% url 'quiz:quiz-attempts-for-quiz-view' quizId=quizId %}">Quiz Attempts</a>
+			</div>
+		</div>
+		<br>
+		<table class="table">
+			<thead class="thead-dark">
+			<tr>
+				<th scope="col">Attempted by</th>
+				<th scope="col">Date and Time</th>
+				<th scope="col">Status</th>
+				<th scope="col">Actions</th>
+			</tr>
+			</thead>
+			<tbody>
+			{% for quizAttempt in quizAttemptList %}
+				<tr>
+					<th scope="row">{{ quizAttempt.user.get_full_name }}</th>
+					<td>{{ quizAttempt.createdDttm }}</td>
+					<td>{{ quizAttempt.get_status_display }}</td>
+					<td>
+						{% if quizAttempt.status == 'MARKED' %}
+							<a type="button" href="{{ quizAttempt.getAttemptUrl }}" class="btn btn-primary btn-sm"
+							   data-toggle="tooltip" data-placement="top" title="View this attempt">
+								<i class="fa fa-eye"></i>
+							</a>
+						{% elif quizAttempt.status == 'SUBMITTED' %}
+							<a type="button" href="{{ quizAttempt.getAttemptUrl }}" class="btn btn-warning btn-sm"
+							   data-toggle="tooltip" data-placement="top" title="Mark this attempt">
+								<i class="fa fa-check"></i>
+							</a>
+						{% endif %}
+						<a type="button" class="btn btn-info btn-sm" data-toggle="tooltip" data-placement="top"
+						   title="Flag this attempt">
+							<i class="far fa-flag"></i>
+						</a>
+						<a type="button" class="btn btn-danger btn-sm" data-toggle="tooltip" data-placement="top"
+						   title="Delete this attempt">
+							<i class="fas fa-trash"></i>
+						</a>
+					</td>
+				</tr>
+			{% endfor %}
+			</tbody>
+		</table>
+	</div>
 {% endblock %}

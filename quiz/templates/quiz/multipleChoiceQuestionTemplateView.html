@@ -1,69 +1,69 @@
 {% extends "accounts/base.html" %}
 {% load static %}
 {% block content %}
-    <script crossorigin src="https://unpkg.com/react@17/umd/react.development.js"></script>
-    <script crossorigin src="https://unpkg.com/react-dom@17/umd/react-dom.development.js"></script>
-    <script src="https://unpkg.com/babel-standalone@6/babel.min.js"></script>
-    <link type="text/css" rel="stylesheet" href="{% static 'css/form.css' %}">
-    <br>
-    <div class="container">
-        <form method="post" class="form-control" enctype="multipart/form-data">
-            {% csrf_token %}
-            <legend>
-                <h2 class="heading-h2">{{ formTitle }}</h2>
-            </legend>
+	<script crossorigin src="https://unpkg.com/react@17/umd/react.development.js"></script>
+	<script crossorigin src="https://unpkg.com/react-dom@17/umd/react-dom.development.js"></script>
+	<script src="https://unpkg.com/babel-standalone@6/babel.min.js"></script>
+	<link type="text/css" rel="stylesheet" href="{% static 'css/form.css' %}">
+	<br>
+	<div class="container">
+		<form method="post" class="form-control" enctype="multipart/form-data">
+			{% csrf_token %}
+			<legend>
+				<h2 class="heading-h2">{{ formTitle }}</h2>
+			</legend>
 
-            {% for field in form %}
-                {% if field.field.widget.input_type == 'text' %}
-                    <span class="form-label">{{ field.label }}</span>
-                    {{ field }}
-                {% elif field.field.widget.input_type == 'select' %}
-                    <span class="form-label">{{ field.label }}</span>
-                    {{ field }}
-                {% elif field.field.widget.input_type == 'number' %}
-                    <span class="form-label">{{ field.label }}</span>
-                    {{ field }}
-                {% elif field.field.widget.input_type == 'checkbox' %}
-                    <div class="multiple-choice">
-                        {{ field }}
-                        <label class="form-label">{{ field.label }}</label>
-                    </div>
-                {% elif field.field.widget.input_type == 'radio' %}
-                    <span class="form-label">{{ field.label }}</span>
-                    <fieldset class="inline">
-                        {% for choice in form.isCorrect %}
-                            <div class="multiple-choice">
-                                <input class="form-control" value="{{ choice.choice_label }}"
-                                       type="radio" name="{{ field.html_name }}" required>
-                                <label class="form-label">{{ choice.choice_label }}</label>
-                            </div>
-                        {% endfor %}
-                    </fieldset>
-                {% else %}
-                    <span class="form-label">{{ field.label }}</span>
-                    {{ field }}
-                {% endif %}
+			{% for field in form %}
+				{% if field.field.widget.input_type == 'text' %}
+					<span class="form-label">{{ field.label }}</span>
+					{{ field }}
+				{% elif field.field.widget.input_type == 'select' %}
+					<span class="form-label">{{ field.label }}</span>
+					{{ field }}
+				{% elif field.field.widget.input_type == 'number' %}
+					<span class="form-label">{{ field.label }}</span>
+					{{ field }}
+				{% elif field.field.widget.input_type == 'checkbox' %}
+					<div class="multiple-choice">
+						{{ field }}
+						<label class="form-label">{{ field.label }}</label>
+					</div>
+				{% elif field.field.widget.input_type == 'radio' %}
+					<span class="form-label">{{ field.label }}</span>
+					<fieldset class="inline">
+						{% for choice in form.isCorrect %}
+							<div class="multiple-choice">
+								<input class="form-control" value="{{ choice.choice_label }}"
+									   type="radio" name="{{ field.html_name }}" required>
+								<label class="form-label">{{ choice.choice_label }}</label>
+							</div>
+						{% endfor %}
+					</fieldset>
+				{% else %}
+					<span class="form-label">{{ field.label }}</span>
+					{{ field }}
+				{% endif %}
 
-                {% for error in field.errors %}
-                    <p class="text-center" style="color: red;"><small>{{ error }}</small></p>
-                {% endfor %}
+				{% for error in field.errors %}
+					<p class="text-center" style="color: red;"><small>{{ error }}</small></p>
+				{% endfor %}
 
-                <br>
-            {% endfor %}
+				<br>
+			{% endfor %}
 
-            <div id="answersContainerList">
-            </div>
+			<div id="answersContainerList">
+			</div>
 
-            <div id="fieldErrorList" hidden>
-            </div>
+			<div id="fieldErrorList" hidden>
+			</div>
 
-            <div class="text-right">
-                <input type="reset" class="btn btn-danger" value="Reset">
-                <input type="submit" class="btn btn-primary" value="Submit">
-            </div>
-        </form>
-        <br><br>
-    </div>
+			<div class="text-right">
+				<input type="reset" class="btn btn-danger" value="Reset">
+				<input type="submit" class="btn btn-primary" value="Submit">
+			</div>
+		</form>
+		<br><br>
+	</div>
 	<script type="text/babel">
 
         window.addEventListener('load', function () {
@@ -76,7 +76,7 @@
             let fieldErrorListElement = $('#fieldErrorList');
             fieldErrorListElement.append('{{ form.errors }}');
 
-            if ( fieldErrorListElement.children().length === 0 )
+            if (fieldErrorListElement.children().length === 0)
                 return;
 
             let asElement = document.getElementById('fieldErrorList').firstElementChild.innerHTML;
@@ -169,7 +169,8 @@
 
             increaseRow = () => {
                 let tempList = this.state.choiceComponentList;
-                tempList.push(<ChoiceComponent key={tempList.length + 1} counter={tempList.length + 1} enteredAnswer={''} isChecked={false}/>);
+                tempList.push(<ChoiceComponent key={tempList.length + 1} counter={tempList.length + 1}
+                                               enteredAnswer={''} isChecked={false}/>);
                 this.updateListState(tempList);
             }
 
@@ -207,5 +208,5 @@
         }
 
         ReactDOM.render(<AnswerChoiceComponent/>, document.getElementById('answersContainerList'));
-    </script>
+	</script>
 {% endblock %}

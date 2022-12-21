@@ -1,24 +1,24 @@
 {% extends "accounts/base.html" %}
 {% load static %}
 {% block content %}
-    <script crossorigin src="https://unpkg.com/react@17/umd/react.development.js"></script>
-    <script crossorigin src="https://unpkg.com/react-dom@17/umd/react-dom.development.js"></script>
-    <script src="https://unpkg.com/babel-standalone@6/babel.min.js"></script>
-    <style>
+	<script crossorigin src="https://unpkg.com/react@17/umd/react.development.js"></script>
+	<script crossorigin src="https://unpkg.com/react-dom@17/umd/react-dom.development.js"></script>
+	<script src="https://unpkg.com/babel-standalone@6/babel.min.js"></script>
+	<style>
         .container {
             color: black;
         }
-    </style>
+	</style>
 
-    <link type="text/css" rel="stylesheet" href="{% static 'css/form.css' %}">
-    <br>
-    <div class="container">
-        <div class="row form-control" id="question-container">
+	<link type="text/css" rel="stylesheet" href="{% static 'css/form.css' %}">
+	<br>
+	<div class="container">
+		<div class="row form-control" id="question-container">
 
-        </div>
-    </div>
+		</div>
+	</div>
 
-    <script type="text/babel">
+	<script type="text/babel">
         function getCookie(name) {
             let cookieValue = null;
 
@@ -206,7 +206,8 @@
                             this.props.question.figure !== null ?
                                 <span>
                                     <h5>Figure</h5>
-                                    <img className="rounded mx-auto d-block" src={this.props.question.figure} style={style2}></img>
+                                    <img className="rounded mx-auto d-block" src={this.props.question.figure}
+                                         style={style2}></img>
                                 </span> : <span></span>
                         }
                         <br></br>
@@ -258,11 +259,11 @@
             render() {
                 const style1 = {
                     marginRight: '30px',
-				}
+                }
 
                 const style2 = {
                     marginRight: '20px',
-				}
+                }
                 return (
                     <div>
                         <div className="row">
@@ -327,7 +328,7 @@
                 const style1 = {
                     paddingLeft: '0px',
                 }
-                 const style2 = {
+                const style2 = {
                     marginBottom: '-15px',
                 }
                 return (
@@ -1056,5 +1057,5 @@
         }
 
         ReactDOM.render(<QuestionComponent/>, document.getElementById('question-container'));
-    </script>
+	</script>
 {% endblock %}

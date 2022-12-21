@@ -1,8 +1,8 @@
 {% extends "accounts/base.html" %}
 {% load static %}
 {% block content %}
-    <link type="text/css" rel="stylesheet" href="{% static 'css/form.css' %}">
-    <style>
+	<link type="text/css" rel="stylesheet" href="{% static 'css/form.css' %}">
+	<style>
         .container {
             color: black;
         }
@@ -17,41 +17,41 @@
             line-height: .5;
             border-radius: .2rem;
         }
-    </style>
-    <br>
+	</style>
+	<br>
 
-    <div class="container">
-        <form method="GET" action="{{ request.path }}">
-            <div class="row">
-                <div class="col">
-                    <input type="text" id="query" name="query" class="form-control col"
-                           placeholder="Search for a quiz..."/>
-                </div>
-                <div class="col-auto">
-                    <input type="submit" class="btn btn-secondary btn-sm" value="Search"/>
-                </div>
-            </div>
-        </form>
-        <br><br>
+	<div class="container">
+		<form method="GET" action="{{ request.path }}">
+			<div class="row">
+				<div class="col">
+					<input type="text" id="query" name="query" class="form-control col"
+						   placeholder="Search for a quiz..."/>
+				</div>
+				<div class="col-auto">
+					<input type="submit" class="btn btn-secondary btn-sm" value="Search"/>
+				</div>
+			</div>
+		</form>
+		<br><br>
 
-        {% for quiz in quizList %}
-            <div class="col form-control">
-                <h5><a href="{{ quiz.getUrl }}">{{ quiz.name }}</a></h5>
-                <p>Description: {{ quiz.description }}</p>
-                <h6>
-                    <span class="badge badge-primary">Subject: {{ quiz.topic.subject }}</span>
-                    <span class="badge badge-secondary">Topic: {{ quiz.topic }}</span>
-                    <button type="button" class="btn btn-Dark btn-xs float-right"
-                            onclick=beginQuizAttempt('{{ quiz.id }}')>
-                        <small>Click here to attempt this quiz</small>
-                    </button>
-                </h6>
-            </div>
-            <br>
-        {% endfor %}
-    </div>
+		{% for quiz in quizList %}
+			<div class="col form-control">
+				<h5><a href="{{ quiz.getUrl }}">{{ quiz.name }}</a></h5>
+				<p>Description: {{ quiz.description }}</p>
+				<h6>
+					<span class="badge badge-primary">Subject: {{ quiz.topic.subject }}</span>
+					<span class="badge badge-secondary">Topic: {{ quiz.topic }}</span>
+					<button type="button" class="btn btn-Dark btn-xs float-right"
+							onclick=beginQuizAttempt('{{ quiz.id }}')>
+						<small>Click here to attempt this quiz</small>
+					</button>
+				</h6>
+			</div>
+			<br>
+		{% endfor %}
+	</div>
 
-    <script>
+	<script>
 
         function getCookie(name) {
             let cookieValue = null;
@@ -103,6 +103,6 @@
                 })
         }
 
-    </script>
+	</script>
 
 {% endblock %}
