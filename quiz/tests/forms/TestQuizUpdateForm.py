@@ -82,6 +82,10 @@ class QuizUpdateFormTest(BaseTest):
         self.assertEqual(form.base_fields.get('isDraft').label, 'Is draft?')
         self.assertTrue(isinstance(form.base_fields.get('isDraft').widget, forms.CheckboxInput))
 
+    def testRaiseExceptionWhenNoneIsPassedForQuiz(self):
+        with self.assertRaisesMessage(Exception, 'Quiz is none, or is not an instance of Quiz object.'):
+            QuizUpdateForm(self.request, None)
+
     def testFormInitialValuesAndChoices(self):
         form = QuizUpdateForm(self.request, self.quiz)
 

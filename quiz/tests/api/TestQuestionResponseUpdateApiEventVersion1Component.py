@@ -8,10 +8,10 @@ from onequiz.tests.BaseTestAjax import BaseTestAjax
 from quiz.models import Topic, QuizAttempt, EssayQuestion, TrueOrFalseQuestion, MultipleChoiceQuestion
 
 
-class QuestionResponseUpdateApiEventVersion1Component(BaseTestAjax):
+class QuestionResponseUpdateApiEventVersion1ComponentTest(BaseTestAjax):
 
     def setUp(self, path=reverse('quiz:questionResponseUpdateApiEventVersion1Component')) -> None:
-        super(QuestionResponseUpdateApiEventVersion1Component, self).setUp(path)
+        super(QuestionResponseUpdateApiEventVersion1ComponentTest, self).setUp(path)
         bakerOperations.createSubjectsAndTopics(1, 1)
         self.topic = Topic.objects.select_related('subject').first()
         self.quiz = bakerOperations.createQuiz(self.request.user, self.topic)

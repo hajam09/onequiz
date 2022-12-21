@@ -12,7 +12,7 @@ class EssayQuestionUpdateFormTest(BaseTest):
         self.essayQuestion = bakerOperations.createEssayQuestion()
 
     def testFieldsAndType(self):
-        form = EssayQuestionUpdateForm()
+        form = EssayQuestionUpdateForm(self.essayQuestion)
         self.assertEqual(len(form.base_fields), 5)
 
         self.assertTrue(isinstance(form.base_fields.get('figure'), forms.ImageField))
@@ -34,6 +34,11 @@ class EssayQuestionUpdateFormTest(BaseTest):
         self.assertTrue(isinstance(form.base_fields.get('answer'), forms.CharField))
         self.assertEqual(form.base_fields.get('answer').label, 'Answer')
         self.assertTrue(isinstance(form.base_fields.get('answer').widget, forms.Textarea))
+
+    def testRaiseExceptionWhenNoneIsPassedForEssayQuestion(self):
+        exceptionMessage = 'EssayQuestion is none, or is not an instance of EssayQuestion object.'
+        with self.assertRaisesMessage(Exception, exceptionMessage):
+            EssayQuestionUpdateForm(None)
 
     def testFormInitialValuesAndChoices(self):
         form = EssayQuestionUpdateForm(self.essayQuestion)

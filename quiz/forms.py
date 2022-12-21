@@ -397,7 +397,7 @@ class QuizUpdateForm(QuizForm):
         self.quiz = quiz
 
         if self.quiz is None or not isinstance(quiz, Quiz):
-            raise Exception('Quiz is none. or is not instance of Quiz object.')
+            raise Exception('Quiz is none, or is not an instance of Quiz object.')
 
         INITIAL_TOPIC_CHOICES = [
             (topic.id, topic.name) for topic in Topic.objects.filter(subject_id=self.quiz.topic.subject_id)
@@ -608,15 +608,16 @@ class EssayQuestionUpdateForm(forms.Form):
     def __init__(self, essayQuestion=None, *args, **kwargs):
         kwargs.setdefault('label_suffix', '')
         super(EssayQuestionUpdateForm, self).__init__(*args, **kwargs)
-        self.essayQuestion = None
+        self.essayQuestion = essayQuestion
 
-        if essayQuestion is not None:
-            self.essayQuestion = essayQuestion
-            # self.initial['figure'] = essayQuestion.figure
-            self.initial['content'] = essayQuestion.content
-            self.initial['explanation'] = essayQuestion.explanation
-            self.initial['mark'] = essayQuestion.mark
-            self.initial['answer'] = essayQuestion.answer
+        if self.essayQuestion is None or not isinstance(self.essayQuestion, EssayQuestion):
+            raise Exception('EssayQuestion is none, or is not an instance of EssayQuestion object.')
+
+        # self.initial['figure'] = essayQuestion.figure
+        self.initial['content'] = essayQuestion.content
+        self.initial['explanation'] = essayQuestion.explanation
+        self.initial['mark'] = essayQuestion.mark
+        self.initial['answer'] = essayQuestion.answer
 
     def clean(self):
         figure = self.cleaned_data.get('figure')
@@ -637,13 +638,12 @@ class EssayQuestionUpdateForm(forms.Form):
         return self.cleaned_data
 
     def update(self):
-        if self.essayQuestion is not None:
-            self.essayQuestion.figure = self.cleaned_data.get('figure')
-            self.essayQuestion.content = self.cleaned_data.get('content')
-            self.essayQuestion.explanation = self.cleaned_data.get('explanation')
-            self.essayQuestion.mark = self.cleaned_data.get('mark')
-            self.essayQuestion.answer = self.cleaned_data.get('answer')
-            self.essayQuestion.save()
+        self.essayQuestion.figure = self.cleaned_data.get('figure')
+        self.essayQuestion.content = self.cleaned_data.get('content')
+        self.essayQuestion.explanation = self.cleaned_data.get('explanation')
+        self.essayQuestion.mark = self.cleaned_data.get('mark')
+        self.essayQuestion.answer = self.cleaned_data.get('answer')
+        self.essayQuestion.save()
         return self.essayQuestion
 
 
@@ -832,10 +832,12 @@ class MultipleChoiceQuestionUpdateForm(forms.Form):
     )
 
     def __init__(self, multipleChoiceQuestion=None, *args, **kwargs):
-        # TODO: Refactor this, re do this.
         kwargs.setdefault('label_suffix', '')
         super(MultipleChoiceQuestionUpdateForm, self).__init__(*args, **kwargs)
-        self.multipleChoiceQuestion = None
+        self.multipleChoiceQuestion = multipleChoiceQuestion
+
+        if self.multipleChoiceQuestion is None or not isinstance(self.multipleChoiceQuestion, MultipleChoiceQuestion):
+            raise Exception('MultipleChoiceQuestion is none, or is not an instance of MultipleChoiceQuestion object.')
 
         ANSWER_ORDER_CHOICES = [
             (None, '-- Select a value --'),
@@ -844,18 +846,18 @@ class MultipleChoiceQuestionUpdateForm(forms.Form):
             (MultipleChoiceQuestion.Order.NONE, MultipleChoiceQuestion.Order.NONE.label),
         ]
         # orderNo, enteredAnswer, isChecked
-        ANSWER_OPTIONS = [(i, x['content'], x['isCorrect']) for i, x in enumerate(multipleChoiceQuestion.choices['choices'], 1)]
+        ANSWER_OPTIONS = [
+            (i, x['content'], x['isCorrect']) for i, x in enumerate(multipleChoiceQuestion.choices['choices'], 1)
+        ]
 
         self.initial['initialAnswerOptions'] = ANSWER_OPTIONS
         self.base_fields['answerOrder'].choices = ANSWER_ORDER_CHOICES
 
-        if multipleChoiceQuestion is not None:
-            self.multipleChoiceQuestion = multipleChoiceQuestion
-            #     # self.initial['figure'] = essayQuestion.figure
-            self.initial['content'] = multipleChoiceQuestion.content
-            self.initial['explanation'] = multipleChoiceQuestion.explanation
-            self.initial['mark'] = multipleChoiceQuestion.mark
-            self.initial['answerOrder'] = multipleChoiceQuestion.answerOrder
+        # self.initial['figure'] = essayQuestion.figure
+        self.initial['content'] = multipleChoiceQuestion.content
+        self.initial['explanation'] = multipleChoiceQuestion.explanation
+        self.initial['mark'] = multipleChoiceQuestion.mark
+        self.initial['answerOrder'] = multipleChoiceQuestion.answerOrder
 
     def clean(self):
         figure = self.cleaned_data.get('figure')
@@ -1100,20 +1102,22 @@ class TrueOrFalseQuestionUpdateForm(forms.Form):
         super(TrueOrFalseQuestionUpdateForm, self).__init__(*args, **kwargs)
         self.trueOrFalseQuestion = trueOrFalseQuestion
 
+        if self.trueOrFalseQuestion is None or not isinstance(self.trueOrFalseQuestion, TrueOrFalseQuestion):
+            raise Exception('TrueOrFalseQuestion is none, or is not instance of TrueOrFalseQuestion object.')
+
         # radioName, value, label, isSelected
         IS_CORRECT_CHOICES = [('isCorrect', 'True', 'True', 'False'), ('isCorrect', 'False', 'False', 'False')]
 
-        if self.trueOrFalseQuestion is not None:
-            # self.initial['figure'] = self.trueOrFalseQuestion.figure
-            self.initial['content'] = self.trueOrFalseQuestion.content
-            self.initial['explanation'] = self.trueOrFalseQuestion.explanation
-            self.initial['mark'] = self.trueOrFalseQuestion.mark
+        # self.initial['figure'] = self.trueOrFalseQuestion.figure
+        self.initial['content'] = self.trueOrFalseQuestion.content
+        self.initial['explanation'] = self.trueOrFalseQuestion.explanation
+        self.initial['mark'] = self.trueOrFalseQuestion.mark
 
-            choiceIndexNumberToUpdate = 0 if self.trueOrFalseQuestion.isCorrect else 1
-            tempList = list(IS_CORRECT_CHOICES[choiceIndexNumberToUpdate])
-            tempList[3] = 'True'
-            IS_CORRECT_CHOICES[choiceIndexNumberToUpdate] = tuple(tempList)
-            self.initial['isCorrectChoices'] = IS_CORRECT_CHOICES
+        choiceIndexNumberToUpdate = 0 if self.trueOrFalseQuestion.isCorrect else 1
+        tempList = list(IS_CORRECT_CHOICES[choiceIndexNumberToUpdate])
+        tempList[3] = 'True'
+        IS_CORRECT_CHOICES[choiceIndexNumberToUpdate] = tuple(tempList)
+        self.initial['isCorrectChoices'] = IS_CORRECT_CHOICES
 
     def clean(self):
         figure = self.cleaned_data.get('figure')

@@ -14,7 +14,7 @@ class TrueOrFalseQuestionUpdateFormTest(BaseTest):
         self.falseOptionSelected = [('isCorrect', 'True', 'True', 'False'), ('isCorrect', 'False', 'False', 'True')]
 
     def testFieldsAndType(self):
-        form = TrueOrFalseQuestionUpdateForm()
+        form = TrueOrFalseQuestionUpdateForm(self.trueOrFalseQuestion)
         self.assertEqual(len(form.base_fields), 5)
 
         self.assertTrue(isinstance(form.base_fields.get('figure'), forms.ImageField))
@@ -36,6 +36,11 @@ class TrueOrFalseQuestionUpdateFormTest(BaseTest):
         self.assertTrue(isinstance(form.base_fields.get('isCorrect'), forms.ChoiceField))
         self.assertEqual(form.base_fields.get('isCorrect').label, 'Is the answer True or False?')
         self.assertTrue(isinstance(form.base_fields.get('isCorrect').widget, forms.RadioSelect))
+
+    def testRaiseExceptionWhenNoneIsPassedForTrueOrFalseQuestion(self):
+        exceptionMessage = 'TrueOrFalseQuestion is none, or is not instance of TrueOrFalseQuestion object.'
+        with self.assertRaisesMessage(Exception, exceptionMessage):
+            TrueOrFalseQuestionUpdateForm(None)
 
     def testFormInitialValuesAndChoices(self):
         form = TrueOrFalseQuestionUpdateForm(self.trueOrFalseQuestion)

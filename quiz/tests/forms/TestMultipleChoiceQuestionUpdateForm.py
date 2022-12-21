@@ -43,6 +43,11 @@ class MultipleChoiceQuestionUpdateFormTest(BaseTest):
         self.assertEqual(form.base_fields.get('mark').label, 'Mark')
         self.assertTrue(isinstance(form.base_fields.get('mark').widget, forms.NumberInput))
 
+    def testRaiseExceptionWhenNoneIsPassedForMultipleChoiceQuestion(self):
+        exceptionMessage = 'MultipleChoiceQuestion is none, or is not an instance of MultipleChoiceQuestion object.'
+        with self.assertRaisesMessage(Exception, exceptionMessage):
+            MultipleChoiceQuestionUpdateForm(None)
+
     def testFormInitialValuesAndChoices(self):
         form = MultipleChoiceQuestionUpdateForm(self.multipleChoiceQuestion)
         self.assertIn('initialAnswerOptions', form.initial)
