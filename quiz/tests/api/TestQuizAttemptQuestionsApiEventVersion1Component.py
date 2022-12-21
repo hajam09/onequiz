@@ -146,7 +146,7 @@ class QuizAttemptQuestionsApiEventVersion1ComponentTest(BaseTestAjax):
 
         for a, b in zip(quizAttempt.responses.all(), responseListData):
             self.assertEqual(a.trueorfalseresponse.id, b['response']['id'])
-            self.assertEqual(a.trueorfalseresponse.isChecked, eval(b['response']['selectedOption']))
+            self.assertEqual(a.trueorfalseresponse.trueSelected, eval(b['response']['selectedOption']))
 
     def testUpdateMultipleChoiceQuestionResponses(self):
         quizQuestionList = [self.mcq1, self.mcq2, self.mcq3]
@@ -210,7 +210,7 @@ class QuizAttemptQuestionsApiEventVersion1ComponentTest(BaseTestAjax):
                 self.assertEqual(a.essayresponse.answer, b['response']['text'])
             elif b['type'] == 'TrueOrFalseQuestion':
                 self.assertEqual(a.trueorfalseresponse.id, b['response']['id'])
-                self.assertEqual(a.trueorfalseresponse.isChecked, eval(b['response']['selectedOption']))
+                self.assertEqual(a.trueorfalseresponse.trueSelected, eval(b['response']['selectedOption']))
             elif b['type'] == 'MultipleChoiceQuestion':
                 self.assertEqual(a.multiplechoiceresponse.id, b['response']['id'])
                 self.assertListEqual(a.multiplechoiceresponse.answers['answers'], b['response']['choices'])
@@ -245,7 +245,7 @@ class QuizAttemptQuestionsApiEventVersion1ComponentTest(BaseTestAjax):
         for a, b in zip(quizAttempt.responses.all(), responseListData):
             if b['type'] == 'TrueOrFalseQuestion':
                 self.assertEqual(a.trueorfalseresponse.id, b['response']['id'])
-                self.assertEqual(a.trueorfalseresponse.isChecked, eval(b['response']['selectedOption']))
+                self.assertEqual(a.trueorfalseresponse.trueSelected, eval(b['response']['selectedOption']))
             elif b['type'] == 'MultipleChoiceQuestion':
                 self.assertEqual(a.multiplechoiceresponse.id, b['response']['id'])
                 self.assertListEqual(a.multiplechoiceresponse.answers['answers'], b['response']['choices'])

@@ -1,9 +1,8 @@
 from django import forms
 from django.contrib import admin
 from django.contrib.admin.widgets import FilteredSelectMultiple
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 
-from quiz.models import Answer
 from quiz.models import EssayQuestion
 from quiz.models import EssayResponse
 from quiz.models import MultipleChoiceQuestion
@@ -16,14 +15,6 @@ from quiz.models import Subject
 from quiz.models import Topic
 from quiz.models import TrueOrFalseQuestion
 from quiz.models import TrueOrFalseResponse
-
-
-class AnswerInline(admin.TabularInline):
-    model = Answer
-
-
-class MultipleChoiceQuestionAdmin(admin.ModelAdmin):
-    inlines = [AnswerInline]
 
 
 class QuizAdminForm(forms.ModelForm):
@@ -81,9 +72,8 @@ class QuizAttemptAdmin(admin.ModelAdmin):
 admin.site.register(Subject)
 admin.site.register(Topic)
 admin.site.register(EssayQuestion)
-admin.site.register(MultipleChoiceQuestion, MultipleChoiceQuestionAdmin)
+admin.site.register(MultipleChoiceQuestion)
 admin.site.register(TrueOrFalseQuestion)
-admin.site.register(Answer)
 admin.site.register(Quiz, QuizAdmin)
 admin.site.register(Result)
 admin.site.register(QuizAttempt, QuizAttemptAdmin)

@@ -35,7 +35,7 @@ class QuizAttemptResultViewTest(BaseTestViews):
         data = [
             {'key': 'Quiz', 'value': self.result.quizAttempt.quiz.name},
             None,
-            {'key': 'Total Questions', 'value': self.result.quizAttempt.quiz.questions.count},
+            {'key': 'Total Questions', 'value': self.result.quizAttempt.quiz.questions.count()},
             {'key': 'Correct Questions', 'value': self.result.numberOfCorrectAnswers},
             {'key': 'Partial Questions', 'value': self.result.numberOfPartialAnswers},
             {'key': 'Wrong Questions', 'value': self.result.numberOfWrongAnswers},

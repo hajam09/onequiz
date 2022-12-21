@@ -2,20 +2,18 @@ from http import HTTPStatus
 
 from django.contrib import auth
 from django.contrib import messages
-from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.contrib.auth.tokens import PasswordResetTokenGenerator
 from django.core.cache import cache
 from django.shortcuts import redirect
 from django.shortcuts import render
 from django.utils.encoding import DjangoUnicodeDecodeError
-from django.utils.encoding import force_text
+from django.utils.encoding import force_str
 from django.utils.http import urlsafe_base64_decode
 
 from accounts.forms import LoginForm
 from accounts.forms import PasswordResetForm
 from accounts.forms import RegistrationForm
-# from accounts.models import Profile
 from onequiz.operations import emailOperations
 
 
@@ -89,7 +87,7 @@ def logout(request):
 
 def activateAccount(request, encodedId, token):
     try:
-        uid = force_text(urlsafe_base64_decode(encodedId))
+        uid = force_str(urlsafe_base64_decode(encodedId))
         user = User.objects.get(pk=uid)
     except (DjangoUnicodeDecodeError, ValueError, User.DoesNotExist):
         user = None
@@ -130,7 +128,7 @@ def passwordForgotten(request):
 
 def passwordReset(request, encodedId, token):
     try:
-        uid = force_text(urlsafe_base64_decode(encodedId))
+        uid = force_str(urlsafe_base64_decode(encodedId))
         user = User.objects.get(pk=uid)
     except (DjangoUnicodeDecodeError, ValueError, User.DoesNotExist):
         user = None
@@ -151,19 +149,3 @@ def passwordReset(request, encodedId, token):
 
     TEMPLATE = 'passwordResetForm' if user is not None and verifyToken else 'activateFailed'
     return render(request, 'accounts/{}.html'.format(TEMPLATE), context)
-
-
-@login_required
-def accountSettings(request):
-    # if request.method == "POST" and "profilePicture" in request.FILES:
-    #     try:
-    #         profile = request.user.profile
-    #     except Profile.DoesNotExist:
-    #         profile = None
-    #
-    #     if profile is not None:
-    #         generalOperations.deleteImage(profile.profilePicture)
-    #         profile.profilePicture = request.FILES["profilePicture"]
-    #         profile.save(update_fields=['profilePicture'])
-
-    return render(request, 'accounts/accountSettings.html')

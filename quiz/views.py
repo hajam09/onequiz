@@ -119,6 +119,7 @@ def createQuizView(request):
     return render(request, 'quiz/quizTemplateView.html', context)
 
 
+@login_required
 def quizDetailView(request, quizId):
     try:
         quiz = Quiz.objects.select_related('topic').get(id=quizId, creator=request.user)
@@ -246,7 +247,7 @@ def quizAttemptResultView(request, attemptId):
     data = [
         {'key': 'Quiz', 'value': result.quizAttempt.quiz.name},
         None,
-        {'key': 'Total Questions', 'value': result.quizAttempt.quiz.questions.count},
+        {'key': 'Total Questions', 'value': result.quizAttempt.quiz.questions.count()},
         {'key': 'Correct Questions', 'value': result.numberOfCorrectAnswers},
         {'key': 'Partial Questions', 'value': result.numberOfPartialAnswers},
         {'key': 'Wrong Questions', 'value': result.numberOfWrongAnswers},

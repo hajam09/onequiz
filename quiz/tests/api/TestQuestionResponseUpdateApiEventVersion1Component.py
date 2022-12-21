@@ -72,7 +72,7 @@ class QuestionResponseUpdateApiEventVersion1Component(BaseTestAjax):
 
         self.assertEqual(response.status_code, 200)
         self.assertTrue(ajaxResponse['success'])
-        self.assertEqual(testParams.response.trueorfalseresponse.isChecked, eval(payload['response']['selectedOption']))
+        self.assertEqual(testParams.response.trueorfalseresponse.trueSelected, eval(payload['response']['selectedOption']))
 
     @patch('quiz.api.featureFlagOperations')
     def testUpdateResponseForMultipleChoiceQuestion(self, mockFeatureFlagOperations):
