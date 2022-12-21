@@ -3,7 +3,7 @@ from onequiz.tests.BaseTest import BaseTest
 
 
 class PasswordResetFormTest(BaseTest):
-    def setUp(self, path='') -> None:
+    def setUp(self, path=None) -> None:
         self.basePath = path
         super(PasswordResetFormTest, self).setUp('')
         self.client.logout()

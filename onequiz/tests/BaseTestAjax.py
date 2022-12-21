@@ -3,7 +3,7 @@ from onequiz.tests.BaseTest import BaseTest
 
 class BaseTestAjax(BaseTest):
 
-    def setUp(self, path='') -> None:
+    def setUp(self, path=None) -> None:
         super(BaseTestAjax, self).setUp(path)
         self.path = path
 

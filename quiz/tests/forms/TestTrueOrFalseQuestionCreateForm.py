@@ -6,7 +6,7 @@ from quiz.forms import TrueOrFalseQuestionCreateForm
 
 class TrueOrFalseQuestionCreateFormTest(BaseTest):
 
-    def setUp(self, path='') -> None:
+    def setUp(self, path=None) -> None:
         self.basePath = path
         super(TrueOrFalseQuestionCreateFormTest, self).setUp('')
 

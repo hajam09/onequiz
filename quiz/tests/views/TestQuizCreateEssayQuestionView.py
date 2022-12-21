@@ -8,7 +8,7 @@ from quiz.forms import EssayQuestionCreateForm
 
 class QuizCreateEssayQuestionViewTest(BaseTestViews):
 
-    def setUp(self, path='') -> None:
+    def setUp(self, path=None) -> None:
         super(QuizCreateEssayQuestionViewTest, self).setUp('')
         self.quiz = bakerOperations.createQuiz(self.request.user)
         self.path = reverse('quiz:create-essay-question-view', kwargs={'quizId': self.quiz.id})

@@ -8,7 +8,7 @@ from quiz.models import Result
 
 class QuizAttemptResultViewTest(BaseTestViews):
 
-    def setUp(self, path='') -> None:
+    def setUp(self, path=None) -> None:
         super(QuizAttemptResultViewTest, self).setUp('')
         bakerOperations.createSubjectsAndTopics(1, 2)
         self.topic = Topic.objects.select_related('subject').first()

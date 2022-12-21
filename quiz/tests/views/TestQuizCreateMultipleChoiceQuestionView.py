@@ -9,7 +9,7 @@ from quiz.models import MultipleChoiceQuestion
 
 class QuizCreateMultipleChoiceQuestionViewTest(BaseTestViews):
 
-    def setUp(self, path='') -> None:
+    def setUp(self, path=None) -> None:
         super(QuizCreateMultipleChoiceQuestionViewTest, self).setUp('')
         self.quiz = bakerOperations.createQuiz(self.request.user)
         self.path = reverse('quiz:create-multiple-choice-question-view', kwargs={'quizId': self.quiz.id})

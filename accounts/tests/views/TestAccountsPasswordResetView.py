@@ -10,7 +10,7 @@ from onequiz.tests.BaseTestViews import BaseTestViews
 
 class AccountsPasswordResetViewTest(BaseTestViews):
 
-    def setUp(self, path='') -> None:
+    def setUp(self, path=None) -> None:
         self.prtg = PasswordResetTokenGenerator()
         super(AccountsPasswordResetViewTest, self).setUp('')
         self.client.logout()

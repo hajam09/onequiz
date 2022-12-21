@@ -10,7 +10,7 @@ from quiz.models import QuizAttempt, Topic
 
 class QuizAttemptViewTest(BaseTestViews):
 
-    def setUp(self, path='') -> None:
+    def setUp(self, path=None) -> None:
         super(QuizAttemptViewTest, self).setUp('')
         bakerOperations.createSubjectsAndTopics(1, 2)
         self.topic = Topic.objects.select_related('subject').first()

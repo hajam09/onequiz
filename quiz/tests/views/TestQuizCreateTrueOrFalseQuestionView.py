@@ -7,7 +7,7 @@ from quiz.forms import TrueOrFalseQuestionCreateForm
 
 class QuizCreateTrueOrFalseQuestionViewTest(BaseTestViews):
 
-    def setUp(self, path='') -> None:
+    def setUp(self, path=None) -> None:
         super(QuizCreateTrueOrFalseQuestionViewTest, self).setUp('')
         self.quiz = bakerOperations.createQuiz(self.request.user)
         self.path = reverse('quiz:create-true-or-false-question-view', kwargs={'quizId': self.quiz.id})

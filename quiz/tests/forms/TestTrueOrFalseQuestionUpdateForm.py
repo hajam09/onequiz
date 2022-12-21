@@ -7,7 +7,7 @@ from quiz.forms import TrueOrFalseQuestionUpdateForm
 
 class TrueOrFalseQuestionUpdateFormTest(BaseTest):
 
-    def setUp(self, path='') -> None:
+    def setUp(self, path=None) -> None:
         super(TrueOrFalseQuestionUpdateFormTest, self).setUp('')
         self.trueOrFalseQuestion = bakerOperations.createTrueOrFalseQuestion()
         self.trueOptionSelected = [('isCorrect', 'True', 'True', 'True'), ('isCorrect', 'False', 'False', 'False')]

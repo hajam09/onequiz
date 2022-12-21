@@ -12,7 +12,7 @@ from quiz.models import Quiz, Subject, Topic
 
 class QuizCreateFormTest(BaseTest):
 
-    def setUp(self, path='') -> None:
+    def setUp(self, path=None) -> None:
         self.basePath = path
         super(QuizCreateFormTest, self).setUp('')
         bakerOperations.createSubjectsAndTopics(1, 1)

@@ -12,7 +12,7 @@ from quiz.models import Quiz, Topic
 
 class QuizUpdateFormTest(BaseTest):
 
-    def setUp(self, path='') -> None:
+    def setUp(self, path=None) -> None:
         super(QuizUpdateFormTest, self).setUp('')
         bakerOperations.createSubjectsAndTopics(1, 1)
         self.topic = Topic.objects.select_related('subject').first()

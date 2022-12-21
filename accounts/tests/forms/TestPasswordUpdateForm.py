@@ -4,7 +4,7 @@ from onequiz.tests.BaseTest import BaseTest
 
 
 class PasswordUpdateFormTest(BaseTest):
-    def setUp(self, path='') -> None:
+    def setUp(self, path=None) -> None:
         self.basePath = path
         super(PasswordUpdateFormTest, self).setUp('')
 

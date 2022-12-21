@@ -3,7 +3,7 @@ from onequiz.tests.BaseTest import BaseTest
 
 class BaseTestViews(BaseTest):
 
-    def setUp(self, path='') -> None:
+    def setUp(self, path=None) -> None:
         super(BaseTestViews, self).setUp(path)
         self.path = path
 

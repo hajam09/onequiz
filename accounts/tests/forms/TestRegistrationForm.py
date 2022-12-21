@@ -6,7 +6,7 @@ from onequiz.tests.BaseTest import BaseTest
 
 
 class RegistrationFormTest(BaseTest):
-    def setUp(self, path='') -> None:
+    def setUp(self, path=None) -> None:
         self.basePath = path
         super(RegistrationFormTest, self).setUp('')
         self.client.logout()

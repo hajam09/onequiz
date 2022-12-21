@@ -12,7 +12,7 @@ from quiz.models import Topic, QuizAttempt, EssayQuestion, TrueOrFalseQuestion, 
 
 class QuizAttemptQuestionsApiEventVersion1ComponentTest(BaseTestAjax):
 
-    def setUp(self, path='') -> None:
+    def setUp(self, path=None) -> None:
         super(QuizAttemptQuestionsApiEventVersion1ComponentTest, self).setUp('')
         bakerOperations.createSubjectsAndTopics(1, 1)
         self.topic = Topic.objects.select_related('subject').first()

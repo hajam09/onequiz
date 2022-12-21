@@ -11,7 +11,7 @@ from quiz.models import Topic, QuizAttempt, Result
 
 class QuizMarkingOccurrenceApiEventVersion1ComponentTest(BaseTestAjax):
 
-    def setUp(self, path='') -> None:
+    def setUp(self, path=None) -> None:
         super(QuizMarkingOccurrenceApiEventVersion1ComponentTest, self).setUp('')
         bakerOperations.createSubjectsAndTopics(1, 2)
 

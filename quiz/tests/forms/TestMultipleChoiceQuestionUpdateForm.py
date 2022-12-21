@@ -9,7 +9,7 @@ from quiz.models import MultipleChoiceQuestion
 
 class MultipleChoiceQuestionUpdateFormTest(BaseTest):
 
-    def setUp(self, path='') -> None:
+    def setUp(self, path=None) -> None:
         super(MultipleChoiceQuestionUpdateFormTest, self).setUp('')
         self.answerOrderChoices = [
             (None, '-- Select a value --'), ('SEQUENTIAL', 'Sequential'), ('RANDOM', 'Random'), ('NONE', 'None')

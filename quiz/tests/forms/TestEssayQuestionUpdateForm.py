@@ -7,7 +7,7 @@ from quiz.forms import EssayQuestionUpdateForm
 
 class EssayQuestionUpdateFormTest(BaseTest):
 
-    def setUp(self, path='') -> None:
+    def setUp(self, path=None) -> None:
         super(EssayQuestionUpdateFormTest, self).setUp('')
         self.essayQuestion = bakerOperations.createEssayQuestion()
 

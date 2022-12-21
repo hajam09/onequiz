@@ -4,12 +4,12 @@ from django.urls import reverse
 
 from onequiz.operations import bakerOperations
 from onequiz.tests.BaseTestAjax import BaseTestAjax
-from quiz.models import Topic, QuizAttempt
+from quiz.models import Topic, QuizAttempt, Quiz
 
 
 class QuizAttemptObjectApiEventVersion1ComponentTest(BaseTestAjax):
 
-    def setUp(self, path=reverse('quiz:quizAttemptObjectApiEventVersion1Component')) -> None:
+    def setUp(self, path=None) -> None:
         super(QuizAttemptObjectApiEventVersion1ComponentTest, self).setUp(path)
         bakerOperations.createSubjectsAndTopics(1, 1)
         self.topic = Topic.objects.select_related('subject').first()
@@ -25,18 +25,17 @@ class QuizAttemptObjectApiEventVersion1ComponentTest(BaseTestAjax):
             bakerOperations.createMultipleChoiceQuestionAndAnswers(None),
             bakerOperations.createMultipleChoiceQuestionAndAnswers(None),
         ])
+        self.path = reverse('quiz:quizAttemptObjectApiEventVersion1Component') + f'?quizId={self.quiz.id}'
 
     def createQuizAttemptAndTheResponseObjects(self):
-        path = reverse('quiz:quizAttemptObjectApiEventVersion1Component') + f'?quizId={self.quiz.id}'
-        response = self.post(path=path)
+        response = self.post()
         ajaxResponse = json.loads(response.content)
         self.assertEqual(200, response.status_code)
         return ajaxResponse['redirectUrl'].split('/')[2]
 
     def testWhenAnotherAttemptIsInProgressThenReturnItsRedirectUrl(self):
         quizAttemptId = self.createQuizAttemptAndTheResponseObjects()
-        path = reverse('quiz:quizAttemptObjectApiEventVersion1Component') + f'?quizId={self.quiz.id}'
-        response = self.post(path=path)
+        response = self.post()
         ajaxResponse = json.loads(response.content)
 
         self.assertEqual(200, response.status_code)
@@ -47,8 +46,9 @@ class QuizAttemptObjectApiEventVersion1ComponentTest(BaseTestAjax):
         self.assertEqual(ajaxResponse['redirectUrl'], f'/quiz-attempt/{quizAttemptId}/')
 
     def testStartQuizAttemptForNonExistingQuiz(self):
-        # TODO: Not Implemented
-        pass
+        path = reverse('quiz:quizAttemptObjectApiEventVersion1Component') + f'?quizId=0'
+        with self.assertRaises(Quiz.DoesNotExist):
+            response = self.post(path=path)
 
     def testStartQuizAttemptSuccessfully(self):
         path = reverse('quiz:quizAttemptObjectApiEventVersion1Component') + f'?quizId={self.quiz.id}'
