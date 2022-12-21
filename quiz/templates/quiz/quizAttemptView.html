@@ -10,7 +10,7 @@
         }
     </style>
 
-    <link type="text/css" rel="stylesheet" href="{% static 'css/baseFormStyle.css' %}">
+    <link type="text/css" rel="stylesheet" href="{% static 'css/form.css' %}">
     <br>
     <div class="container">
         <div class="row form-control" id="question-container">
@@ -256,6 +256,13 @@
             }
 
             render() {
+                const style1 = {
+                    marginRight: '30px',
+				}
+
+                const style2 = {
+                    marginRight: '20px',
+				}
                 return (
                     <div>
                         <div className="row">
@@ -274,20 +281,22 @@
                         <br></br>
                         <h5>Is the answer True or False?</h5>
                         <fieldset className="inline">
-                            <div className="multiple-choice">
-                                <input className="form-control" value="True" type="radio" name="isCorrect"
+                            <div className="form-check form-check-inline" style={style1}>
+                                <input className="form-check-input" value="True" type="radio" name="isCorrect"
                                        onChange={this.whenTrueIsClicked}
                                        required=""
-                                       checked={this.props.question.response.selectedOption != null && this.props.question.response.selectedOption === true}></input>
-                                <label className="form-label">True</label>
+                                       checked={this.props.question.response.selectedOption != null && this.props.question.response.selectedOption === true}
+                                       style={style2}></input>
+                                <label className="form-check-label">True</label>
                             </div>
 
-                            <div className="multiple-choice">
-                                <input className="form-control" value="False" type="radio" name="isCorrect"
+                            <div className="form-check form-check-inline" style={style1}>
+                                <input className="form-check-input" value="False" type="radio" name="isCorrect"
                                        onChange={this.whenFalseIsClicked}
                                        required=""
-                                       checked={this.props.question.response.selectedOption != null && this.props.question.response.selectedOption === false}></input>
-                                <label className="form-label">False</label>
+                                       checked={this.props.question.response.selectedOption != null && this.props.question.response.selectedOption === false}
+                                       style={style2}></input>
+                                <label className="form-check-label">False</label>
                             </div>
                         </fieldset>
                         {
@@ -318,9 +327,12 @@
                 const style1 = {
                     paddingLeft: '0px',
                 }
+                 const style2 = {
+                    marginBottom: '-15px',
+                }
                 return (
                     <div className="row">
-                        <div className="col-1">
+                        <div className="col-1" style={style2}>
                             <div className="multiple-choice" style={style1}>
                                 <input type="checkbox" className="form-control" name="answerChecked2"
                                        ref="checkboxInputRef"
