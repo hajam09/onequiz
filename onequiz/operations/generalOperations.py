@@ -136,20 +136,26 @@ class QuestionAndResponse:
         }
         return data
 
+    def shuffle(self, choices):
+        random.shuffle(choices)
+        return choices
+
     def getMultipleChoiceQuestionResponse(self, question):
         responseObject = self.getResponseObject(question)
         data = {
             'type': 'MultipleChoiceQuestion',
             'response': {
                 'id': responseObject.multiplechoiceresponse.id,
-                'choices': [
-                    {
-                        'id': answer['id'],
-                        'content': answer['content'],
-                        'isChecked': answer['isChecked']
-                    }
-                    for answer in responseObject.multiplechoiceresponse.answers['answers']
-                ],
+                'choices': self.shuffle(
+                    [
+                        {
+                            'id': answer['id'],
+                            'content': answer['content'],
+                            'isChecked': answer['isChecked']
+                        }
+                        for answer in responseObject.multiplechoiceresponse.answers['answers']
+                    ]
+                ),
                 'mark': self.parseResponseMark(responseObject.multiplechoiceresponse.mark)
             }
         }
