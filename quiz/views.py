@@ -274,7 +274,6 @@ class AttemptedQuizzesView(ListView):
 @login_required
 def quizAttemptsForQuizView(request, quizId):
     quizAttemptList = QuizAttempt.objects.select_related('user').filter(quiz_id=quizId)
-    # types of actions: View this attempt, Mark this attempt / View results, Flag this attempt, Delete this attempt.
     context = {
         'quizAttemptList': quizAttemptList,
         'quizId': quizId,

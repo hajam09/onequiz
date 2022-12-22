@@ -3,19 +3,6 @@
 {% block content %}
     <link type="text/css" rel="stylesheet" href="{% static 'css/baseFormStyle.css' %}">
     <br>
-    <style>
-        .container {
-            color: black;
-        }
-
-        .btn-group-xs > .btn, .btn-xs {
-            padding: .25rem .4rem;
-            font-size: .875rem;
-            line-height: .5;
-            border-radius: .2rem;
-        }
-    </style>
-
     <div class="container">
         <div class="row">
             <div class="col">
@@ -48,6 +35,10 @@
                             <a type="button" href="{{ quizAttempt.getAttemptUrl }}" class="btn btn-primary btn-sm"
                                data-toggle="tooltip" data-placement="top" title="View this attempt">
                                 <i class="fa fa-eye"></i>
+                            </a>
+                            <a type="button" href="{{ quizAttempt.getAttemptResultUrl }}" class="btn btn-warning btn-sm"
+                               data-toggle="tooltip" data-placement="top" title="View result">
+                                <i class="fa fa-area-chart"></i>
                             </a>
                         {% elif quizAttempt.status == 'SUBMITTED' %}
                             <a type="button" href="{{ quizAttempt.getAttemptUrl }}" class="btn btn-warning btn-sm"
