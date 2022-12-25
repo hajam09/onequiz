@@ -37,9 +37,8 @@ class QuizAttemptViewTest(BaseTestViews):
         response = self.get(path=path)
         self.assertEquals(response.status_code, 404)
 
-    def testAttemptUserIsNotSameAsViewUser(self):
-        anotherUser = bakerOperations.createUser()
-        self.quizAttempt.user = anotherUser
+    def testQuizCreatorViewsQuizDuringInProgressThenReturnForbidden(self):
+        self.quizAttempt.user = bakerOperations.createUser()
         self.quizAttempt.save()
 
         response = self.get()
@@ -47,15 +46,56 @@ class QuizAttemptViewTest(BaseTestViews):
         self.assertEqual(response.content, str.encode('Forbidden'))
         self.assertEqual(response.reason_phrase, 'Forbidden')
 
-    def testViewUserIsNotSameAsQuizCreator(self):
+    def testQuizCreatorViewsQuizAfterSubmittedThenReturnOK(self):
+        self.quizAttempt.user = bakerOperations.createUser()
+        self.quizAttempt.status = QuizAttempt.Status.SUBMITTED
+        self.quizAttempt.save()
+
+        response = self.get()
+        self.assertEquals(response.status_code, 200)
+
+    def testUnrelatedUserViewsQuizDuringInProgressThenReturnForbidden(self):
         anotherUser = bakerOperations.createUser()
-        self.quiz.creator = anotherUser
-        self.quiz.save()
+        self.quizAttempt.user = anotherUser
+        self.quizAttempt.quiz.creator = anotherUser
+        self.quizAttempt.quiz.save()
+        self.quizAttempt.save()
 
         response = self.get()
         self.assertEquals(response.status_code, 403)
         self.assertEqual(response.content, str.encode('Forbidden'))
         self.assertEqual(response.reason_phrase, 'Forbidden')
+
+    def testUnrelatedUserViewsQuizAfterSubmittedThenReturnForbidden(self):
+        anotherUser = bakerOperations.createUser()
+        self.quizAttempt.user = anotherUser
+        self.quizAttempt.quiz.creator = anotherUser
+        self.quizAttempt.status = QuizAttempt.Status.SUBMITTED
+        self.quizAttempt.quiz.save()
+        self.quizAttempt.save()
+
+        response = self.get()
+        self.assertEquals(response.status_code, 403)
+        self.assertEqual(response.content, str.encode('Forbidden'))
+        self.assertEqual(response.reason_phrase, 'Forbidden')
+
+    def testQuizAttemptedUserViewsQuizDuringInProgressThenReturnOK(self):
+        anotherUser = bakerOperations.createUser()
+        self.quizAttempt.quiz.creator = anotherUser
+        self.quizAttempt.quiz.save()
+
+        response = self.get()
+        self.assertEquals(response.status_code, 200)
+
+    def testQuizAttemptedUserViewsQuizAfterSubmittedThenReturnOK(self):
+        anotherUser = bakerOperations.createUser()
+        self.quizAttempt.quiz.creator = anotherUser
+        self.quizAttempt.status = QuizAttempt.Status.SUBMITTED
+        self.quizAttempt.quiz.save()
+        self.quizAttempt.save()
+
+        response = self.get()
+        self.assertEquals(response.status_code, 200)
 
     @patch('quiz.views.QuizAttempt.getQuizEndTime')
     def testUpdateStatusWhenDurationEndedAndNotSubmitted(self, mockGetQuizEndTime):

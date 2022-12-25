@@ -222,13 +222,12 @@ def quizAttemptView(request, attemptId):
     except QuizAttempt.DoesNotExist:
         raise Http404
 
-    if quizAttempt.user != request.user or quizAttempt.quiz.creator != request.user:
-        return HttpResponseForbidden('Forbidden')
-
-    quizNotSubmittedStatues = [QuizAttempt.Status.NOT_ATTEMPTED, QuizAttempt.Status.IN_PROGRESS]
-    if quizAttempt.hasQuizEnded() and quizAttempt.status in quizNotSubmittedStatues:
+    if quizAttempt.hasQuizEnded() and quizAttempt.status in quizAttempt.getEditStatues():
         quizAttempt.status = QuizAttempt.Status.SUBMITTED
         quizAttempt.save(update_fields=['status'])
+
+    if not quizAttempt.hasViewPermission(request.user):
+        return HttpResponseForbidden('Forbidden')
 
     context = {
         'quizAttempt': quizAttempt,
