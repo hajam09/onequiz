@@ -50,3 +50,29 @@ class QuizAttemptResultViewTest(BaseTestViews):
         self.assertTrue(isinstance(response.context['data'], list))
         self.assertEqual(len(response.context['data']), 8)
         self.assertListEqual(response.context['data'], data)
+
+    def testQuizCreatorViewsResultThenReturnOK(self):
+        self.quizAttempt.user = bakerOperations.createUser()
+        self.quizAttempt.save()
+
+        response = self.get()
+        self.assertEquals(response.status_code, 200)
+
+    def testQuizAttemptedUserViewsResultThenReturnOK(self):
+        self.quizAttempt.quiz.creator = bakerOperations.createUser()
+        self.quizAttempt.quiz.save()
+
+        response = self.get()
+        self.assertEquals(response.status_code, 200)
+
+    def testUnrelatedUserViewsResultThenReturnForbidden(self):
+        anotherUser = bakerOperations.createUser()
+        self.quizAttempt.user = anotherUser
+        self.quizAttempt.quiz.creator = anotherUser
+        self.quizAttempt.save()
+        self.quizAttempt.quiz.save()
+
+        response = self.get()
+        self.assertEquals(response.status_code, 403)
+        self.assertEqual(response.content, str.encode('Forbidden'))
+        self.assertEqual(response.reason_phrase, 'Forbidden')

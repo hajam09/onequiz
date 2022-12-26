@@ -238,10 +238,14 @@ def quizAttemptView(request, attemptId):
 
 @login_required
 def quizAttemptResultView(request, attemptId):
-    result = Result.objects.select_related('quizAttempt__quiz').filter(quizAttempt__id=attemptId).order_by('-id')
-    if result.count() == 0:
+    result = Result.objects.filter(quizAttempt__id=attemptId).select_related(
+        'quizAttempt__user', 'quizAttempt__quiz__creator'
+    ).last()
+    if result is None:
         raise Http404
-    result = result[0]
+
+    if not result.hasViewPermission(request.user):
+        return HttpResponseForbidden('Forbidden')
 
     data = [
         {'key': 'Quiz', 'value': result.quizAttempt.quiz.name},

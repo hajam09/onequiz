@@ -267,3 +267,6 @@ class Result(BaseModel):
 
     def getTimeSpent(self):
         return str(datetime.timedelta(seconds=self.timeSpent))
+
+    def hasViewPermission(self, user):
+        return self.quizAttempt.user == user or self.quizAttempt.quiz.creator == user
