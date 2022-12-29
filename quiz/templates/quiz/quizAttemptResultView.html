@@ -11,16 +11,16 @@
                 <h4 class="text-center">Status: {{ result.quizAttempt.status }}</h4>
 
                 <div class="container">
-                    {% for item in data %}
-                        {% if item is not None %}
-                            <div class="row" style="width: 70%">
-                                <div class="col-3 text-right">{{ item.key }}:</div>
-                                <div class="col-9"><b>{{ item.value }}</b></div>
-                            </div>
-                        {% else %}
-                            <br>
-                        {% endif %}
-                    {% endfor %}
+                    <dl class="row">
+                        {% for item in data %}
+                            {% if item is not None %}
+                                <dd class="col-sm-3">{{ item.key }}</dd>
+                                <dt class="col-sm-9">{{ item.value }}</dt>
+                            {% else %}
+                                <br>
+                            {% endif %}
+                        {% endfor %}
+                    </dl>
                     <br>
                     <h5 class="text-center">
                         {% if result.score >= result.quizAttempt.quiz.passMark %}

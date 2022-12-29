@@ -253,11 +253,12 @@ def quizAttemptResultView(request, attemptId):
         {'key': 'Quiz', 'value': result.quizAttempt.quiz.name},
         None,
         {'key': 'Total Questions', 'value': result.quizAttempt.quiz.questions.count()},
-        {'key': 'Correct Questions', 'value': result.numberOfCorrectAnswers},
-        {'key': 'Partial Questions', 'value': result.numberOfPartialAnswers},
-        {'key': 'Wrong Questions', 'value': result.numberOfWrongAnswers},
+        {'key': 'Correct Answers', 'value': result.numberOfCorrectAnswers},
+        {'key': 'Partially Correct Answers', 'value': result.numberOfPartialAnswers},
+        {'key': 'Wrong Answers', 'value': result.numberOfWrongAnswers},
         {'key': 'Your Score', 'value': f'{result.score} %'},
         {'key': 'Your Time', 'value': result.getTimeSpent()},
+        {'key': 'Marked By', 'value': result.quizAttempt.quiz.creator.get_full_name()},
     ]
 
     context = {

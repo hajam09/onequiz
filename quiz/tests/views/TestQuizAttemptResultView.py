@@ -36,11 +36,12 @@ class QuizAttemptResultViewTest(BaseTestViews):
             {'key': 'Quiz', 'value': self.result.quizAttempt.quiz.name},
             None,
             {'key': 'Total Questions', 'value': self.result.quizAttempt.quiz.questions.count()},
-            {'key': 'Correct Questions', 'value': self.result.numberOfCorrectAnswers},
-            {'key': 'Partial Questions', 'value': self.result.numberOfPartialAnswers},
-            {'key': 'Wrong Questions', 'value': self.result.numberOfWrongAnswers},
+            {'key': 'Correct Answers', 'value': self.result.numberOfCorrectAnswers},
+            {'key': 'Partially Correct Answers', 'value': self.result.numberOfPartialAnswers},
+            {'key': 'Wrong Answers', 'value': self.result.numberOfWrongAnswers},
             {'key': 'Your Score', 'value': f'{self.result.score} %'},
             {'key': 'Your Time', 'value': self.result.getTimeSpent()},
+            {'key': 'Marked By', 'value': self.result.quizAttempt.quiz.creator.get_full_name()},
         ]
 
         response = self.get()
@@ -48,7 +49,7 @@ class QuizAttemptResultViewTest(BaseTestViews):
         self.assertTemplateUsed(response, 'quiz/quizAttemptResultView.html')
         self.assertTrue(isinstance(response.context['result'], Result))
         self.assertTrue(isinstance(response.context['data'], list))
-        self.assertEqual(len(response.context['data']), 8)
+        self.assertEqual(len(response.context['data']), 9)
         self.assertListEqual(response.context['data'], data)
 
     def testQuizCreatorViewsResultThenReturnOK(self):
