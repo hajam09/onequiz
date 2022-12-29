@@ -94,3 +94,14 @@ class QuizQuestionDetailViewTest(BaseTestViews):
         )
         response = self.post(path=path)
         self.assertEquals(response.status_code, 200)
+
+    def testUnrelatedUserViewsQuestionDetailThenReturnNotFound(self):
+        self.quiz.creator = bakerOperations.createUser()
+        self.quiz.save()
+
+        path = reverse(
+            'quiz:question-detail-view', kwargs={'quizId': self.quiz.id, 'questionId': self.essayQuestion.id}
+        )
+        response = self.get(path=path)
+        self.assertEquals(response.status_code, 404)
+        self.assertEqual(response.reason_phrase, 'Not Found')

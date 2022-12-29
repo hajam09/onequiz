@@ -150,7 +150,9 @@ def quizDetailView(request, quizId):
 @login_required
 def questionDetailView(request, quizId, questionId):
     try:
-        question = Question.objects.get_subclass(id=questionId, quizQuestions=quizId)
+        question = Question.objects.get_subclass(
+            id=questionId, quizQuestions=quizId, quizQuestions__creator=request.user
+        )
     except Question.DoesNotExist:
         raise Http404
 
