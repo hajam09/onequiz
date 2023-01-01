@@ -9,7 +9,7 @@ class EssayQuestionUpdateFormTest(BaseTest):
 
     def setUp(self, path=None) -> None:
         super(EssayQuestionUpdateFormTest, self).setUp('')
-        self.essayQuestion = bakerOperations.createEssayQuestion()
+        self.essayQuestion = bakerOperations.createEssayQuestion().question
 
     def testFieldsAndType(self):
         form = EssayQuestionUpdateForm(self.essayQuestion)
@@ -44,9 +44,9 @@ class EssayQuestionUpdateFormTest(BaseTest):
         form = EssayQuestionUpdateForm(self.essayQuestion)
 
         # self.assertEqual(form.initial['figure'], self.essayQuestion.figure)
-        self.assertEqual(form.initial['content'], self.essayQuestion.content)
-        self.assertEqual(form.initial['explanation'], self.essayQuestion.explanation)
-        self.assertEqual(form.initial['mark'], self.essayQuestion.mark)
+        self.assertEqual(form.initial['content'], self.essayQuestion.question.content)
+        self.assertEqual(form.initial['explanation'], self.essayQuestion.question.explanation)
+        self.assertEqual(form.initial['mark'], self.essayQuestion.question.mark)
         self.assertEqual(form.initial['answer'], self.essayQuestion.answer)
 
     def testFigureAndContentIsEmpty(self):
@@ -96,10 +96,10 @@ class EssayQuestionUpdateFormTest(BaseTest):
         self.assertTrue(form.is_valid())
         essayQuestion = form.update()
 
-        self.assertEqual(testParams.figure, essayQuestion.figure)
-        self.assertEqual(testParams.content, essayQuestion.content)
-        self.assertEqual(testParams.explanation, essayQuestion.explanation)
-        self.assertEqual(testParams.mark, essayQuestion.mark)
+        self.assertEqual(testParams.figure, essayQuestion.question.figure)
+        self.assertEqual(testParams.content, essayQuestion.question.content)
+        self.assertEqual(testParams.explanation, essayQuestion.question.explanation)
+        self.assertEqual(testParams.mark, essayQuestion.question.mark)
         self.assertEqual(testParams.answer, essayQuestion.answer)
 
     class TestParams:

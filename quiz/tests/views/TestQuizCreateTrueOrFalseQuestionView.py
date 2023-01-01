@@ -55,7 +55,7 @@ class QuizCreateTrueOrFalseQuestionViewTest(BaseTestViews):
         self.assertEqual(newTrueOrFalseQuestion.content, testParams.content)
         self.assertEqual(newTrueOrFalseQuestion.explanation, testParams.explanation)
         self.assertEqual(newTrueOrFalseQuestion.mark, testParams.mark)
-        self.assertTrue(newTrueOrFalseQuestion.isCorrect)
+        self.assertTrue(newTrueOrFalseQuestion.trueOrFalseQuestion.isCorrect)
 
         self.assertEquals(response.status_code, 200)
         self.assertTrue(isinstance(response.context['form'], TrueOrFalseQuestionCreateForm))

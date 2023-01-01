@@ -15,15 +15,15 @@ class QuizAttemptObjectApiEventVersion1ComponentTest(BaseTestAjax):
         self.topic = Topic.objects.select_related('subject').first()
         self.quiz = bakerOperations.createQuiz(self.request.user, self.topic)
         self.quiz.questions.add(*[
-            bakerOperations.createEssayQuestion(),
-            bakerOperations.createEssayQuestion(),
-            bakerOperations.createEssayQuestion(),
-            bakerOperations.createTrueOrFalseQuestion(),
-            bakerOperations.createTrueOrFalseQuestion(),
-            bakerOperations.createTrueOrFalseQuestion(),
-            bakerOperations.createMultipleChoiceQuestionAndAnswers(None),
-            bakerOperations.createMultipleChoiceQuestionAndAnswers(None),
-            bakerOperations.createMultipleChoiceQuestionAndAnswers(None),
+            bakerOperations.createEssayQuestion().question,
+            bakerOperations.createEssayQuestion().question,
+            bakerOperations.createEssayQuestion().question,
+            bakerOperations.createTrueOrFalseQuestion().question,
+            bakerOperations.createTrueOrFalseQuestion().question,
+            bakerOperations.createTrueOrFalseQuestion().question,
+            bakerOperations.createMultipleChoiceQuestionAndAnswers(None).question,
+            bakerOperations.createMultipleChoiceQuestionAndAnswers(None).question,
+            bakerOperations.createMultipleChoiceQuestionAndAnswers(None).question,
         ])
         self.path = reverse('quiz:quizAttemptObjectApiEventVersion1Component') + f'?quizId={self.quiz.id}'
 

@@ -55,10 +55,10 @@ class MultipleChoiceQuestionUpdateFormTest(BaseTest):
         self.assertListEqual(form.base_fields.get('answerOrder').choices, self.answerOrderChoices)
         self.assertListEqual(form.initial.get('initialAnswerOptions'), self.choices)
 
-        # self.assertEqual(form.initial['figure'], self.multipleChoiceQuestion.figure)
-        self.assertEqual(form.initial['content'], self.multipleChoiceQuestion.content)
-        self.assertEqual(form.initial['explanation'], self.multipleChoiceQuestion.explanation)
-        self.assertEqual(form.initial['mark'], self.multipleChoiceQuestion.mark)
+        # self.assertEqual(form.initial['figure'], self.multipleChoiceQuestion.question.figure)
+        self.assertEqual(form.initial['content'], self.multipleChoiceQuestion.question.content)
+        self.assertEqual(form.initial['explanation'], self.multipleChoiceQuestion.question.explanation)
+        self.assertEqual(form.initial['mark'], self.multipleChoiceQuestion.question.mark)
         self.assertEqual(form.initial['answerOrder'], self.multipleChoiceQuestion.answerOrder)
 
     def testFigureAndContentIsEmpty(self):
@@ -116,10 +116,10 @@ class MultipleChoiceQuestionUpdateFormTest(BaseTest):
         self.assertEqual(0, len(form.errors))
         multipleChoiceQuestion = form.update()
 
-        self.assertEqual(testParams.figure, multipleChoiceQuestion.figure)
-        self.assertEqual(testParams.content, multipleChoiceQuestion.content)
-        self.assertEqual(testParams.explanation, multipleChoiceQuestion.explanation)
-        self.assertEqual(testParams.mark, multipleChoiceQuestion.mark)
+        self.assertEqual(testParams.figure, multipleChoiceQuestion.question.figure)
+        self.assertEqual(testParams.content, multipleChoiceQuestion.question.content)
+        self.assertEqual(testParams.explanation, multipleChoiceQuestion.question.explanation)
+        self.assertEqual(testParams.mark, multipleChoiceQuestion.question.mark)
         self.assertEqual(testParams.answerOrder, multipleChoiceQuestion.answerOrder)
 
         newChoiceList = multipleChoiceQuestion.choices['choices']
@@ -143,10 +143,10 @@ class MultipleChoiceQuestionUpdateFormTest(BaseTest):
         self.assertEqual(0, len(form.errors))
         multipleChoiceQuestion = form.update()
 
-        self.assertEqual(testParams.figure, multipleChoiceQuestion.figure)
-        self.assertEqual(testParams.content, multipleChoiceQuestion.content)
-        self.assertEqual(testParams.explanation, multipleChoiceQuestion.explanation)
-        self.assertEqual(testParams.mark, multipleChoiceQuestion.mark)
+        self.assertEqual(testParams.figure, multipleChoiceQuestion.question.figure)
+        self.assertEqual(testParams.content, multipleChoiceQuestion.question.content)
+        self.assertEqual(testParams.explanation, multipleChoiceQuestion.question.explanation)
+        self.assertEqual(testParams.mark, multipleChoiceQuestion.question.mark)
         self.assertEqual(testParams.answerOrder, multipleChoiceQuestion.answerOrder)
 
         newChoiceList = multipleChoiceQuestion.choices['choices']

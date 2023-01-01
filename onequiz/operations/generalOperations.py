@@ -86,11 +86,11 @@ class QuestionAndResponse:
         }
 
         additionalData = {}
-        if isinstance(question, EssayQuestion):
+        if hasattr(question, 'essayQuestion'):
             additionalData = self.getEssayQuestionResponse(question)
-        elif isinstance(question, TrueOrFalseQuestion):
+        elif hasattr(question, 'trueOrFalseQuestion'):
             additionalData = self.getTrueOrFalseQuestionResponse(question)
-        elif isinstance(question, MultipleChoiceQuestion):
+        elif hasattr(question, 'multipleChoiceQuestion'):
             additionalData = self.getMultipleChoiceQuestionResponse(question)
         else:
             pass
@@ -117,9 +117,9 @@ class QuestionAndResponse:
         data = {
             'type': 'EssayQuestion',
             'response': {
-                'id': responseObject.essayresponse.id,
-                'text': responseObject.essayresponse.answer,
-                'mark': self.parseResponseMark(responseObject.essayresponse.mark)
+                'id': responseObject.essayResponse.pk,
+                'text': responseObject.essayResponse.answer,
+                'mark': self.parseResponseMark(responseObject.mark)
             }
         }
         return data
@@ -129,9 +129,9 @@ class QuestionAndResponse:
         data = {
             'type': 'TrueOrFalseQuestion',
             'response': {
-                'id': responseObject.trueorfalseresponse.id,
-                'selectedOption': responseObject.trueorfalseresponse.trueSelected,
-                'mark': self.parseResponseMark(responseObject.trueorfalseresponse.mark)
+                'id': responseObject.trueOrFalseResponse.pk,
+                'selectedOption': responseObject.trueOrFalseResponse.trueSelected,
+                'mark': self.parseResponseMark(responseObject.mark)
             }
         }
         return data
@@ -141,16 +141,16 @@ class QuestionAndResponse:
         data = {
             'type': 'MultipleChoiceQuestion',
             'response': {
-                'id': responseObject.multiplechoiceresponse.id,
+                'id': responseObject.multipleChoiceResponse.pk,
                 'choices': [
                     {
                         'id': answer['id'],
                         'content': answer['content'],
                         'isChecked': answer['isChecked']
                     }
-                    for answer in responseObject.multiplechoiceresponse.answers['answers']
+                    for answer in responseObject.multipleChoiceResponse.answers['answers']
                 ],
-                'mark': self.parseResponseMark(responseObject.multiplechoiceresponse.mark)
+                'mark': self.parseResponseMark(responseObject.mark)
             }
         }
         return data
@@ -219,7 +219,7 @@ class QuizAttemptAutomaticMarking:
     def requiresManualMarking(self):
         # any(isinstance(question, EssayQuestion) for question in self.questionList)
         for question in self.questionList:
-            if isinstance(question, EssayQuestion):
+            if hasattr(question, 'essayQuestion'):
                 return True
         return False
 

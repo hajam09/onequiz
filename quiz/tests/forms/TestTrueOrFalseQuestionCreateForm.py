@@ -101,10 +101,10 @@ class TrueOrFalseQuestionCreateFormTest(BaseTest):
         self.assertTrue(form.is_valid())
 
         newTrueOrFalseQuestion = form.save()
-        # self.assertIsNone(newTrueOrFalseQuestion.figure)
-        self.assertEqual(testParams.content, newTrueOrFalseQuestion.content)
-        self.assertEqual(testParams.explanation, newTrueOrFalseQuestion.explanation)
-        self.assertEqual(testParams.mark, newTrueOrFalseQuestion.mark)
+        # self.assertIsNone(newTrueOrFalseQuestion.question.figure)
+        self.assertEqual(testParams.content, newTrueOrFalseQuestion.question.content)
+        self.assertEqual(testParams.explanation, newTrueOrFalseQuestion.question.explanation)
+        self.assertEqual(testParams.mark, newTrueOrFalseQuestion.question.mark)
         self.assertFalse(newTrueOrFalseQuestion.isCorrect)
 
     class TestParams:

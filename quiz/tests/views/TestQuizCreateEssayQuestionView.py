@@ -56,7 +56,7 @@ class QuizCreateEssayQuestionViewTest(BaseTestViews):
         self.assertEqual(newEssayQuestion.content, testParams.content)
         self.assertEqual(newEssayQuestion.explanation, testParams.explanation)
         self.assertEqual(newEssayQuestion.mark, testParams.mark)
-        self.assertEqual(newEssayQuestion.answer, testParams.answer)
+        self.assertEqual(newEssayQuestion.essayQuestion.answer, testParams.answer)
 
         self.assertEquals(response.status_code, 200)
         self.assertTrue(isinstance(response.context['form'], EssayQuestionCreateForm))

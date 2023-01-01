@@ -64,8 +64,6 @@ class Question(BaseModel):
     explanation = models.TextField(max_length=2048, blank=True, null=True)
     mark = models.SmallIntegerField(blank=True, null=True, default=1)
 
-    objects = InheritanceManager()
-
     class Meta:
         verbose_name = 'Question'
         verbose_name_plural = 'Questions'
@@ -74,7 +72,8 @@ class Question(BaseModel):
         return self.__class__.__name__
 
 
-class EssayQuestion(Question):
+class EssayQuestion(BaseModel):
+    question = models.OneToOneField(Question, on_delete=models.CASCADE, primary_key=True, related_name='essayQuestion')
     answer = models.TextField()
 
     class Meta:
@@ -82,12 +81,13 @@ class EssayQuestion(Question):
         verbose_name_plural = 'EssayQuestions'
 
 
-class MultipleChoiceQuestion(Question):
+class MultipleChoiceQuestion(BaseModel):
     class Order(models.TextChoices):
         SEQUENTIAL = 'SEQUENTIAL', _('Sequential')
         RANDOM = 'RANDOM', _('Random')
         NONE = 'NONE', _('None')
 
+    question = models.OneToOneField(Question, on_delete=models.CASCADE, primary_key=True, related_name='multipleChoiceQuestion')
     answerOrder = models.CharField(max_length=30, choices=Order.choices, default=Order.RANDOM)
     choices = models.JSONField()
 
@@ -105,7 +105,8 @@ class MultipleChoiceQuestion(Question):
         verbose_name_plural = 'MultipleChoiceQuestions'
 
 
-class TrueOrFalseQuestion(Question):
+class TrueOrFalseQuestion(BaseModel):
+    question = models.OneToOneField(Question, on_delete=models.CASCADE, primary_key=True, related_name='trueOrFalseQuestion')
     isCorrect = models.BooleanField(default=False)
 
     class Meta:
@@ -146,7 +147,7 @@ class Quiz(BaseModel):
         return f"{self.id} - {self.name} - {self.topic.name}"
 
     def getQuestions(self, shuffleQuestions=False):
-        questionList = self.questions.all().select_subclasses()
+        questionList = self.questions.all()#.select_subclasses()
         if shuffleQuestions:
             random.shuffle(questionList)
         return questionList
@@ -160,14 +161,13 @@ class Response(BaseModel):
     isCorrect = models.BooleanField(default=False)
     mark = models.DecimalField(blank=True, null=True, default=None, max_digits=4, decimal_places=2)
 
-    objects = InheritanceManager()
-
     class Meta:
         verbose_name = 'Response'
         verbose_name_plural = 'Response'
 
 
-class EssayResponse(Response):
+class EssayResponse(BaseModel):
+    response = models.OneToOneField(Response, on_delete=models.CASCADE, primary_key=True, related_name='essayResponse')
     answer = models.TextField()
 
     class Meta:
@@ -175,7 +175,8 @@ class EssayResponse(Response):
         verbose_name_plural = 'EssayResponse'
 
 
-class MultipleChoiceResponse(Response):
+class MultipleChoiceResponse(BaseModel):
+    response = models.OneToOneField(Response, on_delete=models.CASCADE, primary_key=True, related_name='multipleChoiceResponse')
     answers = models.JSONField()
 
     class Meta:
@@ -183,7 +184,8 @@ class MultipleChoiceResponse(Response):
         verbose_name_plural = 'MultipleChoiceResponse'
 
 
-class TrueOrFalseResponse(Response):
+class TrueOrFalseResponse(BaseModel):
+    response = models.OneToOneField(Response, on_delete=models.CASCADE, primary_key=True, related_name='trueOrFalseResponse')
     trueSelected = models.BooleanField(blank=True, null=True)
 
     class Meta:

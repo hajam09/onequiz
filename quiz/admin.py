@@ -23,7 +23,7 @@ class QuizAdminForm(forms.ModelForm):
         exclude = []
 
     questions = forms.ModelMultipleChoiceField(
-        queryset=Question.objects.all().select_subclasses(),
+        queryset=Question.objects.all(),#,.select_subclasses(),
         required=False,
         label=_('Questions'),
         widget=FilteredSelectMultiple(
