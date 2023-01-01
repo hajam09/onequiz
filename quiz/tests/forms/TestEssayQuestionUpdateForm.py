@@ -12,7 +12,7 @@ class EssayQuestionUpdateFormTest(BaseTest):
         self.essayQuestion = bakerOperations.createEssayQuestion().question
 
     def testFieldsAndType(self):
-        form = EssayQuestionUpdateForm(self.essayQuestion)
+        form = EssayQuestionUpdateForm(self.essayQuestion.essayQuestion)
         self.assertEqual(len(form.base_fields), 5)
 
         self.assertTrue(isinstance(form.base_fields.get('figure'), forms.ImageField))
@@ -44,10 +44,10 @@ class EssayQuestionUpdateFormTest(BaseTest):
         form = EssayQuestionUpdateForm(self.essayQuestion.essayQuestion)
 
         # self.assertEqual(form.initial['figure'], self.essayQuestion.figure)
-        self.assertEqual(form.initial['content'], self.essayQuestion.question.content)
-        self.assertEqual(form.initial['explanation'], self.essayQuestion.question.explanation)
-        self.assertEqual(form.initial['mark'], self.essayQuestion.question.mark)
-        self.assertEqual(form.initial['answer'], self.essayQuestion.answer)
+        self.assertEqual(form.initial['content'], self.essayQuestion.content)
+        self.assertEqual(form.initial['explanation'], self.essayQuestion.explanation)
+        self.assertEqual(form.initial['mark'], self.essayQuestion.mark)
+        self.assertEqual(form.initial['answer'], self.essayQuestion.essayQuestion.answer)
 
     def testFigureAndContentIsEmpty(self):
         testParams = self.TestParams(
