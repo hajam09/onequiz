@@ -7,7 +7,6 @@ from django.db import models
 from django.urls import reverse
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
-from model_utils.managers import InheritanceManager
 
 PERCENTAGE_VALIDATOR = [MinValueValidator(0), MaxValueValidator(100)]
 
@@ -147,7 +146,7 @@ class Quiz(BaseModel):
         return f"{self.id} - {self.name} - {self.topic.name}"
 
     def getQuestions(self, shuffleQuestions=False):
-        questionList = self.questions.all()#.select_subclasses()
+        questionList = self.questions.all()
         if shuffleQuestions:
             random.shuffle(questionList)
         return questionList
