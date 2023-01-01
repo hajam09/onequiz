@@ -51,7 +51,7 @@ class QuizCreateMultipleChoiceQuestionViewTest(BaseTestViews):
         )
 
         response = self.post(testParams.getData(True))
-        newMultipleChoiceQuestion = self.quiz.getQuestions().first()
+        question = self.quiz.getQuestions().first()
         self.assertEqual(1, self.quiz.getQuestions().count())
 
         self.assertEquals(response.status_code, 200)
@@ -59,13 +59,13 @@ class QuizCreateMultipleChoiceQuestionViewTest(BaseTestViews):
         self.assertTrue(response.context['formTitle'], 'Create Multiple Choice Question')
         self.assertTemplateUsed(response, 'quiz/multipleChoiceQuestionTemplateView.html')
 
-        self.assertEqual(newMultipleChoiceQuestion.figure, testParams.figure)
-        self.assertEqual(newMultipleChoiceQuestion.content, testParams.content)
-        self.assertEqual(newMultipleChoiceQuestion.explanation, testParams.explanation)
-        self.assertEqual(newMultipleChoiceQuestion.mark, testParams.mark)
-        self.assertEqual(newMultipleChoiceQuestion.answerOrder, testParams.answerOrder)
+        self.assertEqual(question.figure, testParams.figure)
+        self.assertEqual(question.content, testParams.content)
+        self.assertEqual(question.explanation, testParams.explanation)
+        self.assertEqual(question.mark, testParams.mark)
+        self.assertEqual(question.multipleChoiceQuestion.answerOrder, testParams.answerOrder)
 
-        choiceList = newMultipleChoiceQuestion.choices['choices']
+        choiceList = question.multipleChoiceQuestion.choices['choices']
         self.assertListEqual(
             [(i['content'], i['isCorrect']) for i in choiceList], [(i[1], i[2]) for i in testParams.choices]
         )

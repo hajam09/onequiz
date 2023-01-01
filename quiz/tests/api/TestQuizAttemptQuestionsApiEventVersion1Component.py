@@ -7,7 +7,7 @@ from faker import Faker
 from onequiz.operations import bakerOperations
 from onequiz.operations.generalOperations import QuestionAndResponse
 from onequiz.tests.BaseTestAjax import BaseTestAjax
-from quiz.models import Topic, QuizAttempt, EssayQuestion, TrueOrFalseQuestion, MultipleChoiceQuestion
+from quiz.models import Topic, QuizAttempt
 
 
 class QuizAttemptQuestionsApiEventVersion1ComponentTest(BaseTestAjax):
@@ -17,15 +17,15 @@ class QuizAttemptQuestionsApiEventVersion1ComponentTest(BaseTestAjax):
         bakerOperations.createSubjectsAndTopics(1, 1)
         self.topic = Topic.objects.select_related('subject').first()
         self.quiz = bakerOperations.createQuiz(self.request.user, self.topic)
-        self.eq1 = bakerOperations.createEssayQuestion()
-        self.eq2 = bakerOperations.createEssayQuestion()
-        self.eq3 = bakerOperations.createEssayQuestion()
-        self.tf1 = bakerOperations.createTrueOrFalseQuestion()
-        self.tf2 = bakerOperations.createTrueOrFalseQuestion()
-        self.tf3 = bakerOperations.createTrueOrFalseQuestion()
-        self.mcq1 = bakerOperations.createMultipleChoiceQuestionAndAnswers(None)
-        self.mcq2 = bakerOperations.createMultipleChoiceQuestionAndAnswers(None)
-        self.mcq3 = bakerOperations.createMultipleChoiceQuestionAndAnswers(None)
+        self.eq1 = bakerOperations.createEssayQuestion().question
+        self.eq2 = bakerOperations.createEssayQuestion().question
+        self.eq3 = bakerOperations.createEssayQuestion().question
+        self.tf1 = bakerOperations.createTrueOrFalseQuestion().question
+        self.tf2 = bakerOperations.createTrueOrFalseQuestion().question
+        self.tf3 = bakerOperations.createTrueOrFalseQuestion().question
+        self.mcq1 = bakerOperations.createMultipleChoiceQuestionAndAnswers(None).question
+        self.mcq2 = bakerOperations.createMultipleChoiceQuestionAndAnswers(None).question
+        self.mcq3 = bakerOperations.createMultipleChoiceQuestionAndAnswers(None).question
 
     def createQuizAttemptAndTheResponseObjects(self):
         path = reverse('quiz:quizAttemptObjectApiEventVersion1Component') + f'?quizId={self.quiz.id}'
@@ -44,7 +44,7 @@ class QuizAttemptQuestionsApiEventVersion1ComponentTest(BaseTestAjax):
         response = self.get(path=path)
         ajaxResponse = json.loads(response.content)
 
-        quizAttempt = QuizAttempt.objects.select_related('quiz', 'user').prefetch_related('responses__question').get(
+        quizAttempt = QuizAttempt.objects.select_related('quiz', 'user').get(
             id=quizAttemptId
         )
         questionList = quizAttempt.quiz.getQuestions()
@@ -96,9 +96,7 @@ class QuizAttemptQuestionsApiEventVersion1ComponentTest(BaseTestAjax):
 
         quizAttemptId = self.createQuizAttemptAndTheResponseObjects()
         path = reverse('quiz:quizAttemptQuestionsApiEventVersion1Component', kwargs={'id': quizAttemptId})
-        quizAttempt = QuizAttempt.objects.select_related('quiz', 'user').prefetch_related(
-            'responses__question', 'responses__essayresponse'
-        ).get(id=quizAttemptId)
+        quizAttempt = QuizAttempt.objects.select_related('quiz', 'user').get(id=quizAttemptId)
 
         questionList = quizAttempt.quiz.getQuestions()
         responseList = quizAttempt.responses.all()
@@ -116,8 +114,8 @@ class QuizAttemptQuestionsApiEventVersion1ComponentTest(BaseTestAjax):
         self.assertTrue(len(quizQuestionList) == quizAttempt.responses.count() == len(responseListData))
 
         for a, b in zip(quizAttempt.responses.all(), responseListData):
-            self.assertEqual(a.essayresponse.id, b['response']['id'])
-            self.assertEqual(a.essayresponse.answer, b['response']['text'])
+            self.assertEqual(a.essayResponse.pk, b['response']['id'])
+            self.assertEqual(a.essayResponse.answer, b['response']['text'])
 
     def testUpdateTrueOrFalseQuestionResponses(self):
         quizQuestionList = [self.tf1, self.tf2, self.tf3]
@@ -125,9 +123,7 @@ class QuizAttemptQuestionsApiEventVersion1ComponentTest(BaseTestAjax):
 
         quizAttemptId = self.createQuizAttemptAndTheResponseObjects()
         path = reverse('quiz:quizAttemptQuestionsApiEventVersion1Component', kwargs={'id': quizAttemptId})
-        quizAttempt = QuizAttempt.objects.select_related('quiz', 'user').prefetch_related(
-            'responses__question', 'responses__trueorfalseresponse'
-        ).get(id=quizAttemptId)
+        quizAttempt = QuizAttempt.objects.select_related('quiz', 'user').get(id=quizAttemptId)
 
         questionList = quizAttempt.quiz.getQuestions()
         responseList = quizAttempt.responses.all()
@@ -145,8 +141,8 @@ class QuizAttemptQuestionsApiEventVersion1ComponentTest(BaseTestAjax):
         self.assertTrue(len(quizQuestionList) == quizAttempt.responses.count() == len(responseListData))
 
         for a, b in zip(quizAttempt.responses.all(), responseListData):
-            self.assertEqual(a.trueorfalseresponse.id, b['response']['id'])
-            self.assertEqual(a.trueorfalseresponse.trueSelected, eval(b['response']['selectedOption']))
+            self.assertEqual(a.trueOrFalseResponse.pk, b['response']['id'])
+            self.assertEqual(a.trueOrFalseResponse.trueSelected, eval(b['response']['selectedOption']))
 
     def testUpdateMultipleChoiceQuestionResponses(self):
         quizQuestionList = [self.mcq1, self.mcq2, self.mcq3]
@@ -154,9 +150,7 @@ class QuizAttemptQuestionsApiEventVersion1ComponentTest(BaseTestAjax):
 
         quizAttemptId = self.createQuizAttemptAndTheResponseObjects()
         path = reverse('quiz:quizAttemptQuestionsApiEventVersion1Component', kwargs={'id': quizAttemptId})
-        quizAttempt = QuizAttempt.objects.select_related('quiz', 'user').prefetch_related(
-            'responses__question', 'responses__trueorfalseresponse'
-        ).get(id=quizAttemptId)
+        quizAttempt = QuizAttempt.objects.select_related('quiz', 'user').get(id=quizAttemptId)
 
         questionList = quizAttempt.quiz.getQuestions()
         responseList = quizAttempt.responses.all()
@@ -174,8 +168,8 @@ class QuizAttemptQuestionsApiEventVersion1ComponentTest(BaseTestAjax):
         self.assertTrue(len(quizQuestionList) == quizAttempt.responses.count() == len(responseListData))
 
         for a, b in zip(quizAttempt.responses.all(), responseListData):
-            self.assertEqual(a.multiplechoiceresponse.id, b['response']['id'])
-            self.assertListEqual(a.multiplechoiceresponse.answers['answers'], b['response']['choices'])
+            self.assertEqual(a.multipleChoiceResponse.pk, b['response']['id'])
+            self.assertListEqual(a.multipleChoiceResponse.answers['answers'], b['response']['choices'])
 
     def testWhenQuizHasEssayQuestionThenDoNotMarkTheQuiz(self):
         quizQuestionList = [self.eq1, self.tf1, self.mcq1]
@@ -185,9 +179,7 @@ class QuizAttemptQuestionsApiEventVersion1ComponentTest(BaseTestAjax):
 
         quizAttemptId = self.createQuizAttemptAndTheResponseObjects()
         path = reverse('quiz:quizAttemptQuestionsApiEventVersion1Component', kwargs={'id': quizAttemptId})
-        quizAttempt = QuizAttempt.objects.select_related('quiz', 'user').prefetch_related(
-            'responses__question', 'responses__trueorfalseresponse'
-        ).get(id=quizAttemptId)
+        quizAttempt = QuizAttempt.objects.select_related('quiz', 'user').get(id=quizAttemptId)
 
         questionList = quizAttempt.quiz.getQuestions()
         responseList = quizAttempt.responses.all()
@@ -206,14 +198,14 @@ class QuizAttemptQuestionsApiEventVersion1ComponentTest(BaseTestAjax):
 
         for a, b in zip(quizAttempt.responses.all(), responseListData):
             if b['type'] == 'EssayQuestion':
-                self.assertEqual(a.essayresponse.id, b['response']['id'])
-                self.assertEqual(a.essayresponse.answer, b['response']['text'])
+                self.assertEqual(a.essayResponse.pk, b['response']['id'])
+                self.assertEqual(a.essayResponse.answer, b['response']['text'])
             elif b['type'] == 'TrueOrFalseQuestion':
-                self.assertEqual(a.trueorfalseresponse.id, b['response']['id'])
-                self.assertEqual(a.trueorfalseresponse.trueSelected, eval(b['response']['selectedOption']))
+                self.assertEqual(a.trueOrFalseResponse.pk, b['response']['id'])
+                self.assertEqual(a.trueOrFalseResponse.trueSelected, eval(b['response']['selectedOption']))
             elif b['type'] == 'MultipleChoiceQuestion':
-                self.assertEqual(a.multiplechoiceresponse.id, b['response']['id'])
-                self.assertListEqual(a.multiplechoiceresponse.answers['answers'], b['response']['choices'])
+                self.assertEqual(a.multipleChoiceResponse.pk, b['response']['id'])
+                self.assertListEqual(a.multipleChoiceResponse.answers['answers'], b['response']['choices'])
 
     def testWhenQuizDoesNotHaveEssayQuestionThenMarkTheQuiz(self):
         quizQuestionList = [self.tf1, self.tf2, self.tf3, self.mcq1, self.mcq2, self.mcq3]
@@ -223,9 +215,7 @@ class QuizAttemptQuestionsApiEventVersion1ComponentTest(BaseTestAjax):
 
         quizAttemptId = self.createQuizAttemptAndTheResponseObjects()
         path = reverse('quiz:quizAttemptQuestionsApiEventVersion1Component', kwargs={'id': quizAttemptId})
-        quizAttempt = QuizAttempt.objects.select_related('quiz', 'user').prefetch_related(
-            'responses__question', 'responses__trueorfalseresponse'
-        ).get(id=quizAttemptId)
+        quizAttempt = QuizAttempt.objects.select_related('quiz', 'user').get(id=quizAttemptId)
 
         questionList = quizAttempt.quiz.getQuestions()
         responseList = quizAttempt.responses.all()
@@ -244,11 +234,11 @@ class QuizAttemptQuestionsApiEventVersion1ComponentTest(BaseTestAjax):
 
         for a, b in zip(quizAttempt.responses.all(), responseListData):
             if b['type'] == 'TrueOrFalseQuestion':
-                self.assertEqual(a.trueorfalseresponse.id, b['response']['id'])
-                self.assertEqual(a.trueorfalseresponse.trueSelected, eval(b['response']['selectedOption']))
+                self.assertEqual(a.trueOrFalseResponse.pk, b['response']['id'])
+                self.assertEqual(a.trueOrFalseResponse.trueSelected, eval(b['response']['selectedOption']))
             elif b['type'] == 'MultipleChoiceQuestion':
-                self.assertEqual(a.multiplechoiceresponse.id, b['response']['id'])
-                self.assertListEqual(a.multiplechoiceresponse.answers['answers'], b['response']['choices'])
+                self.assertEqual(a.multipleChoiceResponse.pk, b['response']['id'])
+                self.assertListEqual(a.multipleChoiceResponse.answers['answers'], b['response']['choices'])
 
     class TestParams:
         def __init__(self, questionList, responseList):
@@ -263,52 +253,52 @@ class QuizAttemptQuestionsApiEventVersion1ComponentTest(BaseTestAjax):
             return computedResponseList
 
         def getResponseForQuestion(self, question):
-            if isinstance(question, EssayQuestion):
+            if hasattr(question, 'essayQuestion'):
                 return self.getEssayQuestionResponse(question)
-            elif isinstance(question, TrueOrFalseQuestion):
+            elif hasattr(question, 'trueOrFalseQuestion'):
                 return self.getTrueOrFalseQuestionResponse(question)
-            elif isinstance(question, MultipleChoiceQuestion):
+            elif hasattr(question, 'multipleChoiceQuestion'):
                 return self.getMultipleChoiceQuestionResponse(question)
 
         def getResponseObject(self, question):
             return next((o for o in self.responseList if o.question.id == question.id))
 
         def getEssayQuestionResponse(self, question):
-            responseObject = self.getResponseObject(question)
+            response = self.getResponseObject(question)
             data = {
                 'id': question.id,
                 'type': 'EssayQuestion',
                 'response': {
-                    'id': responseObject.essayresponse.id,
+                    'id': response.essayResponse.pk,
                     'text': self.faker.paragraph()
                 }
             }
             return data
 
         def getTrueOrFalseQuestionResponse(self, question):
-            responseObject = self.getResponseObject(question)
+            response = self.getResponseObject(question)
             data = {
                 'type': 'TrueOrFalseQuestion',
                 'response': {
-                    'id': responseObject.trueorfalseresponse.id,
+                    'id': response.trueOrFalseResponse.pk,
                     'selectedOption': random.choice(['True', 'False'])
                 }
             }
             return data
 
         def getMultipleChoiceQuestionResponse(self, question):
-            responseObject = self.getResponseObject(question)
+            response = self.getResponseObject(question)
             data = {
                 'type': 'MultipleChoiceQuestion',
                 'response': {
-                    'id': responseObject.multiplechoiceresponse.id,
+                    'id': response.multipleChoiceResponse.pk,
                     'choices': [
                         {
                             'id': answer['id'],
                             'content': answer['content'],
                             'isChecked': random.choice(['True', 'False'])
                         }
-                        for answer in responseObject.multiplechoiceresponse.answers['answers']
+                        for answer in response.multipleChoiceResponse.answers['answers']
                     ]
                 }
             }

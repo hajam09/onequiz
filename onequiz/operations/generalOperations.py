@@ -8,7 +8,7 @@ from django.conf import settings
 from django.db.models import Q
 from django.utils import timezone
 
-from quiz.models import EssayQuestion, MultipleChoiceQuestion, TrueOrFalseQuestion, Response, Result, Quiz
+from quiz.models import Response, Result, Quiz, EssayResponse, TrueOrFalseResponse, MultipleChoiceResponse
 
 
 def isPasswordStrong(password):
@@ -85,15 +85,10 @@ class QuestionAndResponse:
             'mark': question.mark,
         }
 
-        additionalData = {}
-        if isinstance(question, EssayQuestion):
-            additionalData = self.getEssayQuestionResponse(question)
-        elif isinstance(question, TrueOrFalseQuestion):
-            additionalData = self.getTrueOrFalseQuestionResponse(question)
-        elif isinstance(question, MultipleChoiceQuestion):
-            additionalData = self.getMultipleChoiceQuestionResponse(question)
-        else:
-            pass
+        additionalData = (
+                self.getEssayQuestionResponse(question) or self.getTrueOrFalseQuestionResponse(question)
+                or self.getMultipleChoiceQuestionResponse(question) or {}
+        )
 
         try:
             mergedData = data | additionalData
@@ -113,44 +108,62 @@ class QuestionAndResponse:
         return mark
 
     def getEssayQuestionResponse(self, question):
-        responseObject = self.getResponseObject(question)
+        response = self.getResponseObject(question)
+
+        try:
+            essayResponse = response.essayResponse
+        except EssayResponse.DoesNotExist:
+            return None
+
         data = {
             'type': 'EssayQuestion',
             'response': {
-                'id': responseObject.essayresponse.id,
-                'text': responseObject.essayresponse.answer,
-                'mark': self.parseResponseMark(responseObject.essayresponse.mark)
+                'id': essayResponse.pk,
+                'text': essayResponse.answer,
+                'mark': self.parseResponseMark(response.mark)
             }
         }
         return data
 
     def getTrueOrFalseQuestionResponse(self, question):
-        responseObject = self.getResponseObject(question)
+        response = self.getResponseObject(question)
+
+        try:
+            trueOrFalseResponse = response.trueOrFalseResponse
+        except TrueOrFalseResponse.DoesNotExist:
+            return None
+
         data = {
             'type': 'TrueOrFalseQuestion',
             'response': {
-                'id': responseObject.trueorfalseresponse.id,
-                'selectedOption': responseObject.trueorfalseresponse.trueSelected,
-                'mark': self.parseResponseMark(responseObject.trueorfalseresponse.mark)
+                'id': trueOrFalseResponse.pk,
+                'selectedOption': trueOrFalseResponse.trueSelected,
+                'mark': self.parseResponseMark(response.mark)
             }
         }
         return data
 
     def getMultipleChoiceQuestionResponse(self, question):
-        responseObject = self.getResponseObject(question)
+        response = self.getResponseObject(question)
+
+        try:
+            multipleChoiceResponse = response.multipleChoiceResponse
+        except MultipleChoiceResponse.DoesNotExist:
+            return None
+
         data = {
             'type': 'MultipleChoiceQuestion',
             'response': {
-                'id': responseObject.multiplechoiceresponse.id,
+                'id': multipleChoiceResponse.pk,
                 'choices': [
                     {
                         'id': answer['id'],
                         'content': answer['content'],
                         'isChecked': answer['isChecked']
                     }
-                    for answer in responseObject.multiplechoiceresponse.answers['answers']
+                    for answer in multipleChoiceResponse.answers['answers']
                 ],
-                'mark': self.parseResponseMark(responseObject.multiplechoiceresponse.mark)
+                'mark': self.parseResponseMark(response.mark)
             }
         }
         return data
@@ -179,21 +192,21 @@ class QuizAttemptManualMarking:
             if not ('questionId' in item and 'responseId' in item and 'awardedMark' in item):
                 return False
 
-            responseObject = self.getResponseObject(item['questionId'], item['responseId'])
-            if responseObject is None:
+            response = self.getResponseObject(item['questionId'], item['responseId'])
+            if response is None:
                 return False
 
-            responseObject.mark = float(item['awardedMark'])
-            if responseObject.mark == responseObject.question.mark:
+            response.mark = float(item['awardedMark'])
+            if response.mark == response.question.mark:
                 numberOfCorrectAnswers += 1
-            elif responseObject.mark == 0:
+            elif response.mark == 0:
                 numberOfWrongAnswers += 1
             else:
                 numberOfPartialAnswers += 1
 
-            totalQuizMark += responseObject.question.mark
-            totalAwardedMark += responseObject.mark
-            updatedObjectList.append(responseObject)
+            totalQuizMark += response.question.mark
+            totalAwardedMark += response.mark
+            updatedObjectList.append(response)
 
         Response.objects.bulk_update(updatedObjectList, ['mark'])
         self.result = Result(
@@ -219,7 +232,7 @@ class QuizAttemptAutomaticMarking:
     def requiresManualMarking(self):
         # any(isinstance(question, EssayQuestion) for question in self.questionList)
         for question in self.questionList:
-            if isinstance(question, EssayQuestion):
+            if hasattr(question, 'essayQuestion'):
                 return True
         return False
 
@@ -239,22 +252,22 @@ class QuizAttemptAutomaticMarking:
         totalQuizMark = 0
 
         for question in self.questionList:
-            responseObject = self.getResponseObject(question)
+            response = self.getResponseObject(question)
             awardedMark = 0
 
-            if isinstance(question, EssayQuestion):
+            if hasattr(question, 'essayQuestion'):
                 continue
-            elif isinstance(question, TrueOrFalseQuestion):
-                actualAnswer = question.isCorrect
-                providedAnswer = responseObject.trueorfalseresponse.trueSelected
+            elif hasattr(question, 'trueOrFalseQuestion'):
+                actualAnswer = question.trueOrFalseQuestion.isCorrect
+                providedAnswer = response.trueOrFalseResponse.trueSelected
                 awardedMark = question.mark if actualAnswer == providedAnswer else 0
                 if awardedMark == question.mark:
                     numberOfCorrectAnswers += 1
                 else:
                     numberOfWrongAnswers += 1
-            elif isinstance(question, MultipleChoiceQuestion):
-                actualChoices = question.choices['choices']
-                providedChoices = responseObject.multiplechoiceresponse.answers['answers']
+            elif hasattr(question, 'multipleChoiceQuestion'):
+                actualChoices = question.multipleChoiceQuestion.choices['choices']
+                providedChoices = response.multipleChoiceResponse.answers['answers']
                 marksPerChoice = round(question.mark / len(actualChoices), 2)
                 for ac in actualChoices:
                     pc = next((p for p in providedChoices if p['id'] == ac['id']))
@@ -270,8 +283,8 @@ class QuizAttemptAutomaticMarking:
 
             totalAwardedMark += awardedMark
             totalQuizMark += question.mark
-            responseObject.mark = awardedMark
-            responseObjectsList.append(responseObject)
+            response.mark = awardedMark
+            responseObjectsList.append(response)
 
         self.result = Result.objects.create(
             quizAttempt=self.quizAttempt,
