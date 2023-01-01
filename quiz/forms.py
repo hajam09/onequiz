@@ -944,6 +944,7 @@ class MultipleChoiceQuestionUpdateForm(forms.Form):
         self.multipleChoiceQuestion.choices = {
             'choices': [i for i in oldAnswerOptionsList if i['id'] not in idsToDelete]
         }
+
         self.multipleChoiceQuestion.question.save()
         self.multipleChoiceQuestion.save()
         return self.multipleChoiceQuestion
@@ -1165,6 +1166,7 @@ class TrueOrFalseQuestionUpdateForm(forms.Form):
         self.trueOrFalseQuestion.question.explanation = self.cleaned_data.get('explanation')
         self.trueOrFalseQuestion.question.mark = self.cleaned_data.get('mark')
         self.trueOrFalseQuestion.isCorrect = eval(self.cleaned_data.get('isCorrect'))
+
         self.trueOrFalseQuestion.question.save()
         self.trueOrFalseQuestion.save()
         return self.trueOrFalseQuestion

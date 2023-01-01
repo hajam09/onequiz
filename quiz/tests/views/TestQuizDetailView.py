@@ -2,7 +2,6 @@ from unittest.mock import patch
 
 from django.db.models import QuerySet
 from django.urls import reverse
-from model_utils.managers import InheritanceQuerySet
 
 from onequiz.operations import bakerOperations
 from onequiz.tests.BaseTestViews import BaseTestViews

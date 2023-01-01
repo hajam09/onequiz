@@ -5,7 +5,7 @@ from django.urls import reverse
 
 from onequiz.operations import bakerOperations
 from onequiz.tests.BaseTestAjax import BaseTestAjax
-from quiz.models import Topic, QuizAttempt, EssayQuestion, TrueOrFalseQuestion, MultipleChoiceQuestion
+from quiz.models import Topic, QuizAttempt
 
 
 class QuestionResponseUpdateApiEventVersion1ComponentTest(BaseTestAjax):
@@ -69,7 +69,8 @@ class QuestionResponseUpdateApiEventVersion1ComponentTest(BaseTestAjax):
 
         self.assertEqual(response.status_code, 200)
         self.assertTrue(ajaxResponse['success'])
-        self.assertEqual(testParams.response.trueOrFalseResponse.trueSelected, eval(payload['response']['selectedOption']))
+        self.assertEqual(testParams.response.trueOrFalseResponse.trueSelected,
+                         eval(payload['response']['selectedOption']))
 
     @patch('quiz.api.featureFlagOperations')
     def testUpdateResponseForMultipleChoiceQuestion(self, mockFeatureFlagOperations):

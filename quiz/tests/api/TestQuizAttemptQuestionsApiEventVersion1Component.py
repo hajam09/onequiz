@@ -7,7 +7,7 @@ from faker import Faker
 from onequiz.operations import bakerOperations
 from onequiz.operations.generalOperations import QuestionAndResponse
 from onequiz.tests.BaseTestAjax import BaseTestAjax
-from quiz.models import Topic, QuizAttempt, EssayQuestion, TrueOrFalseQuestion, MultipleChoiceQuestion
+from quiz.models import Topic, QuizAttempt
 
 
 class QuizAttemptQuestionsApiEventVersion1ComponentTest(BaseTestAjax):
@@ -264,41 +264,41 @@ class QuizAttemptQuestionsApiEventVersion1ComponentTest(BaseTestAjax):
             return next((o for o in self.responseList if o.question.id == question.id))
 
         def getEssayQuestionResponse(self, question):
-            responseObject = self.getResponseObject(question)
+            response = self.getResponseObject(question)
             data = {
                 'id': question.id,
                 'type': 'EssayQuestion',
                 'response': {
-                    'id': responseObject.essayResponse.pk,
+                    'id': response.essayResponse.pk,
                     'text': self.faker.paragraph()
                 }
             }
             return data
 
         def getTrueOrFalseQuestionResponse(self, question):
-            responseObject = self.getResponseObject(question)
+            response = self.getResponseObject(question)
             data = {
                 'type': 'TrueOrFalseQuestion',
                 'response': {
-                    'id': responseObject.trueOrFalseResponse.pk,
+                    'id': response.trueOrFalseResponse.pk,
                     'selectedOption': random.choice(['True', 'False'])
                 }
             }
             return data
 
         def getMultipleChoiceQuestionResponse(self, question):
-            responseObject = self.getResponseObject(question)
+            response = self.getResponseObject(question)
             data = {
                 'type': 'MultipleChoiceQuestion',
                 'response': {
-                    'id': responseObject.multipleChoiceResponse.pk,
+                    'id': response.multipleChoiceResponse.pk,
                     'choices': [
                         {
                             'id': answer['id'],
                             'content': answer['content'],
                             'isChecked': random.choice(['True', 'False'])
                         }
-                        for answer in responseObject.multipleChoiceResponse.answers['answers']
+                        for answer in response.multipleChoiceResponse.answers['answers']
                     ]
                 }
             }

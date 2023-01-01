@@ -8,13 +8,14 @@ from django.shortcuts import render, redirect
 from django.views.generic import ListView
 
 from onequiz.operations import generalOperations
+from onequiz.operations.generalOperations import QuestionAndResponse
 from quiz.forms import (
     EssayQuestionCreateForm, EssayQuestionUpdateForm, MultipleChoiceQuestionCreateForm,
     MultipleChoiceQuestionUpdateForm, QuizCreateForm, TrueOrFalseQuestionCreateForm,
     TrueOrFalseQuestionUpdateForm, QuizUpdateForm
 )
 from quiz.models import (
-    EssayQuestion, MultipleChoiceQuestion, Question, Quiz, TrueOrFalseQuestion, QuizAttempt, Result
+    Question, Quiz, QuizAttempt, Result, EssayResponse, Response, TrueOrFalseResponse, MultipleChoiceResponse
 )
 
 
@@ -126,7 +127,7 @@ def quizDetailView(request, quizId):
     except Quiz.DoesNotExist:
         raise Http404
 
-    quizQuestions = quiz.getQuestions()  # OR Question.objects.filter(quizQuestions=quizId).select_subclasses()
+    quizQuestions = quiz.getQuestions()
 
     if request.method == "POST":
         form = QuizUpdateForm(request, quiz, request.POST, request.FILES)
@@ -150,7 +151,8 @@ def quizDetailView(request, quizId):
 @login_required
 def questionDetailView(request, quizId, questionId):
     try:
-        question = Question.objects.get(
+        question = Question.objects.select_related(
+            'essayQuestion', 'trueOrFalseQuestion', 'multipleChoiceQuestion').get(
             id=questionId, quizQuestions=quizId, quizQuestions__creator=request.user
         )
     except Question.DoesNotExist:

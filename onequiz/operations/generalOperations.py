@@ -245,7 +245,7 @@ class QuizAttemptAutomaticMarking:
             if hasattr(question, 'essayQuestion'):
                 continue
             elif hasattr(question, 'trueOrFalseQuestion'):
-                actualAnswer = question.isCorrect
+                actualAnswer = question.trueOrFalseQuestion.isCorrect
                 providedAnswer = response.trueOrFalseResponse.trueSelected
                 awardedMark = question.mark if actualAnswer == providedAnswer else 0
                 if awardedMark == question.mark:
@@ -253,7 +253,7 @@ class QuizAttemptAutomaticMarking:
                 else:
                     numberOfWrongAnswers += 1
             elif hasattr(question, 'multipleChoiceQuestion'):
-                actualChoices = question.choices['choices']
+                actualChoices = question.multipleChoiceQuestion.choices['choices']
                 providedChoices = response.multipleChoiceResponse.answers['answers']
                 marksPerChoice = round(question.mark / len(actualChoices), 2)
                 for ac in actualChoices:

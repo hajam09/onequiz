@@ -12,7 +12,7 @@ from onequiz.operations.generalOperations import (
     QuestionAndResponse, QuizAttemptAutomaticMarking, QuizAttemptManualMarking
 )
 from quiz.models import (
-    EssayResponse, MultipleChoiceResponse, QuizAttempt, Topic, TrueOrFalseResponse, Result, Response
+    EssayResponse, MultipleChoiceResponse, QuizAttempt, Topic, TrueOrFalseResponse, Result, Response, Quiz
 )
 
 
@@ -46,8 +46,11 @@ class QuizAttemptObjectApiEventVersion1Component(View):
             }
             return JsonResponse(response, status=HTTPStatus.OK)
 
-        newQuizAttempt = QuizAttempt.objects.create(user=self.request.user, quiz_id=quizId)
-        questionList = newQuizAttempt.quiz.getQuestions()
+        quiz = Quiz.objects.prefetch_related(
+            'questions__essayQuestion', 'questions__trueOrFalseQuestion', 'questions__multipleChoiceQuestion'
+        ).get(id=quizId)
+        newQuizAttempt = QuizAttempt.objects.create(user=self.request.user, quiz_id=quiz.id)
+        questionList = quiz.getQuestions()
 
         responseList = []
         essayResponseList = []
@@ -63,8 +66,8 @@ class QuizAttemptObjectApiEventVersion1Component(View):
                     EssayResponse(response=response, answer='')
                 )
             elif hasattr(question, 'trueOrFalseQuestion'):
-                trueOrFalseQuestionList.append(TrueOrFalseResponse(
-                    response=response, trueSelected=None)
+                trueOrFalseQuestionList.append(
+                    TrueOrFalseResponse(response=response, trueSelected=None)
                 )
             elif hasattr(question, 'multipleChoiceQuestion'):
                 choiceList = question.multipleChoiceQuestion.choices['choices']
@@ -164,7 +167,11 @@ class QuestionResponseUpdateApiEventVersion1Component(View):
 class QuizAttemptQuestionsApiEventVersion1Component(View):
 
     def get(self, *args, **kwargs):
-        quizAttempt = QuizAttempt.objects.select_related('quiz').get(id=kwargs.get('id'))
+        quizAttempt = QuizAttempt.objects.prefetch_related(
+            'quiz__questions__essayQuestion', 'quiz__questions__trueOrFalseQuestion',
+            'quiz__questions__multipleChoiceQuestion', 'responses__question',
+            'responses__essayResponse', 'responses__trueOrFalseResponse', 'responses__multipleChoiceResponse'
+        ).get(id=kwargs.get('id'))
         questionList = quizAttempt.quiz.getQuestions()
         responseList = quizAttempt.responses.all()
         computedResponseList = QuestionAndResponse(questionList, responseList)
