@@ -41,7 +41,7 @@ class EssayQuestionUpdateFormTest(BaseTest):
             EssayQuestionUpdateForm(None)
 
     def testFormInitialValuesAndChoices(self):
-        form = EssayQuestionUpdateForm(self.essayQuestion)
+        form = EssayQuestionUpdateForm(self.essayQuestion.essayQuestion)
 
         # self.assertEqual(form.initial['figure'], self.essayQuestion.figure)
         self.assertEqual(form.initial['content'], self.essayQuestion.question.content)
@@ -54,7 +54,7 @@ class EssayQuestionUpdateFormTest(BaseTest):
             mark=50,
             answer='new answer',
         )
-        form = EssayQuestionUpdateForm(self.essayQuestion, data=testParams.getData())
+        form = EssayQuestionUpdateForm(self.essayQuestion.essayQuestion, data=testParams.getData())
         self.assertFalse(form.is_valid())
         self.assertEqual(2, len(form.errors))
         self.assertTrue(form.has_error('figure'))
@@ -68,7 +68,7 @@ class EssayQuestionUpdateFormTest(BaseTest):
             mark=-1,
             answer='new answer',
         )
-        form = EssayQuestionUpdateForm(self.essayQuestion, data=testParams.getData())
+        form = EssayQuestionUpdateForm(self.essayQuestion.essayQuestion, data=testParams.getData())
         self.assertFalse(form.is_valid())
         self.assertEqual(1, len(form.errors))
         self.assertTrue(form.has_error('mark'))
@@ -79,7 +79,7 @@ class EssayQuestionUpdateFormTest(BaseTest):
             content='new content',
             mark=80,
         )
-        form = EssayQuestionUpdateForm(self.essayQuestion, data=testParams.getData())
+        form = EssayQuestionUpdateForm(self.essayQuestion.essayQuestion, data=testParams.getData())
         self.assertFalse(form.is_valid())
         self.assertEqual(1, len(form.errors))
         self.assertTrue(form.has_error('answer'))
@@ -92,7 +92,7 @@ class EssayQuestionUpdateFormTest(BaseTest):
             mark=70,
             answer='new answer',
         )
-        form = EssayQuestionUpdateForm(self.essayQuestion, data=testParams.getData())
+        form = EssayQuestionUpdateForm(self.essayQuestion.essayQuestion, data=testParams.getData())
         self.assertTrue(form.is_valid())
         essayQuestion = form.update()
 
