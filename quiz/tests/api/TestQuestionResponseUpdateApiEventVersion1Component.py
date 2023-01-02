@@ -5,7 +5,7 @@ from django.urls import reverse
 
 from onequiz.operations import bakerOperations
 from onequiz.tests.BaseTestAjax import BaseTestAjax
-from quiz.models import Topic, QuizAttempt, EssayQuestion, TrueOrFalseQuestion, MultipleChoiceQuestion
+from quiz.models import Topic, QuizAttempt
 
 
 class QuestionResponseUpdateApiEventVersion1ComponentTest(BaseTestAjax):
@@ -15,16 +15,13 @@ class QuestionResponseUpdateApiEventVersion1ComponentTest(BaseTestAjax):
         bakerOperations.createSubjectsAndTopics(1, 1)
         self.topic = Topic.objects.select_related('subject').first()
         self.quiz = bakerOperations.createQuiz(self.request.user, self.topic)
-        self.eq = bakerOperations.createEssayQuestion()
-        self.tf = bakerOperations.createTrueOrFalseQuestion()
-        self.mc = bakerOperations.createMultipleChoiceQuestionAndAnswers(None)
+        self.eq = bakerOperations.createEssayQuestion().question
+        self.tf = bakerOperations.createTrueOrFalseQuestion().question
+        self.mc = bakerOperations.createMultipleChoiceQuestionAndAnswers(None).question
         self.quiz.questions.add(*[self.eq, self.tf, self.mc])
 
         quizAttemptId = self.createQuizAttemptAndTheResponseObjects()
-        self.quizAttempt = QuizAttempt.objects.select_related('quiz').prefetch_related(
-            'responses__question', 'responses__essayresponse', 'responses__trueorfalseresponse',
-            'responses__multiplechoiceresponse'
-        ).get(id=quizAttemptId)
+        self.quizAttempt = QuizAttempt.objects.select_related('quiz').get(id=quizAttemptId)
 
     def createQuizAttemptAndTheResponseObjects(self):
         path = reverse('quiz:quizAttemptObjectApiEventVersion1Component') + f'?quizId={self.quiz.id}'
@@ -58,7 +55,7 @@ class QuestionResponseUpdateApiEventVersion1ComponentTest(BaseTestAjax):
 
         self.assertEqual(response.status_code, 200)
         self.assertTrue(ajaxResponse['success'])
-        self.assertEqual(testParams.response.essayresponse.answer, payload['response']['text'])
+        self.assertEqual(testParams.response.essayResponse.answer, payload['response']['text'])
 
     @patch('quiz.api.featureFlagOperations')
     def testUpdateResponseForTrueOrFalseQuestion(self, mockFeatureFlagOperations):
@@ -72,7 +69,8 @@ class QuestionResponseUpdateApiEventVersion1ComponentTest(BaseTestAjax):
 
         self.assertEqual(response.status_code, 200)
         self.assertTrue(ajaxResponse['success'])
-        self.assertEqual(testParams.response.trueorfalseresponse.trueSelected, eval(payload['response']['selectedOption']))
+        self.assertEqual(testParams.response.trueOrFalseResponse.trueSelected,
+                         eval(payload['response']['selectedOption']))
 
     @patch('quiz.api.featureFlagOperations')
     def testUpdateResponseForMultipleChoiceQuestion(self, mockFeatureFlagOperations):
@@ -87,10 +85,10 @@ class QuestionResponseUpdateApiEventVersion1ComponentTest(BaseTestAjax):
         self.assertEqual(response.status_code, 200)
         self.assertTrue(ajaxResponse['success'])
         self.assertListEqual(
-            testParams.response.multiplechoiceresponse.answers['answers'], payload['response']['choices']
+            testParams.response.multipleChoiceResponse.answers['answers'], payload['response']['choices']
         )
 
-        for choice in testParams.response.multiplechoiceresponse.answers['answers']:
+        for choice in testParams.response.multipleChoiceResponse.answers['answers']:
             self.assertTrue(isinstance(choice, dict))
             self.assertEqual(len(choice), 3)
             self.assertIn('id', choice)
@@ -105,11 +103,11 @@ class QuestionResponseUpdateApiEventVersion1ComponentTest(BaseTestAjax):
             self.response = self.getResponseObject()
 
         def getResponseForQuestion(self):
-            if isinstance(self.question, EssayQuestion):
+            if hasattr(self.question, 'essayQuestion'):
                 return self.getEssayQuestionResponse()
-            elif isinstance(self.question, TrueOrFalseQuestion):
+            elif hasattr(self.question, 'trueOrFalseQuestion'):
                 return self.getTrueOrFalseQuestionResponse()
-            elif isinstance(self.question, MultipleChoiceQuestion):
+            elif hasattr(self.question, 'multipleChoiceQuestion'):
                 return self.getMultipleChoiceQuestionResponse()
 
         def getResponseObject(self):
@@ -144,7 +142,7 @@ class QuestionResponseUpdateApiEventVersion1ComponentTest(BaseTestAjax):
             return data
 
         def getMultipleChoiceQuestionResponse(self):
-            currentChoices = self.response.multiplechoiceresponse.answers['answers']
+            currentChoices = self.response.multipleChoiceResponse.answers['answers']
             for item in currentChoices:
                 item['isChecked'] = 'True'
             data = {

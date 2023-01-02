@@ -48,14 +48,14 @@ class QuizCreateTrueOrFalseQuestionViewTest(BaseTestViews):
             isCorrect=True,
         )
         response = self.post(testParams.getData())
-        newTrueOrFalseQuestion = self.quiz.getQuestions().first()
+        question = self.quiz.getQuestions().first()
         self.assertEqual(1, self.quiz.getQuestions().count())
 
-        self.assertEqual(newTrueOrFalseQuestion.figure, testParams.figure)
-        self.assertEqual(newTrueOrFalseQuestion.content, testParams.content)
-        self.assertEqual(newTrueOrFalseQuestion.explanation, testParams.explanation)
-        self.assertEqual(newTrueOrFalseQuestion.mark, testParams.mark)
-        self.assertTrue(newTrueOrFalseQuestion.isCorrect)
+        self.assertEqual(question.figure, testParams.figure)
+        self.assertEqual(question.content, testParams.content)
+        self.assertEqual(question.explanation, testParams.explanation)
+        self.assertEqual(question.mark, testParams.mark)
+        self.assertTrue(question.trueOrFalseQuestion.isCorrect)
 
         self.assertEquals(response.status_code, 200)
         self.assertTrue(isinstance(response.context['form'], TrueOrFalseQuestionCreateForm))

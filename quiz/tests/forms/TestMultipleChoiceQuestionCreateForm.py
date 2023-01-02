@@ -132,10 +132,10 @@ class MultipleChoiceQuestionCreateFormTest(BaseTest):
 
         newMultipleChoiceQuestion = form.save()
 
-        # self.assertIsNone(newMultipleChoiceQuestion.figure)
-        self.assertEqual(testParams.content, newMultipleChoiceQuestion.content)
-        self.assertEqual('', newMultipleChoiceQuestion.explanation)
-        self.assertEqual(testParams.mark, newMultipleChoiceQuestion.mark)
+        # self.assertIsNone(newMultipleChoiceQuestion.question.figure)
+        self.assertEqual(testParams.content, newMultipleChoiceQuestion.question.content)
+        self.assertEqual('', newMultipleChoiceQuestion.question.explanation)
+        self.assertEqual(testParams.mark, newMultipleChoiceQuestion.question.mark)
         self.assertEqual(testParams.answerOrder, newMultipleChoiceQuestion.answerOrder)
 
         choiceList = newMultipleChoiceQuestion.choices['choices']

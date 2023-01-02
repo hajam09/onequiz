@@ -49,14 +49,14 @@ class QuizCreateEssayQuestionViewTest(BaseTestViews):
             answer='test answer'
         )
         response = self.post(testParams.getData())
-        newEssayQuestion = self.quiz.getQuestions().first()
+        question = self.quiz.getQuestions().first()
         self.assertEqual(1, self.quiz.getQuestions().count())
 
-        self.assertEqual(newEssayQuestion.figure, testParams.figure)
-        self.assertEqual(newEssayQuestion.content, testParams.content)
-        self.assertEqual(newEssayQuestion.explanation, testParams.explanation)
-        self.assertEqual(newEssayQuestion.mark, testParams.mark)
-        self.assertEqual(newEssayQuestion.answer, testParams.answer)
+        self.assertEqual(question.figure, testParams.figure)
+        self.assertEqual(question.content, testParams.content)
+        self.assertEqual(question.explanation, testParams.explanation)
+        self.assertEqual(question.mark, testParams.mark)
+        self.assertEqual(question.essayQuestion.answer, testParams.answer)
 
         self.assertEquals(response.status_code, 200)
         self.assertTrue(isinstance(response.context['form'], EssayQuestionCreateForm))
