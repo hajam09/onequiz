@@ -1,6 +1,7 @@
 import json
 from http import HTTPStatus
 from json import JSONDecodeError
+from threading import Thread
 
 from django.db.models import F
 from django.http import JsonResponse
@@ -33,25 +34,7 @@ class TopicObjectApiEventVersion1Component(View):
 
 class QuizAttemptObjectApiEventVersion1Component(View):
 
-    def post(self, *args, **kwargs):
-        quizId = self.request.GET.get('quizId')
-        existingQuizAttempt = QuizAttempt.objects.filter(
-            quiz_id=quizId, user=self.request.user, status=QuizAttempt.Status.IN_PROGRESS
-        )
-        if existingQuizAttempt.exists():
-            response = {
-                "success": True,
-                "message": "You already have an attempt that is in progress.",
-                "redirectUrl": reverse('quiz:quiz-attempt-view', kwargs={'attemptId': existingQuizAttempt[0].id})
-            }
-            return JsonResponse(response, status=HTTPStatus.OK)
-
-        quiz = Quiz.objects.prefetch_related(
-            'questions__essayQuestion', 'questions__trueOrFalseQuestion', 'questions__multipleChoiceQuestion'
-        ).get(id=quizId)
-        newQuizAttempt = QuizAttempt.objects.create(user=self.request.user, quiz_id=quiz.id)
-        questionList = quiz.getQuestions()
-
+    def createResponseModels(self, quizAttempt, questionList):
         responseList = []
         essayResponseList = []
         trueOrFalseQuestionList = []
@@ -85,9 +68,33 @@ class QuizAttemptObjectApiEventVersion1Component(View):
         EssayResponse.objects.bulk_create(essayResponseList)
         TrueOrFalseResponse.objects.bulk_create(trueOrFalseQuestionList)
         MultipleChoiceResponse.objects.bulk_create(multipleChoiceQuestionList)
+        quizAttempt.responses.add(*responseList)
+        return
+
+    def post(self, *args, **kwargs):
+        quizId = self.request.GET.get('quizId')
+        existingQuizAttempt = QuizAttempt.objects.filter(
+            quiz_id=quizId, user=self.request.user, status=QuizAttempt.Status.IN_PROGRESS
+        )
+        if existingQuizAttempt.exists():
+            response = {
+                "success": True,
+                "message": "You already have an attempt that is in progress.",
+                "redirectUrl": reverse('quiz:quiz-attempt-view', kwargs={'attemptId': existingQuizAttempt[0].id})
+            }
+            return JsonResponse(response, status=HTTPStatus.OK)
+
+        quiz = Quiz.objects.prefetch_related(
+            'questions__essayQuestion', 'questions__trueOrFalseQuestion', 'questions__multipleChoiceQuestion'
+        ).get(id=quizId)
+        newQuizAttempt = QuizAttempt.objects.create(user=self.request.user, quiz_id=quiz.id)
+        questionList = quiz.getQuestions()
+
+        t1 = Thread(target=self.createResponseModels, args=(newQuizAttempt, questionList), daemon=True)
+        t1.start()
+        t1.join()
 
         newQuizAttempt.status = QuizAttempt.Status.IN_PROGRESS
-        newQuizAttempt.responses.add(*responseList)
         newQuizAttempt.save()
 
         response = {
