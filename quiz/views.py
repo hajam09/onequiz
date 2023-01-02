@@ -8,14 +8,13 @@ from django.shortcuts import render, redirect
 from django.views.generic import ListView
 
 from onequiz.operations import generalOperations
-from onequiz.operations.generalOperations import QuestionAndResponse
 from quiz.forms import (
     EssayQuestionCreateForm, EssayQuestionUpdateForm, MultipleChoiceQuestionCreateForm,
     MultipleChoiceQuestionUpdateForm, QuizCreateForm, TrueOrFalseQuestionCreateForm,
     TrueOrFalseQuestionUpdateForm, QuizUpdateForm
 )
 from quiz.models import (
-    Question, Quiz, QuizAttempt, Result, EssayResponse, Response, TrueOrFalseResponse, MultipleChoiceResponse
+    Question, Quiz, QuizAttempt, Result
 )
 
 

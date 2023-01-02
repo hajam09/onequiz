@@ -8,7 +8,7 @@ from django.conf import settings
 from django.db.models import Q
 from django.utils import timezone
 
-from quiz.models import EssayQuestion, MultipleChoiceQuestion, TrueOrFalseQuestion, Response, Result, Quiz
+from quiz.models import Response, Result, Quiz
 
 
 def isPasswordStrong(password):

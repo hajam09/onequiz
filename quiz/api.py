@@ -188,7 +188,9 @@ class QuizAttemptQuestionsApiEventVersion1Component(View):
         return JsonResponse(response, status=HTTPStatus.OK)
 
     def put(self, *args, **kwargs):
-        quizAttempt = QuizAttempt.objects.get(id=kwargs.get('id'))
+        quizAttempt = QuizAttempt.objects.prefetch_related(
+            'responses__essayResponse', 'responses__trueOrFalseResponse', 'responses__multipleChoiceResponse'
+        ).get(id=kwargs.get('id'))
 
         try:
             put = json.loads(self.request.body)
