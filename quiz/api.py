@@ -1,6 +1,7 @@
 import json
 from http import HTTPStatus
 from json import JSONDecodeError
+from threading import Thread
 
 from django.db.models import F
 from django.http import JsonResponse
@@ -12,8 +13,7 @@ from onequiz.operations.generalOperations import (
     QuestionAndResponse, QuizAttemptAutomaticMarking, QuizAttemptManualMarking
 )
 from quiz.models import (
-    EssayQuestion, EssayResponse, MultipleChoiceQuestion, MultipleChoiceResponse, QuizAttempt, Topic,
-    TrueOrFalseQuestion, TrueOrFalseResponse, Result
+    EssayResponse, MultipleChoiceResponse, QuizAttempt, Topic, TrueOrFalseResponse, Result, Response, Quiz
 )
 
 
@@ -34,6 +34,43 @@ class TopicObjectApiEventVersion1Component(View):
 
 class QuizAttemptObjectApiEventVersion1Component(View):
 
+    def createResponseModels(self, quizAttempt, questionList):
+        responseList = []
+        essayResponseList = []
+        trueOrFalseQuestionList = []
+        multipleChoiceQuestionList = []
+
+        for question in questionList:
+            response = Response(question_id=question.id)
+            responseList.append(response)
+
+            if hasattr(question, 'essayQuestion'):
+                essayResponseList.append(
+                    EssayResponse(response=response, answer='')
+                )
+            elif hasattr(question, 'trueOrFalseQuestion'):
+                trueOrFalseQuestionList.append(
+                    TrueOrFalseResponse(response=response, trueSelected=None)
+                )
+            elif hasattr(question, 'multipleChoiceQuestion'):
+                choiceList = question.multipleChoiceQuestion.choices['choices']
+                for item in choiceList:
+                    item['isChecked'] = False
+                    del item['isCorrect']
+                multipleChoiceQuestionList.append(
+                    MultipleChoiceResponse(response=response, answers={'answers': choiceList})
+                )
+            else:
+                print('Unknown question type.')
+                continue
+
+        Response.objects.bulk_create(responseList)
+        EssayResponse.objects.bulk_create(essayResponseList)
+        TrueOrFalseResponse.objects.bulk_create(trueOrFalseQuestionList)
+        MultipleChoiceResponse.objects.bulk_create(multipleChoiceQuestionList)
+        quizAttempt.responses.add(*responseList)
+        return
+
     def post(self, *args, **kwargs):
         quizId = self.request.GET.get('quizId')
         existingQuizAttempt = QuizAttempt.objects.filter(
@@ -47,44 +84,14 @@ class QuizAttemptObjectApiEventVersion1Component(View):
             }
             return JsonResponse(response, status=HTTPStatus.OK)
 
-        newQuizAttempt = QuizAttempt.objects.create(user=self.request.user, quiz_id=quizId)
-        questionList = newQuizAttempt.quiz.getQuestions()
-        newBulkResponseList = []
+        quiz = Quiz.objects.prefetch_related(
+            'questions__essayQuestion', 'questions__trueOrFalseQuestion', 'questions__multipleChoiceQuestion'
+        ).get(id=quizId)
+        newQuizAttempt = QuizAttempt.objects.create(user=self.request.user, quiz_id=quiz.id)
+        questionList = quiz.getQuestions()
 
-        for question in questionList:
-            if isinstance(question, EssayQuestion):
-                newBulkResponseList.append(
-                    EssayResponse.objects.create(
-                        question_id=question.id,
-                        answer=''
-                    )
-                )
-            elif isinstance(question, TrueOrFalseQuestion):
-                newBulkResponseList.append(
-                    TrueOrFalseResponse.objects.create(
-                        question_id=question.id,
-                        trueSelected=None
-                    )
-                )
-            elif isinstance(question, MultipleChoiceQuestion):
-                choiceList = question.choices['choices']
-                for item in choiceList:
-                    item['isChecked'] = False
-                    del item['isCorrect']
-                newBulkResponseList.append(
-                    MultipleChoiceResponse.objects.create(
-                        question_id=question.id,
-                        answers={
-                            'answers': choiceList
-                        }
-                    )
-                )
-            else:
-                print('Unknown question type.')
-                continue
-
+        self.createResponseModels(newQuizAttempt, questionList)
         newQuizAttempt.status = QuizAttempt.Status.IN_PROGRESS
-        newQuizAttempt.responses.add(*newBulkResponseList)
         newQuizAttempt.save()
 
         response = {
@@ -97,7 +104,9 @@ class QuizAttemptObjectApiEventVersion1Component(View):
 class QuizMarkingOccurrenceApiEventVersion1Component(View):
 
     def put(self, *args, **kwargs):
-        quizAttempt = QuizAttempt.objects.prefetch_related('responses__question').get(id=kwargs.get('id'))
+        quizAttempt = QuizAttempt.objects.select_related('quiz').prefetch_related(
+            'responses__question', 
+        ).get(id=kwargs.get('id'))
         try:
             put = json.loads(self.request.body)
         except JSONDecodeError:
@@ -146,14 +155,14 @@ class QuestionResponseUpdateApiEventVersion1Component(View):
         responseInstance = next((r for r in responseList if r.question.id == qid and r.id == rid), None)
 
         if put.get('question').get('type') == 'EssayQuestion':
-            responseInstance.essayresponse.answer = put.get('response').get('text')
-            responseInstance.essayresponse.save()
+            responseInstance.essayResponse.answer = put.get('response').get('text')
+            responseInstance.essayResponse.save()
         elif put.get('question').get('type') == 'TrueOrFalseQuestion':
-            responseInstance.trueorfalseresponse.trueSelected = put.get('response').get('selectedOption')
-            responseInstance.trueorfalseresponse.save()
+            responseInstance.trueOrFalseResponse.trueSelected = put.get('response').get('selectedOption')
+            responseInstance.trueOrFalseResponse.save()
         elif put.get('question').get('type') == 'MultipleChoiceQuestion':
-            responseInstance.multiplechoiceresponse.answers['answers'] = put.get('response').get('choices')
-            responseInstance.multiplechoiceresponse.save()
+            responseInstance.multipleChoiceResponse.answers['answers'] = put.get('response').get('choices')
+            responseInstance.multipleChoiceResponse.save()
 
         response = {
             "success": True
@@ -164,11 +173,11 @@ class QuestionResponseUpdateApiEventVersion1Component(View):
 class QuizAttemptQuestionsApiEventVersion1Component(View):
 
     def get(self, *args, **kwargs):
-        quizAttempt = QuizAttempt.objects.select_related('quiz').prefetch_related(
-            'responses__question', 'responses__essayresponse', 'responses__trueorfalseresponse',
-            'responses__multiplechoiceresponse'
+        quizAttempt = QuizAttempt.objects.prefetch_related(
+            'responses__essayResponse', 'responses__trueOrFalseResponse', 'responses__multipleChoiceResponse',
+            'responses__question',
         ).get(id=kwargs.get('id'))
-        questionList = quizAttempt.quiz.getQuestions()
+        questionList = quizAttempt.quiz.getQuestions(quizAttempt.quiz.inRandomOrder)
         responseList = quizAttempt.responses.all()
         computedResponseList = QuestionAndResponse(questionList, responseList)
 
@@ -184,9 +193,8 @@ class QuizAttemptQuestionsApiEventVersion1Component(View):
         return JsonResponse(response, status=HTTPStatus.OK)
 
     def put(self, *args, **kwargs):
-        quizAttempt = QuizAttempt.objects.prefetch_related(
-            'responses__question', 'responses__essayresponse', 'responses__trueorfalseresponse',
-            'responses__multiplechoiceresponse'
+        quizAttempt = QuizAttempt.objects.select_related('quiz').prefetch_related(
+            'responses__essayResponse', 'responses__trueOrFalseResponse', 'responses__multipleChoiceResponse'
         ).get(id=kwargs.get('id'))
 
         try:
@@ -205,18 +213,18 @@ class QuizAttemptQuestionsApiEventVersion1Component(View):
             if response['type'] == 'EssayQuestion':
                 existingResponseObject = next((o for o in responseList if o.id == response['response']['id']))
                 if existingResponseObject is not None:
-                    existingResponseObject.essayresponse.answer = response['response']['text']
-                    essayResponseObjects.append(existingResponseObject.essayresponse)
+                    existingResponseObject.essayResponse.answer = response['response']['text']
+                    essayResponseObjects.append(existingResponseObject.essayResponse)
             elif response['type'] == 'TrueOrFalseQuestion':
                 existingResponseObject = next((o for o in responseList if o.id == response['response']['id']))
                 if existingResponseObject is not None:
-                    existingResponseObject.trueorfalseresponse.trueSelected = response['response']['selectedOption']
-                    trueOrFalseResponseObjects.append(existingResponseObject.trueorfalseresponse)
+                    existingResponseObject.trueOrFalseResponse.trueSelected = response['response']['selectedOption']
+                    trueOrFalseResponseObjects.append(existingResponseObject.trueOrFalseResponse)
             elif response['type'] == 'MultipleChoiceQuestion':
                 existingResponseObject = next((o for o in responseList if o.id == response['response']['id']))
                 if existingResponseObject is not None:
-                    existingResponseObject.multiplechoiceresponse.answers['answers'] = response['response']['choices']
-                    multipleChoiceResponseObjects.append(existingResponseObject.multiplechoiceresponse)
+                    existingResponseObject.multipleChoiceResponse.answers['answers'] = response['response']['choices']
+                    multipleChoiceResponseObjects.append(existingResponseObject.multipleChoiceResponse)
             else:
                 continue
 
@@ -224,6 +232,7 @@ class QuizAttemptQuestionsApiEventVersion1Component(View):
         TrueOrFalseResponse.objects.bulk_update(trueOrFalseResponseObjects, ['trueSelected'])
         MultipleChoiceResponse.objects.bulk_update(multipleChoiceResponseObjects, ['answers'])
 
+        # TODO: Optimize when automatic marking is enabled.
         quizAttemptAutomaticMarking = QuizAttemptAutomaticMarking(quizAttempt, quizAttempt.quiz.getQuestions(), responseList)
         if quizAttemptAutomaticMarking.mark():
             quizAttempt.status = QuizAttempt.Status.MARKED

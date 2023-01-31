@@ -5,7 +5,7 @@ from django import forms
 from django.db.models import Q
 
 from onequiz.operations import generalOperations
-from quiz.models import Quiz, Subject, Topic, TrueOrFalseQuestion, EssayQuestion, MultipleChoiceQuestion
+from quiz.models import Quiz, Subject, Topic, TrueOrFalseQuestion, EssayQuestion, MultipleChoiceQuestion, Question
 
 
 class QuestionForm(forms.Form):
@@ -234,6 +234,15 @@ class QuizForm(forms.Form):
         self.base_fields['subject'].choices = SUBJECT_CHOICES
         self.base_fields['topic'].choices = INITIAL_TOPIC_CHOICES
 
+    def setSubjectAndTopicFields(self):
+        if self.data.get('subject') != '0':
+            self.base_fields['topic'].choices = [(0, '-- Select a topic first --')]
+        else:
+            INITIAL_TOPIC_CHOICES = [
+                (topic.id, topic.name) for topic in Topic.objects.filter(subject_id=self.data.get('subject'))
+            ]
+            self.base_fields['topic'].choices = INITIAL_TOPIC_CHOICES
+
     def clean_name(self):
         name = self.cleaned_data.get('name')
 
@@ -361,6 +370,7 @@ class QuizCreateForm(QuizForm):
         del self.errors['topic']
         del self.errors['difficulty']
 
+        self.setSubjectAndTopicFields()
         self.clean_subject()
         self.clean_topic()
         self.clean_difficulty()
@@ -441,6 +451,7 @@ class QuizUpdateForm(QuizForm):
         del self.errors['topic']
         del self.errors['difficulty']
 
+        self.setSubjectAndTopicFields()
         self.clean_subject()
         self.clean_topic()
         self.clean_difficulty()
@@ -542,14 +553,19 @@ class EssayQuestionCreateForm(forms.Form):
         return self.cleaned_data
 
     def save(self):
-        newEssayQuestion = EssayQuestion.objects.create(
+        question = Question(
             figure=self.cleaned_data.get('figure'),
             content=self.cleaned_data.get('content'),
             explanation=self.cleaned_data.get('explanation'),
             mark=self.cleaned_data.get('mark'),
+        )
+        essayQuestion = EssayQuestion(
+            question=question,
             answer=self.cleaned_data.get('answer'),
         )
-        return newEssayQuestion
+        question.save()
+        essayQuestion.save()
+        return essayQuestion
 
 
 class EssayQuestionUpdateForm(forms.Form):
@@ -614,9 +630,9 @@ class EssayQuestionUpdateForm(forms.Form):
             raise Exception('EssayQuestion is none, or is not an instance of EssayQuestion object.')
 
         # self.initial['figure'] = essayQuestion.figure
-        self.initial['content'] = essayQuestion.content
-        self.initial['explanation'] = essayQuestion.explanation
-        self.initial['mark'] = essayQuestion.mark
+        self.initial['content'] = essayQuestion.question.content
+        self.initial['explanation'] = essayQuestion.question.explanation
+        self.initial['mark'] = essayQuestion.question.mark
         self.initial['answer'] = essayQuestion.answer
 
     def clean(self):
@@ -638,11 +654,13 @@ class EssayQuestionUpdateForm(forms.Form):
         return self.cleaned_data
 
     def update(self):
-        self.essayQuestion.figure = self.cleaned_data.get('figure')
-        self.essayQuestion.content = self.cleaned_data.get('content')
-        self.essayQuestion.explanation = self.cleaned_data.get('explanation')
-        self.essayQuestion.mark = self.cleaned_data.get('mark')
+        self.essayQuestion.question.figure = self.cleaned_data.get('figure')
+        self.essayQuestion.question.content = self.cleaned_data.get('content')
+        self.essayQuestion.question.explanation = self.cleaned_data.get('explanation')
+        self.essayQuestion.question.mark = self.cleaned_data.get('mark')
         self.essayQuestion.answer = self.cleaned_data.get('answer')
+
+        self.essayQuestion.question.save()
         self.essayQuestion.save()
         return self.essayQuestion
 
@@ -767,15 +785,20 @@ class MultipleChoiceQuestionCreateForm(forms.Form):
             for i in range(len(answerOptionsList))
         ]
 
-        newMultipleChoiceQuestion = MultipleChoiceQuestion.objects.create(
+        question = Question(
             figure=self.cleaned_data.get('figure'),
             content=self.cleaned_data.get('content'),
             explanation=self.cleaned_data.get('explanation'),
             mark=self.cleaned_data.get('mark'),
+        )
+        multipleChoiceQuestion = MultipleChoiceQuestion(
+            question=question,
             answerOrder=self.data.get('answerOrder'),
             choices={'choices': choices}
         )
-        return newMultipleChoiceQuestion
+        question.save()
+        multipleChoiceQuestion.save()
+        return multipleChoiceQuestion
 
 
 class MultipleChoiceQuestionUpdateForm(forms.Form):
@@ -854,9 +877,9 @@ class MultipleChoiceQuestionUpdateForm(forms.Form):
         self.base_fields['answerOrder'].choices = ANSWER_ORDER_CHOICES
 
         # self.initial['figure'] = essayQuestion.figure
-        self.initial['content'] = multipleChoiceQuestion.content
-        self.initial['explanation'] = multipleChoiceQuestion.explanation
-        self.initial['mark'] = multipleChoiceQuestion.mark
+        self.initial['content'] = multipleChoiceQuestion.question.content
+        self.initial['explanation'] = multipleChoiceQuestion.question.explanation
+        self.initial['mark'] = multipleChoiceQuestion.question.mark
         self.initial['answerOrder'] = multipleChoiceQuestion.answerOrder
 
     def clean(self):
@@ -898,10 +921,10 @@ class MultipleChoiceQuestionUpdateForm(forms.Form):
         return self.cleaned_data
 
     def update(self):
-        # self.multipleChoiceQuestion.figure = self.cleaned_data.get('figure')
-        self.multipleChoiceQuestion.content = self.cleaned_data.get('content')
-        self.multipleChoiceQuestion.explanation = self.cleaned_data.get('explanation')
-        self.multipleChoiceQuestion.mark = self.cleaned_data.get('mark')
+        self.multipleChoiceQuestion.question.figure = self.cleaned_data.get('figure')
+        self.multipleChoiceQuestion.question.content = self.cleaned_data.get('content')
+        self.multipleChoiceQuestion.question.explanation = self.cleaned_data.get('explanation')
+        self.multipleChoiceQuestion.question.mark = self.cleaned_data.get('mark')
         self.multipleChoiceQuestion.answerOrder = self.data.get('answerOrder')
 
         newAnswerOptionsList = self.data.getlist('answerOptions')
@@ -932,6 +955,8 @@ class MultipleChoiceQuestionUpdateForm(forms.Form):
         self.multipleChoiceQuestion.choices = {
             'choices': [i for i in oldAnswerOptionsList if i['id'] not in idsToDelete]
         }
+
+        self.multipleChoiceQuestion.question.save()
         self.multipleChoiceQuestion.save()
         return self.multipleChoiceQuestion
 
@@ -1031,14 +1056,19 @@ class TrueOrFalseQuestionCreateForm(forms.Form):
         return self.cleaned_data
 
     def save(self):
-        newTrueOrFalseQuestion = TrueOrFalseQuestion.objects.create(
+        question = Question(
             figure=self.cleaned_data.get('figure'),
             content=self.cleaned_data.get('content'),
             explanation=self.cleaned_data.get('explanation'),
             mark=self.cleaned_data.get('mark'),
+        )
+        trueOrFalseQuestion = TrueOrFalseQuestion(
+            question=question,
             isCorrect=eval(self.cleaned_data.get('isCorrect')),
         )
-        return newTrueOrFalseQuestion
+        question.save()
+        trueOrFalseQuestion.save()
+        return trueOrFalseQuestion
 
 
 class TrueOrFalseQuestionUpdateForm(forms.Form):
@@ -1108,10 +1138,10 @@ class TrueOrFalseQuestionUpdateForm(forms.Form):
         # radioName, value, label, isSelected
         IS_CORRECT_CHOICES = [('isCorrect', 'True', 'True', 'False'), ('isCorrect', 'False', 'False', 'False')]
 
-        # self.initial['figure'] = self.trueOrFalseQuestion.figure
-        self.initial['content'] = self.trueOrFalseQuestion.content
-        self.initial['explanation'] = self.trueOrFalseQuestion.explanation
-        self.initial['mark'] = self.trueOrFalseQuestion.mark
+        # self.initial['figure'] = self.trueOrFalseQuestion.question.figure
+        self.initial['content'] = self.trueOrFalseQuestion.question.content
+        self.initial['explanation'] = self.trueOrFalseQuestion.question.explanation
+        self.initial['mark'] = self.trueOrFalseQuestion.question.mark
 
         choiceIndexNumberToUpdate = 0 if self.trueOrFalseQuestion.isCorrect else 1
         tempList = list(IS_CORRECT_CHOICES[choiceIndexNumberToUpdate])
@@ -1142,10 +1172,12 @@ class TrueOrFalseQuestionUpdateForm(forms.Form):
         return self.cleaned_data
 
     def update(self):
-        self.trueOrFalseQuestion.figure = self.cleaned_data.get('figure')
-        self.trueOrFalseQuestion.content = self.cleaned_data.get('content')
-        self.trueOrFalseQuestion.explanation = self.cleaned_data.get('explanation')
-        self.trueOrFalseQuestion.mark = self.cleaned_data.get('mark')
+        self.trueOrFalseQuestion.question.figure = self.cleaned_data.get('figure')
+        self.trueOrFalseQuestion.question.content = self.cleaned_data.get('content')
+        self.trueOrFalseQuestion.question.explanation = self.cleaned_data.get('explanation')
+        self.trueOrFalseQuestion.question.mark = self.cleaned_data.get('mark')
         self.trueOrFalseQuestion.isCorrect = eval(self.cleaned_data.get('isCorrect'))
+
+        self.trueOrFalseQuestion.question.save()
         self.trueOrFalseQuestion.save()
         return self.trueOrFalseQuestion

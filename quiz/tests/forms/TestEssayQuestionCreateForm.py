@@ -82,10 +82,10 @@ class EssayQuestionCreateFormTest(BaseTest):
         self.assertTrue(form.is_valid())
 
         newEssayQuestion = form.save()
-        # self.assertIsNone(newEssayQuestion.figure)
-        self.assertEqual(testParams.content, newEssayQuestion.content)
-        self.assertEqual(testParams.explanation, newEssayQuestion.explanation)
-        self.assertEqual(testParams.mark, newEssayQuestion.mark)
+        # self.assertIsNone(newEssayQuestion.question.figure)
+        self.assertEqual(testParams.content, newEssayQuestion.question.content)
+        self.assertEqual(testParams.explanation, newEssayQuestion.question.explanation)
+        self.assertEqual(testParams.mark, newEssayQuestion.question.mark)
         self.assertEqual(testParams.answer, newEssayQuestion.answer)
 
     class TestParams:

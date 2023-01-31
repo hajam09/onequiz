@@ -15,9 +15,9 @@ class QuizQuestionDetailViewTest(BaseTestViews):
         bakerOperations.createSubjectsAndTopics(1, 1)
         self.topic = Topic.objects.select_related('subject').first()
         self.quiz = bakerOperations.createQuiz(self.request.user, self.topic)
-        self.essayQuestion = bakerOperations.createEssayQuestion()
-        self.trueOrFalseQuestion = bakerOperations.createTrueOrFalseQuestion()
-        self.multipleChoiceQuestion = bakerOperations.createMultipleChoiceQuestionAndAnswers(None)
+        self.essayQuestion = bakerOperations.createEssayQuestion().question
+        self.trueOrFalseQuestion = bakerOperations.createTrueOrFalseQuestion().question
+        self.multipleChoiceQuestion = bakerOperations.createMultipleChoiceQuestionAndAnswers(None).question
         self.quiz.questions.add(*[
             self.essayQuestion,
             self.trueOrFalseQuestion,

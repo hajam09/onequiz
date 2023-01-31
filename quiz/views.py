@@ -14,7 +14,7 @@ from quiz.forms import (
     TrueOrFalseQuestionUpdateForm, QuizUpdateForm
 )
 from quiz.models import (
-    EssayQuestion, MultipleChoiceQuestion, Question, Quiz, TrueOrFalseQuestion, QuizAttempt, Result
+    Question, Quiz, QuizAttempt, Result
 )
 
 
@@ -36,7 +36,7 @@ def createEssayQuestionView(request, quizId):
         form = EssayQuestionCreateForm(request.POST, request.FILES)
         if form.is_valid():
             newEssayQuestion = form.save()
-            quiz.questions.add(newEssayQuestion)
+            quiz.questions.add(newEssayQuestion.question)
             return redirect('quiz:create-essay-question-view', quizId=quizId)
     else:
         form = EssayQuestionCreateForm()
@@ -61,7 +61,7 @@ def createMultipleChoiceQuestionView(request, quizId):
         form = MultipleChoiceQuestionCreateForm(request.POST, request.FILES)
         if form.is_valid():
             newMultipleChoiceQuestion = form.save()
-            quiz.questions.add(newMultipleChoiceQuestion)
+            quiz.questions.add(newMultipleChoiceQuestion.question)
             return redirect('quiz:create-multiple-choice-question-view', quizId=quizId)
     else:
         form = MultipleChoiceQuestionCreateForm()
@@ -86,7 +86,7 @@ def createTrueOrFalseQuestionView(request, quizId):
         form = TrueOrFalseQuestionCreateForm(request.POST, request.FILES)
         if form.is_valid():
             newTrueOrFalseQuestion = form.save()
-            quiz.questions.add(newTrueOrFalseQuestion)
+            quiz.questions.add(newTrueOrFalseQuestion.question)
             return redirect('quiz:create-true-or-false-question-view', quizId=quizId)
     else:
         form = TrueOrFalseQuestionCreateForm()
@@ -126,7 +126,7 @@ def quizDetailView(request, quizId):
     except Quiz.DoesNotExist:
         raise Http404
 
-    quizQuestions = quiz.getQuestions()  # OR Question.objects.filter(quizQuestions=quizId).select_subclasses()
+    quizQuestions = quiz.getQuestions()
 
     if request.method == "POST":
         form = QuizUpdateForm(request, quiz, request.POST, request.FILES)
@@ -150,7 +150,8 @@ def quizDetailView(request, quizId):
 @login_required
 def questionDetailView(request, quizId, questionId):
     try:
-        question = Question.objects.get_subclass(
+        question = Question.objects.select_related(
+            'essayQuestion', 'trueOrFalseQuestion', 'multipleChoiceQuestion').get(
             id=questionId, quizQuestions=quizId, quizQuestions__creator=request.user
         )
     except Question.DoesNotExist:
@@ -160,38 +161,38 @@ def questionDetailView(request, quizId, questionId):
     template = None
     formTitle = None
 
-    if isinstance(question, EssayQuestion):
+    if hasattr(question, 'essayQuestion'):
         if request.method == "POST":
-            form = EssayQuestionUpdateForm(question, request.POST, request.FILES)
+            form = EssayQuestionUpdateForm(question.essayQuestion, request.POST, request.FILES)
             if form.is_valid():
                 form.update()
                 return redirect('quiz:question-detail-view', quizId=quizId, questionId=questionId)
         else:
-            form = EssayQuestionUpdateForm(question)
+            form = EssayQuestionUpdateForm(question.essayQuestion)
 
         template = 'quiz/essayQuestionTemplateView.html'
         formTitle = 'View or Update Essay Question'
 
-    elif isinstance(question, TrueOrFalseQuestion):
+    elif hasattr(question, 'trueOrFalseQuestion'):
         if request.method == "POST":
-            form = TrueOrFalseQuestionUpdateForm(question, request.POST, request.FILES)
+            form = TrueOrFalseQuestionUpdateForm(question.trueOrFalseQuestion, request.POST, request.FILES)
             if form.is_valid():
                 form.update()
                 return redirect('quiz:question-detail-view', quizId=quizId, questionId=questionId)
         else:
-            form = TrueOrFalseQuestionUpdateForm(question)
+            form = TrueOrFalseQuestionUpdateForm(question.trueOrFalseQuestion)
 
         template = 'quiz/trueOrFalseQuestionTemplateView.html'
         formTitle = 'View or Update True or False Question'
 
-    elif isinstance(question, MultipleChoiceQuestion):
+    elif hasattr(question, 'multipleChoiceQuestion'):
         if request.method == "POST":
-            form = MultipleChoiceQuestionUpdateForm(question, request.POST, request.FILES)
+            form = MultipleChoiceQuestionUpdateForm(question.multipleChoiceQuestion, request.POST, request.FILES)
             if form.is_valid():
                 form.update()
                 return redirect('quiz:question-detail-view', quizId=quizId, questionId=questionId)
         else:
-            form = MultipleChoiceQuestionUpdateForm(question)
+            form = MultipleChoiceQuestionUpdateForm(question.multipleChoiceQuestion)
 
         template = 'quiz/multipleChoiceQuestionTemplateView.html'
         formTitle = 'View or Update Multiple Choice Question'
@@ -244,6 +245,7 @@ def quizAttemptResultView(request, attemptId):
         'quizAttempt__user', 'quizAttempt__quiz__creator'
     ).last()
     if result is None:
+        # TODO: Raise a template that quiz attempt does not have a result or its not yet to be viewed.
         raise Http404
 
     if not result.hasViewPermission(request.user):

@@ -25,17 +25,17 @@ class Command(BaseCommand):
             newQuiz = bakerOperations.createQuiz(creator=randomUser, topic=randomTopic)
 
             # create three of each questions for this quiz.
-            eq1 = bakerOperations.createEssayQuestion()
-            eq2 = bakerOperations.createEssayQuestion()
-            eq3 = bakerOperations.createEssayQuestion()
+            eq1 = bakerOperations.createEssayQuestion().question
+            eq2 = bakerOperations.createEssayQuestion().question
+            eq3 = bakerOperations.createEssayQuestion().question
 
-            tf1 = bakerOperations.createTrueOrFalseQuestion()
-            tf2 = bakerOperations.createTrueOrFalseQuestion()
-            tf3 = bakerOperations.createTrueOrFalseQuestion()
+            tf1 = bakerOperations.createTrueOrFalseQuestion().question
+            tf2 = bakerOperations.createTrueOrFalseQuestion().question
+            tf3 = bakerOperations.createTrueOrFalseQuestion().question
 
-            mcq1 = bakerOperations.createMultipleChoiceQuestionAndAnswers(None)
-            mcq2 = bakerOperations.createMultipleChoiceQuestionAndAnswers(None)
-            mcq3 = bakerOperations.createMultipleChoiceQuestionAndAnswers(None)
+            mcq1 = bakerOperations.createMultipleChoiceQuestionAndAnswers(None).question
+            mcq2 = bakerOperations.createMultipleChoiceQuestionAndAnswers(None).question
+            mcq3 = bakerOperations.createMultipleChoiceQuestionAndAnswers(None).question
 
             newQuiz.questions.add(*[
                 eq1, eq2, eq3,

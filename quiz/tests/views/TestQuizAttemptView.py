@@ -17,8 +17,8 @@ class QuizAttemptViewTest(BaseTestViews):
 
         self.quiz = bakerOperations.createQuiz(self.request.user, self.topic)
         self.quiz.questions.add(*[
-            bakerOperations.createEssayQuestion(),
-            bakerOperations.createTrueOrFalseQuestion()
+            bakerOperations.createEssayQuestion().question,
+            bakerOperations.createTrueOrFalseQuestion().question
         ])
 
         self.quizAttempt = QuizAttempt.objects.create(user=self.request.user, quiz_id=self.quiz.id)

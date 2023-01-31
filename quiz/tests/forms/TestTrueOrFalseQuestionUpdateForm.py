@@ -46,10 +46,10 @@ class TrueOrFalseQuestionUpdateFormTest(BaseTest):
         form = TrueOrFalseQuestionUpdateForm(self.trueOrFalseQuestion)
         IS_CORRECT_CHOICES = self.trueOptionSelected if self.trueOrFalseQuestion.isCorrect else self.falseOptionSelected
 
-        # self.assertEqual(form.initial['figure'], self.trueOrFalseQuestion.figure)
-        self.assertEqual(form.initial['content'], self.trueOrFalseQuestion.content)
-        self.assertEqual(form.initial['explanation'], self.trueOrFalseQuestion.explanation)
-        self.assertEqual(form.initial['mark'], self.trueOrFalseQuestion.mark)
+        # self.assertEqual(form.initial['figure'], self.trueOrFalseQuestion.question.figure)
+        self.assertEqual(form.initial['content'], self.trueOrFalseQuestion.question.content)
+        self.assertEqual(form.initial['explanation'], self.trueOrFalseQuestion.question.explanation)
+        self.assertEqual(form.initial['mark'], self.trueOrFalseQuestion.question.mark)
         self.assertEqual(form.initial['isCorrectChoices'], IS_CORRECT_CHOICES)
 
     def testFigureAndContentIsEmpty(self):
@@ -111,10 +111,10 @@ class TrueOrFalseQuestionUpdateFormTest(BaseTest):
         self.assertTrue(form.is_valid())
         trueOrFalseQuestion = form.update()
 
-        self.assertEqual(testParams.figure, trueOrFalseQuestion.figure)
-        self.assertEqual(testParams.content, trueOrFalseQuestion.content)
-        self.assertEqual(testParams.explanation, trueOrFalseQuestion.explanation)
-        self.assertEqual(testParams.mark, trueOrFalseQuestion.mark)
+        self.assertEqual(testParams.figure, trueOrFalseQuestion.question.figure)
+        self.assertEqual(testParams.content, trueOrFalseQuestion.question.content)
+        self.assertEqual(testParams.explanation, trueOrFalseQuestion.question.explanation)
+        self.assertEqual(testParams.mark, trueOrFalseQuestion.question.mark)
         self.assertTrue(trueOrFalseQuestion.isCorrect)
 
     def testTrueOrFalseQuestionUpdatedFalseSelected(self):
@@ -128,10 +128,10 @@ class TrueOrFalseQuestionUpdateFormTest(BaseTest):
         self.assertTrue(form.is_valid())
         trueOrFalseQuestion = form.update()
 
-        self.assertEqual(testParams.figure, trueOrFalseQuestion.figure)
-        self.assertEqual(testParams.content, trueOrFalseQuestion.content)
-        self.assertEqual(testParams.explanation, trueOrFalseQuestion.explanation)
-        self.assertEqual(testParams.mark, trueOrFalseQuestion.mark)
+        self.assertEqual(testParams.figure, trueOrFalseQuestion.question.figure)
+        self.assertEqual(testParams.content, trueOrFalseQuestion.question.content)
+        self.assertEqual(testParams.explanation, trueOrFalseQuestion.question.explanation)
+        self.assertEqual(testParams.mark, trueOrFalseQuestion.question.mark)
         self.assertFalse(trueOrFalseQuestion.isCorrect)
 
     class TestParams:

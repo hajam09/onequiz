@@ -9,10 +9,10 @@ class EssayQuestionUpdateFormTest(BaseTest):
 
     def setUp(self, path=None) -> None:
         super(EssayQuestionUpdateFormTest, self).setUp('')
-        self.essayQuestion = bakerOperations.createEssayQuestion()
+        self.essayQuestion = bakerOperations.createEssayQuestion().question
 
     def testFieldsAndType(self):
-        form = EssayQuestionUpdateForm(self.essayQuestion)
+        form = EssayQuestionUpdateForm(self.essayQuestion.essayQuestion)
         self.assertEqual(len(form.base_fields), 5)
 
         self.assertTrue(isinstance(form.base_fields.get('figure'), forms.ImageField))
@@ -41,20 +41,20 @@ class EssayQuestionUpdateFormTest(BaseTest):
             EssayQuestionUpdateForm(None)
 
     def testFormInitialValuesAndChoices(self):
-        form = EssayQuestionUpdateForm(self.essayQuestion)
+        form = EssayQuestionUpdateForm(self.essayQuestion.essayQuestion)
 
         # self.assertEqual(form.initial['figure'], self.essayQuestion.figure)
         self.assertEqual(form.initial['content'], self.essayQuestion.content)
         self.assertEqual(form.initial['explanation'], self.essayQuestion.explanation)
         self.assertEqual(form.initial['mark'], self.essayQuestion.mark)
-        self.assertEqual(form.initial['answer'], self.essayQuestion.answer)
+        self.assertEqual(form.initial['answer'], self.essayQuestion.essayQuestion.answer)
 
     def testFigureAndContentIsEmpty(self):
         testParams = self.TestParams(
             mark=50,
             answer='new answer',
         )
-        form = EssayQuestionUpdateForm(self.essayQuestion, data=testParams.getData())
+        form = EssayQuestionUpdateForm(self.essayQuestion.essayQuestion, data=testParams.getData())
         self.assertFalse(form.is_valid())
         self.assertEqual(2, len(form.errors))
         self.assertTrue(form.has_error('figure'))
@@ -68,7 +68,7 @@ class EssayQuestionUpdateFormTest(BaseTest):
             mark=-1,
             answer='new answer',
         )
-        form = EssayQuestionUpdateForm(self.essayQuestion, data=testParams.getData())
+        form = EssayQuestionUpdateForm(self.essayQuestion.essayQuestion, data=testParams.getData())
         self.assertFalse(form.is_valid())
         self.assertEqual(1, len(form.errors))
         self.assertTrue(form.has_error('mark'))
@@ -79,7 +79,7 @@ class EssayQuestionUpdateFormTest(BaseTest):
             content='new content',
             mark=80,
         )
-        form = EssayQuestionUpdateForm(self.essayQuestion, data=testParams.getData())
+        form = EssayQuestionUpdateForm(self.essayQuestion.essayQuestion, data=testParams.getData())
         self.assertFalse(form.is_valid())
         self.assertEqual(1, len(form.errors))
         self.assertTrue(form.has_error('answer'))
@@ -92,14 +92,14 @@ class EssayQuestionUpdateFormTest(BaseTest):
             mark=70,
             answer='new answer',
         )
-        form = EssayQuestionUpdateForm(self.essayQuestion, data=testParams.getData())
+        form = EssayQuestionUpdateForm(self.essayQuestion.essayQuestion, data=testParams.getData())
         self.assertTrue(form.is_valid())
         essayQuestion = form.update()
 
-        self.assertEqual(testParams.figure, essayQuestion.figure)
-        self.assertEqual(testParams.content, essayQuestion.content)
-        self.assertEqual(testParams.explanation, essayQuestion.explanation)
-        self.assertEqual(testParams.mark, essayQuestion.mark)
+        self.assertEqual(testParams.figure, essayQuestion.question.figure)
+        self.assertEqual(testParams.content, essayQuestion.question.content)
+        self.assertEqual(testParams.explanation, essayQuestion.question.explanation)
+        self.assertEqual(testParams.mark, essayQuestion.question.mark)
         self.assertEqual(testParams.answer, essayQuestion.answer)
 
     class TestParams:

@@ -19,22 +19,19 @@ class QuizMarkingOccurrenceApiEventVersion1ComponentTest(BaseTestAjax):
         self.quiz = bakerOperations.createQuiz(self.request.user, self.topic)
 
         self.quiz.questions.add(*[
-            bakerOperations.createEssayQuestion(),
-            bakerOperations.createEssayQuestion(),
-            bakerOperations.createEssayQuestion(),
-            bakerOperations.createTrueOrFalseQuestion(),
-            bakerOperations.createTrueOrFalseQuestion(),
-            bakerOperations.createTrueOrFalseQuestion(),
-            bakerOperations.createMultipleChoiceQuestionAndAnswers(None),
-            bakerOperations.createMultipleChoiceQuestionAndAnswers(None),
-            bakerOperations.createMultipleChoiceQuestionAndAnswers(None),
+            bakerOperations.createEssayQuestion().question,
+            bakerOperations.createEssayQuestion().question,
+            bakerOperations.createEssayQuestion().question,
+            bakerOperations.createTrueOrFalseQuestion().question,
+            bakerOperations.createTrueOrFalseQuestion().question,
+            bakerOperations.createTrueOrFalseQuestion().question,
+            bakerOperations.createMultipleChoiceQuestionAndAnswers(None).question,
+            bakerOperations.createMultipleChoiceQuestionAndAnswers(None).question,
+            bakerOperations.createMultipleChoiceQuestionAndAnswers(None).question,
         ])
 
         quizAttemptId = self.createQuizAttemptAndTheResponseObjects()
-        self.quizAttempt = QuizAttempt.objects.select_related('quiz').prefetch_related(
-            'responses__question', 'responses__essayresponse', 'responses__trueorfalseresponse',
-            'responses__multiplechoiceresponse'
-        ).get(id=quizAttemptId)
+        self.quizAttempt = QuizAttempt.objects.select_related('quiz').get(id=quizAttemptId)
         self.path = reverse('quiz:quizMarkingOccurrenceApiEventVersion1Component', kwargs={'id': self.quizAttempt.id})
 
     def createQuizAttemptAndTheResponseObjects(self):

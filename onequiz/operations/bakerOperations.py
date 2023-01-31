@@ -6,7 +6,7 @@ from django.contrib.auth.models import User
 from faker import Faker
 
 from onequiz.operations import generalOperations
-from quiz.models import Subject, Topic, Quiz, EssayQuestion, TrueOrFalseQuestion, MultipleChoiceQuestion
+from quiz.models import Subject, Topic, Quiz, EssayQuestion, TrueOrFalseQuestion, MultipleChoiceQuestion, Question
 
 EMAIL_DOMAINS = ["@yahoo", "@gmail", "@outlook", "@hotmail"]
 DOMAINS = [".co.uk", ".com", ".co.in", ".net", ".us"]
@@ -110,35 +110,39 @@ def createQuiz(creator=None, topic=None, save=True):
     return newQuiz
 
 
-def createEssayQuestion():
+def createQuestion():
     faker = Faker()
-    newEssayQuestion = EssayQuestion.objects.create(
+    question = Question.objects.create(
         figure=None,
         content=faker.paragraph(),
         explanation=faker.paragraph(),
         mark=faker.random_number(digits=2),
+    )
+    return question
+
+
+def createEssayQuestion():
+    faker = Faker()
+    essayQuestion = EssayQuestion.objects.create(
+        question=createQuestion(),
         answer=faker.paragraph()
     )
-    return newEssayQuestion
+    return essayQuestion
 
 
 def createTrueOrFalseQuestion():
-    faker = Faker()
-    newTrueOrFalseQuestion = TrueOrFalseQuestion.objects.create(
-        figure=None,
-        content=faker.paragraph(),
-        explanation=faker.paragraph(),
-        mark=faker.random_number(digits=2),
+    trueOrFalseQuestion = TrueOrFalseQuestion.objects.create(
+        question=createQuestion(),
         isCorrect=random.choice(BOOLEAN),
     )
-    return newTrueOrFalseQuestion
+    return trueOrFalseQuestion
 
 
 def createMultipleChoiceQuestionAndAnswers(choices):
     faker = Faker()
-    answerOrder = [MultipleChoiceQuestion.Order.SEQUENTIAL,
-                     MultipleChoiceQuestion.Order.RANDOM,
-                     MultipleChoiceQuestion.Order.NONE]
+    answerOrder = [
+        MultipleChoiceQuestion.Order.SEQUENTIAL, MultipleChoiceQuestion.Order.RANDOM, MultipleChoiceQuestion.Order.NONE
+    ]
 
     if choices is None or choices == []:
         choices = [
@@ -149,12 +153,9 @@ def createMultipleChoiceQuestionAndAnswers(choices):
             } for _ in range(random.randint(2, 10))
         ]
 
-    newMultipleChoiceQuestion = MultipleChoiceQuestion.objects.create(
-        figure=None,
-        content=faker.paragraph(),
-        explanation=faker.paragraph(),
-        mark=faker.random_number(digits=2),
+    multipleChoiceQuestion = MultipleChoiceQuestion.objects.create(
+        question=createQuestion(),
         answerOrder=random.choice(answerOrder),
         choices={'choices': choices}
     )
-    return newMultipleChoiceQuestion
+    return multipleChoiceQuestion

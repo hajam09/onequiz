@@ -1,7 +1,7 @@
 from unittest.mock import patch
 
+from django.db.models import QuerySet
 from django.urls import reverse
-from model_utils.managers import InheritanceQuerySet
 
 from onequiz.operations import bakerOperations
 from onequiz.tests.BaseTestViews import BaseTestViews
@@ -25,7 +25,7 @@ class QuizDetailViewTest(BaseTestViews):
         self.assertTrue(response.context['formTitle'], 'View or Update Quiz')
         self.assertTrue(response.context['quizId'], self.quiz.id)
         self.assertEqual(len(response.context['quizQuestions']), 0)
-        self.assertTrue(isinstance(response.context['quizQuestions'], InheritanceQuerySet))
+        self.assertTrue(isinstance(response.context['quizQuestions'], QuerySet))
         self.assertTemplateUsed(response, 'quiz/quizTemplateView.html')
 
     def testQuizDoesNotExist(self):
