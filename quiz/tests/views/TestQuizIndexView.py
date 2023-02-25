@@ -6,19 +6,18 @@ from django.urls import reverse
 
 from onequiz.operations import bakerOperations
 from onequiz.tests.BaseTestViews import BaseTestViews
-from quiz.models import Topic, Quiz
+from quiz.models import Quiz
 
 
 class QuizIndexViewTest(BaseTestViews):
     def setUp(self, path=reverse('quiz:index-view')) -> None:
         super(QuizIndexViewTest, self).setUp(path)
-        bakerOperations.createSubjectsAndTopics(1, 1)
+        self.subject = bakerOperations.createSubjects(1).first()
         bakerOperations.createUsers(maxLimit=2)
 
         allUsers = User.objects.all()
-        self.topic = Topic.objects.select_related('subject').first()
         self.quizList = [
-            bakerOperations.createQuiz(creator=random.choice(allUsers), topic=self.topic, save=False)
+            bakerOperations.createQuiz(creator=random.choice(allUsers), subject=self.subject, save=False)
             for _ in range(allUsers.count())
         ]
         Quiz.objects.bulk_create(self.quizList)
@@ -48,27 +47,9 @@ class QuizIndexViewTest(BaseTestViews):
         self.assertEqual(len(quizWithDescription), len(response.context['quizList']))
         self.assertTemplateUsed(response, 'quiz/quizListView.html')
 
-    def testSearchQuizForTopicName(self):
-        query = self.quizList[0].topic.name
-        quizWithTopicName = [i for i in self.quizList if query in i.topic.name]
-        response = self.get(path=f"{self.path}?query={query}")
-        self.assertEquals(response.status_code, 200)
-        self.assertTrue(isinstance(response.context['quizList'], QuerySet))
-        self.assertEqual(len(quizWithTopicName), len(response.context['quizList']))
-        self.assertTemplateUsed(response, 'quiz/quizListView.html')
-
-    def testSearchQuizForTopicDescription(self):
-        query = self.quizList[0].topic.description
-        quizWithTopicDescription = [i for i in self.quizList if query in i.topic.description]
-        response = self.get(path=f"{self.path}?query={query}")
-        self.assertEquals(response.status_code, 200)
-        self.assertTrue(isinstance(response.context['quizList'], QuerySet))
-        self.assertEqual(len(quizWithTopicDescription), len(response.context['quizList']))
-        self.assertTemplateUsed(response, 'quiz/quizListView.html')
-
     def testSearchQuizForSubjectName(self):
-        query = self.quizList[0].topic.subject.name
-        quizWithSubjectName = [i for i in self.quizList if query in i.topic.subject.name]
+        query = self.quizList[0].subject.name
+        quizWithSubjectName = [i for i in self.quizList if query in i.subject.name]
         response = self.get(path=f"{self.path}?query={query}")
         self.assertEquals(response.status_code, 200)
         self.assertTrue(isinstance(response.context['quizList'], QuerySet))
@@ -76,8 +57,26 @@ class QuizIndexViewTest(BaseTestViews):
         self.assertTemplateUsed(response, 'quiz/quizListView.html')
 
     def testSearchQuizForSubjectDescription(self):
-        query = self.quizList[0].topic.subject.description
-        quizWithSubjectDescription = [i for i in self.quizList if query in i.topic.subject.description]
+        query = self.quizList[0].subject.description
+        quizWithSubjectDescription = [i for i in self.quizList if query in i.subject.description]
+        response = self.get(path=f"{self.path}?query={query}")
+        self.assertEquals(response.status_code, 200)
+        self.assertTrue(isinstance(response.context['quizList'], QuerySet))
+        self.assertEqual(len(quizWithSubjectDescription), len(response.context['quizList']))
+        self.assertTemplateUsed(response, 'quiz/quizListView.html')
+
+    def testSearchQuizForSubjectName(self):
+        query = self.quizList[0].subject.name
+        quizWithSubjectName = [i for i in self.quizList if query in i.subject.name]
+        response = self.get(path=f"{self.path}?query={query}")
+        self.assertEquals(response.status_code, 200)
+        self.assertTrue(isinstance(response.context['quizList'], QuerySet))
+        self.assertEqual(len(quizWithSubjectName), len(response.context['quizList']))
+        self.assertTemplateUsed(response, 'quiz/quizListView.html')
+
+    def testSearchQuizForSubjectDescription(self):
+        query = self.quizList[0].subject.description
+        quizWithSubjectDescription = [i for i in self.quizList if query in i.subject.description]
         response = self.get(path=f"{self.path}?query={query}")
         self.assertEquals(response.status_code, 200)
         self.assertTrue(isinstance(response.context['quizList'], QuerySet))

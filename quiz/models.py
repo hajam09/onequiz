@@ -35,27 +35,6 @@ class Subject(BaseModel):
         verbose_name = 'Subject'
         verbose_name_plural = 'Subjects'
 
-    def getSubjectTopics(self):
-        return self.subjectTopics.all().order_by('name')
-
-
-class Topic(BaseModel):
-    """
-    Within the subject they could be tested in specific topic.
-    e.g -> Maths (Algebra, Probability, ...)
-    e.g -> Chemistry (Atomic structure, Chemical bonds, ...)
-    """
-    name = models.CharField(max_length=255)
-    subject = models.ForeignKey(Subject, on_delete=models.CASCADE, related_name='subjectTopics')
-    description = models.TextField(blank=True, null=True)
-
-    def __str__(self):
-        return self.name
-
-    class Meta:
-        verbose_name = 'Topic'
-        verbose_name_plural = 'Topics'
-
 
 class Question(BaseModel):
     figure = models.ImageField(blank=True, null=True, upload_to='uploads/%Y/%m/%d')
@@ -126,7 +105,7 @@ class Quiz(BaseModel):
     name = models.CharField(max_length=255)
     description = models.TextField(blank=True, null=True)
     url = models.SlugField(max_length=255, blank=False)
-    topic = models.ForeignKey(Topic, on_delete=models.SET_NULL, null=True, blank=True, related_name='topicQuizzes')
+    subject = models.ForeignKey(Subject, on_delete=models.SET_NULL, null=True, blank=True, related_name='subjectQuizzes')
     numberOfQuestions = models.PositiveIntegerField()
     quizDuration = models.IntegerField()
     maxAttempt = models.PositiveIntegerField(default=False)
@@ -143,7 +122,7 @@ class Quiz(BaseModel):
     creator = models.ForeignKey(User, on_delete=models.CASCADE)
 
     def __str__(self):
-        return f"{self.id} - {self.name} - {self.topic.name}"
+        return f"{self.id} - {self.name}"
 
     def getQuestions(self, shuffleQuestions=False):
         questionList = self.questions.all()

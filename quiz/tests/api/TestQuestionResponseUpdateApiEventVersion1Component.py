@@ -5,16 +5,15 @@ from django.urls import reverse
 
 from onequiz.operations import bakerOperations
 from onequiz.tests.BaseTestAjax import BaseTestAjax
-from quiz.models import Topic, QuizAttempt
+from quiz.models import QuizAttempt
 
 
 class QuestionResponseUpdateApiEventVersion1ComponentTest(BaseTestAjax):
 
     def setUp(self, path=reverse('quiz:questionResponseUpdateApiEventVersion1Component')) -> None:
         super(QuestionResponseUpdateApiEventVersion1ComponentTest, self).setUp(path)
-        bakerOperations.createSubjectsAndTopics(1, 1)
-        self.topic = Topic.objects.select_related('subject').first()
-        self.quiz = bakerOperations.createQuiz(self.request.user, self.topic)
+        self.subject = bakerOperations.createSubjects(1).first()
+        self.quiz = bakerOperations.createQuiz(self.request.user, self.subject)
         self.eq = bakerOperations.createEssayQuestion().question
         self.tf = bakerOperations.createTrueOrFalseQuestion().question
         self.mc = bakerOperations.createMultipleChoiceQuestionAndAnswers(None).question

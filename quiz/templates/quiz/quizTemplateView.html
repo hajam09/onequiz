@@ -114,44 +114,11 @@
 
         window.addEventListener('load', function () {
             let isSubjectDropdownEmpty = $('#id_subject').has('option').length === 0;
-            let isTopicDropdownEmpty = $('#id_topic').has('option').length === 0;
             let isDifficultyDropdownEmpty = $('#id_difficulty').has('option').length === 0;
-            if (isSubjectDropdownEmpty || isTopicDropdownEmpty || isDifficultyDropdownEmpty) {
+            if (isSubjectDropdownEmpty || isDifficultyDropdownEmpty) {
                 location.reload();
             }
         })
-
-        $("#id_subject").on('change', function () {
-            let subjectId = $(this).val();
-
-            fetch("{% url 'quiz:topicObjectApiEventVersion1Component' %}?subject_id=" + subjectId, {
-                method: 'GET',
-            }).then((response) => response.json())
-                .then((response) => {
-                    if (response.success) {
-
-                        $("#id_topic")
-                            .find('option')
-                            .remove()
-
-                        if (response.data.topics.length === 0) {
-                            response.data.topics = [
-                                {
-                                    'id': 0,
-                                    'name': '-- Select a subject first --'
-                                }
-                            ]
-                        }
-
-                        $.each(response.data.topics, function (i, item) {
-                            $('#id_topic').append($('<option>', {
-                                value: item.id,
-                                text: item.name
-                            }));
-                        })
-                    }
-                })
-        });
 
     </script>
 {% endblock %}

@@ -9,7 +9,7 @@
                 <thead class="thead-light">
                 <tr>
                     <th>Name</th>
-                    <th>Subject / Topic</th>
+                    <th>Subject / Subject</th>
                     <th>Status</th>
                     <th>Action</th>
                 </tr>
@@ -19,9 +19,9 @@
                     <tr>
                         <td>{{ quizAttempt.quiz.name }}</td>
                         <td>
-                            <span class="badge badge-primary">{{ quizAttempt.quiz.topic.subject.name }}</span>
+                            <span class="badge badge-primary">{{ quizAttempt.quiz.subject.name }}</span>
                             /
-                            <span class="badge badge-secondary">{{ quizAttempt.quiz.topic.name }}</span>
+                            <span class="badge badge-secondary">{{ quizAttempt.quiz.name }}</span>
                         </td>
                         <td>{{ quizAttempt.get_status_display }}</td>
                         <td>

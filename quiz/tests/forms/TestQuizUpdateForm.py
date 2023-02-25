@@ -7,20 +7,19 @@ from faker import Faker
 from onequiz.operations import bakerOperations, generalOperations
 from onequiz.tests.BaseTest import BaseTest
 from quiz.forms import QuizUpdateForm
-from quiz.models import Quiz, Topic
+from quiz.models import Quiz
 
 
 class QuizUpdateFormTest(BaseTest):
 
     def setUp(self, path=None) -> None:
         super(QuizUpdateFormTest, self).setUp('')
-        bakerOperations.createSubjectsAndTopics(1, 1)
-        self.topic = Topic.objects.select_related('subject').first()
-        self.quiz = bakerOperations.createQuiz(self.request.user, self.topic)
+        self.subject = bakerOperations.createSubjects(1).first()
+        self.quiz = bakerOperations.createQuiz(self.request.user, self.subject)
 
     def testFieldsAndType(self):
         form = QuizUpdateForm(self.request, self.quiz)
-        self.assertEqual(len(form.base_fields), 15)
+        self.assertEqual(len(form.base_fields), 14)
 
         self.assertTrue(isinstance(form.base_fields.get('name'), forms.CharField))
         self.assertEqual(form.base_fields.get('name').label, 'Quiz Name')
@@ -37,10 +36,6 @@ class QuizUpdateFormTest(BaseTest):
         self.assertTrue(isinstance(form.base_fields.get('subject'), forms.MultipleChoiceField))
         self.assertEqual(form.base_fields.get('subject').label, 'Subject')
         self.assertTrue(isinstance(form.base_fields.get('subject').widget, forms.Select))
-
-        self.assertTrue(isinstance(form.base_fields.get('topic'), forms.MultipleChoiceField))
-        self.assertEqual(form.base_fields.get('topic').label, 'Topic')
-        self.assertTrue(isinstance(form.base_fields.get('topic').widget, forms.Select))
 
         self.assertTrue(isinstance(form.base_fields.get('quizDuration'), forms.IntegerField))
         self.assertEqual(form.base_fields.get('quizDuration').label, 'Quiz Duration (Minutes)')
@@ -89,16 +84,10 @@ class QuizUpdateFormTest(BaseTest):
     def testFormInitialValuesAndChoices(self):
         form = QuizUpdateForm(self.request, self.quiz)
 
-        INITIAL_TOPIC_CHOICES = [
-            (topic.id, topic.name) for topic in Topic.objects.filter(subject_id=self.quiz.topic.subject_id)
-        ]
-        self.assertListEqual(form.base_fields.get('topic').choices, INITIAL_TOPIC_CHOICES)
-
         self.assertEqual(form.initial['name'], self.quiz.name)
         self.assertEqual(form.initial['description'], self.quiz.description)
         self.assertEqual(form.initial['link'], self.quiz.url)
-        self.assertEqual(form.initial['subject'], self.quiz.topic.subject.id)
-        self.assertEqual(form.initial['topic'], self.quiz.topic.id)
+        self.assertEqual(form.initial['subject'], self.quiz.subject.id)
         self.assertEqual(form.initial['quizDuration'], self.quiz.quizDuration)
         self.assertEqual(form.initial['maxAttempt'], self.quiz.maxAttempt)
         self.assertEqual(form.initial['difficulty'], self.quiz.difficulty)
@@ -114,8 +103,8 @@ class QuizUpdateFormTest(BaseTest):
         pass
 
     def testUpdateQuizUrlAlreadyUsed(self):
-        quiz2 = bakerOperations.createQuiz(self.request.user, self.topic)
-        testParams = self.TestParams(self.topic)
+        quiz2 = bakerOperations.createQuiz(self.request.user, self.subject)
+        testParams = self.TestParams(self.subject)
         testParams.link = quiz2.url
 
         form = QuizUpdateForm(self.request, self.quiz, data=testParams.getData())
@@ -125,7 +114,7 @@ class QuizUpdateFormTest(BaseTest):
         self.assertEqual(f'Quiz already exists with link: {quiz2.url}', form.errors.get('link')[0])
 
     def testQuizUpdatedSuccessfully(self):
-        testParams = self.TestParams(self.topic)
+        testParams = self.TestParams(self.subject)
         testParams.name = 'New Quiz Name'
         testParams.link = 'New Quiz Link'
         testParams.quizDuration = 100
@@ -142,7 +131,7 @@ class QuizUpdateFormTest(BaseTest):
         self.assertEqual(testParams.name, quiz.name)
         self.assertEqual(testParams.description, quiz.description)
         self.assertEqual(generalOperations.parseStringToUrl(testParams.link), quiz.url)
-        self.assertEqual(self.topic, quiz.topic)
+        self.assertEqual(self.subject, quiz.subject)
         self.assertEqual(testParams.quizDuration, quiz.quizDuration)
         self.assertEqual(testParams.maxAttempt, quiz.maxAttempt)
         self.assertEqual(testParams.difficulty, quiz.difficulty)
@@ -156,15 +145,14 @@ class QuizUpdateFormTest(BaseTest):
 
     class TestParams:
 
-        def __init__(self, topic):
+        def __init__(self, subject):
             faker = Faker()
             CHECKBOX = ['on', 'off']
 
             self.name = faker.pystr_format()
             self.description = faker.paragraph()
             self.link = faker.paragraph()
-            self.subject = topic.subject.id
-            self.topic = topic.id
+            self.subject = subject.id
             self.quizDuration = faker.random_number(digits=2)
             self.maxAttempt = faker.random_number(digits=1)
             self.difficulty = random.choice([Quiz.Difficulty.EASY, Quiz.Difficulty.MEDIUM, Quiz.Difficulty.HARD])
@@ -182,7 +170,6 @@ class QuizUpdateFormTest(BaseTest):
                 'description': self.description,
                 'link': self.link,
                 'subject': self.subject,
-                'topic': self.topic,
                 'quizDuration': self.quizDuration,
                 'maxAttempt': self.maxAttempt,
                 'difficulty': self.difficulty,

@@ -12,7 +12,6 @@ from quiz.models import Quiz
 from quiz.models import QuizAttempt
 from quiz.models import Result
 from quiz.models import Subject
-from quiz.models import Topic
 from quiz.models import TrueOrFalseQuestion
 from quiz.models import TrueOrFalseResponse
 
@@ -49,8 +48,8 @@ class QuizAdmin(admin.ModelAdmin):
     form = QuizAdminForm
 
     list_display = ('name',)
-    list_filter = ('topic',)
-    search_fields = ('description', 'topic',)
+    list_filter = ('subject',)
+    search_fields = ('description', 'subject',)
 
 
 class QuizAttemptForm(forms.ModelForm):
@@ -61,7 +60,7 @@ class QuizAttemptForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super(QuizAttemptForm, self).__init__(*args, **kwargs)
         self.fields['quiz'].choices = [
-            (i.id, f"{i.id} - {i.name} - {i.topic.name}") for i in Quiz.objects.all().select_related('topic')
+            (i.id, f"{i.id} - {i.name} - {i.subject.name}") for i in Quiz.objects.all().select_related('subject')
         ]
 
 
@@ -70,7 +69,6 @@ class QuizAttemptAdmin(admin.ModelAdmin):
 
 
 admin.site.register(Subject)
-admin.site.register(Topic)
 admin.site.register(EssayQuestion)
 admin.site.register(MultipleChoiceQuestion)
 admin.site.register(TrueOrFalseQuestion)

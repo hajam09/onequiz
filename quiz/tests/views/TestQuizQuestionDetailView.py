@@ -5,16 +5,14 @@ from django.urls import reverse
 from onequiz.operations import bakerOperations
 from onequiz.tests.BaseTestViews import BaseTestViews
 from quiz.forms import EssayQuestionUpdateForm, TrueOrFalseQuestionUpdateForm, MultipleChoiceQuestionUpdateForm
-from quiz.models import Topic
 
 
 class QuizQuestionDetailViewTest(BaseTestViews):
 
     def setUp(self, path=None) -> None:
         super(QuizQuestionDetailViewTest, self).setUp('')
-        bakerOperations.createSubjectsAndTopics(1, 1)
-        self.topic = Topic.objects.select_related('subject').first()
-        self.quiz = bakerOperations.createQuiz(self.request.user, self.topic)
+        self.subject = bakerOperations.createSubjects(1).first()
+        self.quiz = bakerOperations.createQuiz(self.request.user, self.subject)
         self.essayQuestion = bakerOperations.createEssayQuestion().question
         self.trueOrFalseQuestion = bakerOperations.createTrueOrFalseQuestion().question
         self.multipleChoiceQuestion = bakerOperations.createMultipleChoiceQuestionAndAnswers(None).question

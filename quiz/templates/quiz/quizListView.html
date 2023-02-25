@@ -35,8 +35,7 @@
                 <h5><a href="{{ quiz.getUrl }}">{{ quiz.name }}</a></h5>
                 <p>Description: {{ quiz.description }}</p>
                 <h6>
-                    <span class="badge badge-primary">Subject: {{ quiz.topic.subject }}</span>
-                    <span class="badge badge-secondary">Topic: {{ quiz.topic }}</span>
+                    <span class="badge badge-primary">Subject: {{ quiz.subject }}</span>
                     {% if user.is_authenticated %}
                         <button type="button" class="btn btn-Dark btn-xs float-right"
                                 onclick=beginQuizAttempt('{{ quiz.id }}')>

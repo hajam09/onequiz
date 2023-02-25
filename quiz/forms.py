@@ -5,7 +5,7 @@ from django import forms
 from django.db.models import Q
 
 from onequiz.operations import generalOperations
-from quiz.models import Quiz, Subject, Topic, TrueOrFalseQuestion, EssayQuestion, MultipleChoiceQuestion, Question
+from quiz.models import Quiz, Subject, TrueOrFalseQuestion, EssayQuestion, MultipleChoiceQuestion, Question
 
 
 class QuestionForm(forms.Form):
@@ -114,16 +114,6 @@ class QuizForm(forms.Form):
             }
         ),
     )
-    topic = forms.MultipleChoiceField(
-        label='Topic',
-        widget=forms.Select(
-            attrs={
-                'class': 'form-control',
-                'style': 'width: 100%; border-radius: 0',
-                'required': 'required',
-            }
-        ),
-    )
     quizDuration = forms.IntegerField(
         label='Quiz Duration (Minutes)',
         widget=forms.NumberInput(
@@ -223,7 +213,6 @@ class QuizForm(forms.Form):
 
         SUBJECT_CHOICES = [(subject.id, subject.name) for subject in Subject.objects.all()]
         SUBJECT_CHOICES.insert(0, (0, '-- Select a value --'))
-        INITIAL_TOPIC_CHOICES = [(0, '-- Select a subject first --')]
         DIFFICULTY_CHOICES = [
             (Quiz.Difficulty.EASY, Quiz.Difficulty.EASY.label),
             (Quiz.Difficulty.MEDIUM, Quiz.Difficulty.MEDIUM.label),
@@ -232,16 +221,6 @@ class QuizForm(forms.Form):
 
         self.base_fields['difficulty'].choices = DIFFICULTY_CHOICES
         self.base_fields['subject'].choices = SUBJECT_CHOICES
-        self.base_fields['topic'].choices = INITIAL_TOPIC_CHOICES
-
-    def setSubjectAndTopicFields(self):
-        if self.data.get('subject') != '0':
-            self.base_fields['topic'].choices = [(0, '-- Select a topic first --')]
-        else:
-            INITIAL_TOPIC_CHOICES = [
-                (topic.id, topic.name) for topic in Topic.objects.filter(subject_id=self.data.get('subject'))
-            ]
-            self.base_fields['topic'].choices = INITIAL_TOPIC_CHOICES
 
     def clean_name(self):
         name = self.cleaned_data.get('name')
@@ -274,16 +253,6 @@ class QuizForm(forms.Form):
             raise forms.ValidationError(f'There\'s an error with the selected subject.')
 
         return subject
-
-    def clean_topic(self):
-        topic = self.data.get('topic')
-
-        if topic == '0':
-            raise forms.ValidationError(f'Topic is empty.')
-        elif not Topic.objects.filter(id=topic).exists():
-            raise forms.ValidationError(f'There\'s an error with the selected topic.')
-
-        return topic
 
     def clean_quizDuration(self):
         quizDuration = int(self.data.get('quizDuration'))
@@ -367,12 +336,9 @@ class QuizCreateForm(QuizForm):
 
     def clean(self):
         del self.errors['subject']
-        del self.errors['topic']
         del self.errors['difficulty']
 
-        self.setSubjectAndTopicFields()
         self.clean_subject()
-        self.clean_topic()
         self.clean_difficulty()
 
         return self.cleaned_data
@@ -382,7 +348,7 @@ class QuizCreateForm(QuizForm):
         newQuiz.name = self.cleaned_data.get('name')
         newQuiz.description = self.cleaned_data.get('description')
         newQuiz.url = self.cleaned_data.get('link')
-        newQuiz.topic_id = self.data.get('topic')
+        newQuiz.subject_id = self.data.get('subject')
         newQuiz.numberOfQuestions = 1
         newQuiz.quizDuration = self.cleaned_data.get('quizDuration')
         newQuiz.maxAttempt = self.cleaned_data.get('maxAttempt')
@@ -409,16 +375,10 @@ class QuizUpdateForm(QuizForm):
         if self.quiz is None or not isinstance(quiz, Quiz):
             raise Exception('Quiz is none, or is not an instance of Quiz object.')
 
-        INITIAL_TOPIC_CHOICES = [
-            (topic.id, topic.name) for topic in Topic.objects.filter(subject_id=self.quiz.topic.subject_id)
-        ]
-        self.base_fields['topic'].choices = INITIAL_TOPIC_CHOICES
-
         self.initial['name'] = quiz.name
         self.initial['description'] = quiz.description
         self.initial['link'] = quiz.url
-        self.initial['subject'] = self.quiz.topic.subject_id
-        self.initial['topic'] = self.quiz.topic.id
+        self.initial['subject'] = self.quiz.subject.id
         self.initial['quizDuration'] = quiz.quizDuration
         self.initial['maxAttempt'] = quiz.maxAttempt
         self.initial['difficulty'] = quiz.difficulty
@@ -448,12 +408,9 @@ class QuizUpdateForm(QuizForm):
 
     def clean(self):
         del self.errors['subject']
-        del self.errors['topic']
         del self.errors['difficulty']
 
-        self.setSubjectAndTopicFields()
         self.clean_subject()
-        self.clean_topic()
         self.clean_difficulty()
 
         return self.cleaned_data
@@ -462,7 +419,7 @@ class QuizUpdateForm(QuizForm):
         self.quiz.name = self.cleaned_data.get('name')
         self.quiz.description = self.cleaned_data.get('description')
         self.quiz.url = self.cleaned_data.get('link')
-        self.quiz.topic_id = self.data.get('topic')
+        self.quiz.subject_id = self.data.get('subject')
         self.quiz.quizDuration = self.cleaned_data.get('quizDuration')
         self.quiz.maxAttempt = self.cleaned_data.get('maxAttempt')
         self.quiz.difficulty = self.data.get('difficulty')

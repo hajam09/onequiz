@@ -4,7 +4,7 @@ from django.contrib.auth.models import User
 from django.core.management import BaseCommand
 
 from onequiz.operations import bakerOperations
-from quiz.models import Topic
+from quiz.models import Subject
 
 BOOLEAN = [True, False]
 
@@ -13,16 +13,16 @@ class Command(BaseCommand):
     help = 'Create Baker Model'
 
     def handle(self, *args, **kwargs):
-        bakerOperations.createSubjectsAndTopics(1, 1)
+        bakerOperations.createSubjects(1)
         bakerOperations.createUsers()
 
         allUsers = User.objects.all()
-        allTopics = Topic.objects.all()
+        allSubjects = Subject.objects.all()
 
         for i in range(10):
             randomUser = random.choice(allUsers)
-            randomTopic = random.choice(allTopics)
-            newQuiz = bakerOperations.createQuiz(creator=randomUser, topic=randomTopic)
+            randomSubject = random.choice(allSubjects)
+            newQuiz = bakerOperations.createQuiz(creator=randomUser, subject=randomSubject)
 
             # create three of each questions for this quiz.
             eq1 = bakerOperations.createEssayQuestion().question

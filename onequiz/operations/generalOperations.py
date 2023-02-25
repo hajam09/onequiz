@@ -53,15 +53,14 @@ def performComplexQuizSearch(query, filterList=None):
     filterList = filterList or []
     attributesToSearch = [
         'name', 'description', 'url',
-        'topic__name', 'topic__description',
-        'topic__subject__name', 'topic__subject__description'
+        'subject__name', 'subject__description',
     ]
 
     filterList.append(reduce(operator.or_, [Q(**{'deleteFl': False})]))
     if query and query.strip():
         filterList.append(reduce(operator.or_, [Q(**{f'{v}__icontains': query}) for v in attributesToSearch]))
 
-    return Quiz.objects.filter(reduce(operator.and_, filterList)).select_related('topic__subject').distinct()
+    return Quiz.objects.filter(reduce(operator.and_, filterList)).select_related('subject').distinct()
 
 
 class QuestionAndResponse:

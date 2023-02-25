@@ -1,9 +1,7 @@
 import json
 from http import HTTPStatus
 from json import JSONDecodeError
-from threading import Thread
 
-from django.db.models import F
 from django.http import JsonResponse
 from django.urls import reverse
 from django.views import View
@@ -13,23 +11,8 @@ from onequiz.operations.generalOperations import (
     QuestionAndResponse, QuizAttemptAutomaticMarking, QuizAttemptManualMarking
 )
 from quiz.models import (
-    EssayResponse, MultipleChoiceResponse, QuizAttempt, Topic, TrueOrFalseResponse, Result, Response, Quiz
+    EssayResponse, MultipleChoiceResponse, QuizAttempt, TrueOrFalseResponse, Result, Response, Quiz
 )
-
-
-class TopicObjectApiEventVersion1Component(View):
-    def get(self, *args, **kwargs):
-        topics = Topic.objects.filter(**self.request.GET.dict()).annotate(
-            _id=F('id'), _name=F('name'), _description=F('description')
-        ).values('id', 'name', 'description')
-
-        response = {
-            "success": True,
-            "data": {
-                "topics": list(topics)
-            }
-        }
-        return JsonResponse(response, status=HTTPStatus.OK)
 
 
 class QuizAttemptObjectApiEventVersion1Component(View):

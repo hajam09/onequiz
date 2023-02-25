@@ -6,16 +6,14 @@ from django.urls import reverse
 from onequiz.operations import bakerOperations
 from onequiz.tests.BaseTestViews import BaseTestViews
 from quiz.forms import QuizUpdateForm
-from quiz.models import Topic
 
 
 class QuizDetailViewTest(BaseTestViews):
 
     def setUp(self, path=None) -> None:
         super(QuizDetailViewTest, self).setUp('')
-        bakerOperations.createSubjectsAndTopics(1, 1)
-        self.topic = Topic.objects.select_related('subject').first()
-        self.quiz = bakerOperations.createQuiz(self.request.user, self.topic)
+        self.subject = bakerOperations.createSubjects(1).first()
+        self.quiz = bakerOperations.createQuiz(self.request.user, self.subject)
         self.path = reverse('quiz:quiz-detail-view', kwargs={'quizId': self.quiz.id})
 
     def testQuizDetailViewGet(self):

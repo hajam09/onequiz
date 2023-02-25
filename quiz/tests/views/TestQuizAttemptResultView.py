@@ -2,7 +2,7 @@ from django.urls import reverse
 
 from onequiz.operations import bakerOperations
 from onequiz.tests.BaseTestViews import BaseTestViews
-from quiz.models import QuizAttempt, Topic
+from quiz.models import QuizAttempt, Subject
 from quiz.models import Result
 
 
@@ -10,10 +10,8 @@ class QuizAttemptResultViewTest(BaseTestViews):
 
     def setUp(self, path=None) -> None:
         super(QuizAttemptResultViewTest, self).setUp('')
-        bakerOperations.createSubjectsAndTopics(1, 2)
-        self.topic = Topic.objects.select_related('subject').first()
-
-        self.quiz = bakerOperations.createQuiz(self.request.user, self.topic)
+        self.subject = bakerOperations.createSubjects(1).first()
+        self.quiz = bakerOperations.createQuiz(self.request.user, self.subject)
         self.quiz.questions.add(*[
             bakerOperations.createEssayQuestion().question,
             bakerOperations.createTrueOrFalseQuestion().question

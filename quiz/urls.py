@@ -23,11 +23,6 @@ urlpatterns = [
 
 urlpatterns += [
     path(
-        'api/v1/topicObjectApiEventVersion1Component/',
-        TopicObjectApiEventVersion1Component.as_view(),
-        name='topicObjectApiEventVersion1Component'
-    ),
-    path(
         'api/v1/quizAttemptObjectApiEventVersion1Component/',
         QuizAttemptObjectApiEventVersion1Component.as_view(),
         name='quizAttemptObjectApiEventVersion1Component'

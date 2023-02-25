@@ -7,7 +7,7 @@ from faker import Faker
 from onequiz.operations import bakerOperations, generalOperations
 from onequiz.tests.BaseTest import BaseTest
 from quiz.forms import QuizCreateForm
-from quiz.models import Quiz, Subject, Topic
+from quiz.models import Quiz, Subject
 
 
 class QuizCreateFormTest(BaseTest):
@@ -15,12 +15,11 @@ class QuizCreateFormTest(BaseTest):
     def setUp(self, path=None) -> None:
         self.basePath = path
         super(QuizCreateFormTest, self).setUp('')
-        bakerOperations.createSubjectsAndTopics(1, 1)
-        self.topic = Topic.objects.select_related('subject').first()
+        self.subject = bakerOperations.createSubjects(1).first()
 
     def testFieldsAndType(self):
         form = QuizCreateForm(self.request)
-        self.assertEqual(len(form.base_fields), 15)
+        self.assertEqual(len(form.base_fields), 14)
 
         self.assertTrue(isinstance(form.base_fields.get('name'), forms.CharField))
         self.assertEqual(form.base_fields.get('name').label, 'Quiz Name')
@@ -37,10 +36,6 @@ class QuizCreateFormTest(BaseTest):
         self.assertTrue(isinstance(form.base_fields.get('subject'), forms.MultipleChoiceField))
         self.assertEqual(form.base_fields.get('subject').label, 'Subject')
         self.assertTrue(isinstance(form.base_fields.get('subject').widget, forms.Select))
-
-        self.assertTrue(isinstance(form.base_fields.get('topic'), forms.MultipleChoiceField))
-        self.assertEqual(form.base_fields.get('topic').label, 'Topic')
-        self.assertTrue(isinstance(form.base_fields.get('topic').widget, forms.Select))
 
         self.assertTrue(isinstance(form.base_fields.get('quizDuration'), forms.IntegerField))
         self.assertEqual(form.base_fields.get('quizDuration').label, 'Quiz Duration (Minutes)')
@@ -87,8 +82,6 @@ class QuizCreateFormTest(BaseTest):
         SUBJECT_CHOICES = [(subject.id, subject.name) for subject in Subject.objects.all()]
         SUBJECT_CHOICES.insert(0, (0, '-- Select a value --'))
 
-        INITIAL_TOPIC_CHOICES = [(0, '-- Select a subject first --')]
-
         DIFFICULTY_CHOICES = [
             (Quiz.Difficulty.EASY, Quiz.Difficulty.EASY.label),
             (Quiz.Difficulty.MEDIUM, Quiz.Difficulty.MEDIUM.label),
@@ -98,12 +91,11 @@ class QuizCreateFormTest(BaseTest):
         self.assertIn('subject', form.base_fields)
         self.assertIn('difficulty', form.base_fields)
         self.assertListEqual(form.base_fields.get('subject').choices, SUBJECT_CHOICES)
-        self.assertListEqual(form.base_fields.get('topic').choices, INITIAL_TOPIC_CHOICES)
         self.assertListEqual(form.base_fields.get('difficulty').choices, DIFFICULTY_CHOICES)
 
     def testQuizWithNameAlreadyExists(self):
         quiz = bakerOperations.createQuiz(self.request.user)
-        testParams = self.TestParams(self.topic)
+        testParams = self.TestParams(self.subject)
         testParams.name = quiz.name
         form = QuizCreateForm(self.request, data=testParams.getData())
 
@@ -113,7 +105,7 @@ class QuizCreateFormTest(BaseTest):
 
     def testQuizLinkAlreadyExists(self):
         quiz = bakerOperations.createQuiz(self.request.user)
-        testParams = self.TestParams(self.topic)
+        testParams = self.TestParams(self.subject)
         testParams.link = quiz.url
         form = QuizCreateForm(self.request, data=testParams.getData())
 
@@ -122,7 +114,7 @@ class QuizCreateFormTest(BaseTest):
         self.assertEqual(f'Quiz already exists with link: {testParams.link}', form.errors.get('link')[0])
 
     def testSelectedSubjectDoesNotExists(self):
-        testParams = self.TestParams(self.topic)
+        testParams = self.TestParams(self.subject)
         testParams.subject = 0
         form = QuizCreateForm(self.request, data=testParams.getData())
 
@@ -131,7 +123,7 @@ class QuizCreateFormTest(BaseTest):
         self.assertEqual(f'There\'s an error with the selected subject.', form.errors.get('__all__')[0])
 
     def testQuizDurationIsNegative(self):
-        testParams = self.TestParams(self.topic)
+        testParams = self.TestParams(self.subject)
         testParams.quizDuration = -1
         form = QuizCreateForm(self.request, data=testParams.getData())
 
@@ -140,7 +132,7 @@ class QuizCreateFormTest(BaseTest):
         self.assertEqual(f'Quiz Durations should be greater than 0.', form.errors.get('quizDuration')[0])
 
     def testQuizMaxAttemptIsNegative(self):
-        testParams = self.TestParams(self.topic)
+        testParams = self.TestParams(self.subject)
         testParams.maxAttempt = -1
         form = QuizCreateForm(self.request, data=testParams.getData())
 
@@ -149,7 +141,7 @@ class QuizCreateFormTest(BaseTest):
         self.assertEqual(f'Quiz Max Attempt should be greater than 0.', form.errors.get('maxAttempt')[0])
 
     def testQuizDifficultyIsIncorrect(self):
-        testParams = self.TestParams(self.topic)
+        testParams = self.TestParams(self.subject)
         testParams.difficulty = 'NONE'
         form = QuizCreateForm(self.request, data=testParams.getData())
 
@@ -160,7 +152,7 @@ class QuizCreateFormTest(BaseTest):
             form.errors.get('__all__')[0])
 
     def testQuizPassMarkIsLessThanZero(self):
-        testParams = self.TestParams(self.topic)
+        testParams = self.TestParams(self.subject)
         testParams.passMark = -1
         form = QuizCreateForm(self.request, data=testParams.getData())
 
@@ -169,7 +161,7 @@ class QuizCreateFormTest(BaseTest):
         self.assertEqual(f'Pass mark should be between 0 and 100.', form.errors.get('passMark')[0])
 
     def testQuizPassMarkIsGreaterThanHundred(self):
-        testParams = self.TestParams(self.topic)
+        testParams = self.TestParams(self.subject)
         testParams.passMark = 101
         form = QuizCreateForm(self.request, data=testParams.getData())
 
@@ -184,7 +176,7 @@ class QuizCreateFormTest(BaseTest):
         pass
 
     def testQuizObjectCreatedCaseOne(self):
-        testParams = self.TestParams(self.topic)
+        testParams = self.TestParams(self.subject)
         form = QuizCreateForm(self.request, data=testParams.getData())
 
         self.assertTrue(form.is_valid())
@@ -193,7 +185,7 @@ class QuizCreateFormTest(BaseTest):
         self.assertEqual(testParams.name, newQuiz.name)
         self.assertEqual(testParams.description, newQuiz.description)
         self.assertEqual(generalOperations.parseStringToUrl(testParams.link), newQuiz.url)
-        self.assertEqual(self.topic, newQuiz.topic)
+        self.assertEqual(self.subject, newQuiz.subject)
         self.assertEqual(1, newQuiz.numberOfQuestions)
         self.assertEqual(testParams.quizDuration, newQuiz.quizDuration)
         self.assertEqual(testParams.maxAttempt, newQuiz.maxAttempt)
@@ -209,15 +201,14 @@ class QuizCreateFormTest(BaseTest):
 
     class TestParams:
 
-        def __init__(self, topic):
+        def __init__(self, subject):
             faker = Faker()
             CHECKBOX = ['on', 'off']
 
             self.name = faker.pystr_format()
             self.description = faker.paragraph()
             self.link = faker.paragraph()
-            self.subject = topic.subject.id
-            self.topic = topic.id
+            self.subject = subject.id
             self.quizDuration = faker.random_number(digits=2)
             self.maxAttempt = faker.random_number(digits=1)
             self.difficulty = random.choice([Quiz.Difficulty.EASY, Quiz.Difficulty.MEDIUM, Quiz.Difficulty.HARD])
@@ -235,7 +226,6 @@ class QuizCreateFormTest(BaseTest):
                 'description': self.description,
                 'link': self.link,
                 'subject': self.subject,
-                'topic': self.topic,
                 'quizDuration': self.quizDuration,
                 'maxAttempt': self.maxAttempt,
                 'difficulty': self.difficulty,

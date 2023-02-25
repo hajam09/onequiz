@@ -122,7 +122,7 @@ def createQuizView(request):
 @login_required
 def quizDetailView(request, quizId):
     try:
-        quiz = Quiz.objects.select_related('topic').get(id=quizId, creator=request.user)
+        quiz = Quiz.objects.select_related('subject').get(id=quizId, creator=request.user)
     except Quiz.DoesNotExist:
         raise Http404
 
@@ -276,7 +276,7 @@ class AttemptedQuizzesView(ListView):
     context_object_name = 'quizAttemptList'
 
     def get_queryset(self):
-        return QuizAttempt.objects.select_related('quiz__topic__subject').filter(user=self.request.user)
+        return QuizAttempt.objects.select_related('quiz__subject').filter(user=self.request.user)
 
 
 @login_required

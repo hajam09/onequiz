@@ -3,17 +3,15 @@ from django.urls import reverse
 
 from onequiz.operations import bakerOperations
 from onequiz.tests.BaseTestViews import BaseTestViews
-from quiz.models import QuizAttempt, Topic
+from quiz.models import QuizAttempt
 
 
 class AttemptedQuizzesViewTest(BaseTestViews):
 
     def setUp(self, path=reverse('quiz:attempted-quizzes-view')) -> None:
         super(AttemptedQuizzesViewTest, self).setUp(path)
-        bakerOperations.createSubjectsAndTopics(1, 2)
-        self.topic = Topic.objects.select_related('subject').first()
-
-        self.quiz = bakerOperations.createQuiz(self.request.user, self.topic)
+        self.subject = bakerOperations.createSubjects(1).first()
+        self.quiz = bakerOperations.createQuiz(self.request.user, self.subject)
         self.quizAttempts = [
             QuizAttempt(user=self.request.user, quiz_id=self.quiz.id)
             for _ in range(10)
