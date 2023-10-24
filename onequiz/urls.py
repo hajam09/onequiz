@@ -1,7 +1,7 @@
 """onequiz URL Configuration
 
 The `urlpatterns` list routes URLs to views. For more information please see:
-    https://docs.djangoproject.com/en/4.1.4/topics/http/urls/
+    https://docs.djangoproject.com/en/4.2.6/topics/http/urls/
 Examples:
 Function views
     1. Add an import:  from my_app import views
@@ -22,7 +22,7 @@ from django.urls import path
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('accounts/', include('accounts.urls')),
-    path('', include('quiz.urls')),
+    path('', include('core.urls')),
 ]
 
 if settings.DEBUG:
