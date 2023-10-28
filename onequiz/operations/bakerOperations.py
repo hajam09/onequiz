@@ -5,8 +5,8 @@ from django.conf import settings
 from django.contrib.auth.models import User
 from faker import Faker
 
+from core.models import Subject, Quiz, Question
 from onequiz.operations import generalOperations
-from quiz.models import Subject, Topic, Quiz, EssayQuestion, TrueOrFalseQuestion, MultipleChoiceQuestion, Question
 
 EMAIL_DOMAINS = ["@yahoo", "@gmail", "@outlook", "@hotmail"]
 DOMAINS = [".co.uk", ".com", ".co.in", ".net", ".us"]
@@ -44,51 +44,24 @@ def createUser(save=True):
     return userList.first() if save else userList[0]
 
 
-def createSubjectsAndTopics(numberOfSubjects=5, numberOfTopicsForEachSubject=10):
+def createSubjects(numberOfSubjects=5):
     faker = Faker()
-    BULK_SUBJECT_LIST = []
-    BULK_TOPIC_LIST = []
-
-    for _ in range(numberOfSubjects):
-        subject = Subject(name=faker.pystr_format(), description=faker.paragraph())
-        BULK_SUBJECT_LIST.append(subject)
-
-        for _ in range(numberOfTopicsForEachSubject):
-            BULK_TOPIC_LIST.append(
-                Topic(
-                    name=faker.pystr_format(),
-                    subject=subject,
-                    description=faker.paragraph()
-                )
-            )
+    BULK_SUBJECT_LIST = [
+        Subject(name=faker.pystr_format(), description=faker.paragraph()) for _ in range(numberOfSubjects)
+    ]
 
     Subject.objects.bulk_create(BULK_SUBJECT_LIST)
-    subjectNameUnique = list(set([i.name for i in BULK_SUBJECT_LIST]))
-    subjectList = Subject.objects.filter(name__in=subjectNameUnique)
-
-    topicNameUnique = []
-
-    for subject in subjectList:
-        for topic in BULK_TOPIC_LIST:
-            if subject.name == topic.subject.name:
-                topic.subject = subject
-
-            if topic.name not in topicNameUnique:
-                topicNameUnique.append(topic.name)
-
-    Topic.objects.bulk_create(BULK_TOPIC_LIST)
-    topicList = Topic.objects.filter(name__in=topicNameUnique)
-    return subjectList, topicList
 
 
-def createQuiz(creator=None, topic=None, save=True):
+def createQuiz(creator=None, subject=None, save=True):
     faker = Faker()
 
     newQuiz = Quiz()
     newQuiz.name = faker.pystr_format()
     newQuiz.description = faker.paragraph()
     newQuiz.url = generalOperations.parseStringToUrl(faker.paragraph())
-    newQuiz.topic = topic
+    newQuiz.subject = subject
+    newQuiz.topic = faker.pystr_format()
     newQuiz.numberOfQuestions = faker.random_number(digits=2, fix_len=False)
     newQuiz.quizDuration = faker.random_number(digits=2)
     newQuiz.maxAttempt = faker.random_number(digits=1)
@@ -96,7 +69,7 @@ def createQuiz(creator=None, topic=None, save=True):
     newQuiz.passMark = faker.random_number(digits=2)
     newQuiz.successText = faker.paragraph()
     newQuiz.failText = faker.paragraph()
-    # newQuiz.questions = None
+
     newQuiz.inRandomOrder = random.choice(BOOLEAN)
     newQuiz.answerAtEnd = random.choice(BOOLEAN)
     newQuiz.isExamPaper = random.choice(BOOLEAN)
@@ -110,52 +83,77 @@ def createQuiz(creator=None, topic=None, save=True):
     return newQuiz
 
 
-def createQuestion():
+def createRandomQuestions(numberOfQuestions=None, save=True):
+    if numberOfQuestions is None:
+        numberOfQuestions = random.randint(5, 50)
+
+    BULK_QUESTIONS = []
+
+    for _ in range(numberOfQuestions):
+        questionType = random.choice([Question.Type.ESSAY, Question.Type.TRUE_OR_FALSE, Question.Type.MULTIPLE_CHOICE])
+
+        if questionType == Question.Type.ESSAY:
+            BULK_QUESTIONS.append(createEssayQuestion(False))
+        elif questionType == Question.Type.TRUE_OR_FALSE:
+            BULK_QUESTIONS.append(createTrueOrFalseQuestion(False))
+        elif questionType == Question.Type.MULTIPLE_CHOICE:
+            BULK_QUESTIONS.append(createMultipleChoiceQuestionAndAnswers(False))
+
+    return Question.objects.bulk_create(BULK_QUESTIONS) if save else BULK_QUESTIONS
+
+
+def createEssayQuestion(save=True):
     faker = Faker()
-    question = Question.objects.create(
+    question = Question(
         figure=None,
         content=faker.paragraph(),
         explanation=faker.paragraph(),
         mark=faker.random_number(digits=2),
+        questionType=Question.Type.ESSAY,
+        answer=faker.paragraph()
     )
+
+    if save:
+        question.save()
     return question
 
 
-def createEssayQuestion():
+def createTrueOrFalseQuestion(save=True):
     faker = Faker()
-    essayQuestion = EssayQuestion.objects.create(
-        question=createQuestion(),
-        answer=faker.paragraph()
+    question = Question(
+        figure=None,
+        content=faker.paragraph(),
+        explanation=faker.paragraph(),
+        mark=faker.random_number(digits=2),
+        questionType=Question.Type.TRUE_OR_FALSE,
+        trueSelected=random.choice(BOOLEAN)
     )
-    return essayQuestion
+
+    if save:
+        question.save()
+    return question
 
 
-def createTrueOrFalseQuestion():
-    trueOrFalseQuestion = TrueOrFalseQuestion.objects.create(
-        question=createQuestion(),
-        isCorrect=random.choice(BOOLEAN),
-    )
-    return trueOrFalseQuestion
-
-
-def createMultipleChoiceQuestionAndAnswers(choices):
+def createMultipleChoiceQuestionAndAnswers(save=True):
     faker = Faker()
-    answerOrder = [
-        MultipleChoiceQuestion.Order.SEQUENTIAL, MultipleChoiceQuestion.Order.RANDOM, MultipleChoiceQuestion.Order.NONE
+    choices = [
+        {
+            'id': uuid.uuid4().hex,
+            'content': faker.paragraph(),
+            'isCorrect': random.choice(BOOLEAN)
+        } for _ in range(random.randint(2, 10))
     ]
 
-    if choices is None or choices == []:
-        choices = [
-            {
-                'id': uuid.uuid4().hex,
-                'content': faker.paragraph(),
-                'isCorrect': random.choice(BOOLEAN)
-            } for _ in range(random.randint(2, 10))
-        ]
-
-    multipleChoiceQuestion = MultipleChoiceQuestion.objects.create(
-        question=createQuestion(),
-        answerOrder=random.choice(answerOrder),
+    question = Question(
+        figure=None,
+        content=faker.paragraph(),
+        explanation=faker.paragraph(),
+        mark=faker.random_number(digits=2),
+        questionType=Question.Type.MULTIPLE_CHOICE,
+        choicesOrder=random.choice([Question.Order.SEQUENTIAL, Question.Order.RANDOM, Question.Order.NONE]),
         choices={'choices': choices}
     )
-    return multipleChoiceQuestion
+
+    if save:
+        question.save()
+    return question

@@ -1,0 +1,44 @@
+{% extends "accounts/base.html" %}
+{% load static %}
+{% block content %}
+    <link type="text/css" rel="stylesheet" href="{% static 'css/baseFormStyle.css' %}">
+    <div style="height: 30px;"></div>
+    <div class="container">
+        <div class="table-responsive-xl table-sm">
+            <table class="table">
+                <thead class="thead-light">
+                <tr>
+                    <th>Name</th>
+                    <th>Subject / Topic</th>
+                    <th>Status</th>
+                    <th>Action</th>
+                </tr>
+                </thead>
+                <tbody>
+                {% for quizAttempt in quizAttemptList %}
+                    <tr>
+                        <td>{{ quizAttempt.quiz.name }}</td>
+                        <td>
+                            <span class="badge badge-primary">{{ quizAttempt.quiz.subject }}</span>
+                            /
+                            <span class="badge badge-secondary">{{ quizAttempt.quiz.topic }}</span>
+                        </td>
+                        <td>{{ quizAttempt.get_status_display }}</td>
+                        <td>
+                            <span>
+                                <a href={{ quizAttempt.getAttemptUrl }}>View</a>
+                            </span>
+                            {% if quizAttempt.status == 'MARKED' %}
+                                <span>
+                                |
+                                <a href={{ quizAttempt.getAttemptResultUrl }}>Result</a>
+                            </span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+{% endblock %}
