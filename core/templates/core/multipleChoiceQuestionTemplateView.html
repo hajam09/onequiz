@@ -1,10 +1,8 @@
 {% extends "accounts/base.html" %}
 {% load static %}
 {% block content %}
-    <link type="text/css" rel="stylesheet" href="{% static 'css/baseFormStyle.css' %}">
-    <br>
-    <div class="container">
-        <form method="post" class="form-control" enctype="multipart/form-data">
+    <div class="container mt-5" id="idCardWideComponent">
+        <form method="post" enctype="multipart/form-data">
             {% csrf_token %}
             <legend>
                 <h2 class="heading-h2">{{ formTitle }}</h2>
@@ -60,9 +58,9 @@
                 <input type="submit" class="btn btn-primary" value="Submit">
             </div>
         </form>
-        <br><br>
     </div>
-	<script type="text/babel">
+    <div class="mt-5"></div>
+    <script type="text/babel">
 
         window.addEventListener('load', function () {
             if ($('#id_answerOrder').has('option').length === 0) {
@@ -74,7 +72,7 @@
             let fieldErrorListElement = $('#fieldErrorList');
             fieldErrorListElement.append('{{ form.errors }}');
 
-            if ( fieldErrorListElement.children().length === 0 )
+            if (fieldErrorListElement.children().length === 0)
                 return;
 
             let asElement = document.getElementById('fieldErrorList').firstElementChild.innerHTML;
@@ -111,17 +109,16 @@
             }
 
             render() {
-                const style1 = {
-                    paddingLeft: '0px',
-                }
+                const style1 = {paddingLeft: '0px'}
+                const checkboxSize = {height: '34px', width: '34px'}
                 return (
                     <div className="row">
-                        <div className="col-1">
+                        <div className="col-auto">
                             <div className="multiple-choice" style={style1}>
-                                <input type="checkbox" className="form-control"
+                                <input type="checkbox" className="form-control" style={checkboxSize}
                                        name={"answerChecked-" + this.props.counter}
                                        defaultChecked={this.props.isChecked}></input>
-                                <label className="form-label">&nbsp;</label>
+                                <div className="mt-2"></div>
                             </div>
                         </div>
                         <div className="col">
@@ -164,7 +161,8 @@
 
             increaseRow = () => {
                 let tempList = this.state.choiceComponentList;
-                tempList.push(<ChoiceComponent key={tempList.length + 1} counter={tempList.length + 1} enteredAnswer={''} isChecked={false}/>);
+                tempList.push(<ChoiceComponent key={tempList.length + 1} counter={tempList.length + 1}
+                                               enteredAnswer={''} isChecked={false}/>);
                 this.updateListState(tempList);
             }
 
@@ -175,9 +173,7 @@
             }
 
             render() {
-                const style1 = {
-                    marginRight: '5px',
-                }
+                const style1 = {marginRight: '5px'}
                 return (
                     <div>
                         <span className="form-label">Enter answers in each field and select the correct answers.</span>
@@ -202,14 +198,14 @@
         }
 
         ReactDOM.render(<AnswerChoiceComponent/>, document.getElementById('answersContainerList'));
-	</script>
-	<script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"
-			integrity="sha512-8Q6Y9XnTbOE+JNvjBQwJ2H8S+UV4uA6hiRykhdtIyDYZ2TprdNmWOUaKdGzOhyr4dCyk287OejbPvwl7lrfqrQ=="
-			crossorigin="anonymous" referrerpolicy="no-referrer"></script>
-	<script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"
-			integrity="sha512-MOCpqoRoisCTwJ8vQQiciZv0qcpROCidek3GTFS6KTk2+y7munJIlKCVkFCYY+p3ErYFXCjmFjnfTTRSC1OHWQ=="
-			crossorigin="anonymous" referrerpolicy="no-referrer"></script>
-	<script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/6.26.0/babel.min.js"
-			integrity="sha512-kp7YHLxuJDJcOzStgd6vtpxr4ZU9kjn77e6dBsivSz+pUuAuMlE2UTdKB7jjsWT84qbS8kdCWHPETnP/ctrFsA=="
-			crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    </script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"
+            integrity="sha512-8Q6Y9XnTbOE+JNvjBQwJ2H8S+UV4uA6hiRykhdtIyDYZ2TprdNmWOUaKdGzOhyr4dCyk287OejbPvwl7lrfqrQ=="
+            crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"
+            integrity="sha512-MOCpqoRoisCTwJ8vQQiciZv0qcpROCidek3GTFS6KTk2+y7munJIlKCVkFCYY+p3ErYFXCjmFjnfTTRSC1OHWQ=="
+            crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/6.26.0/babel.min.js"
+            integrity="sha512-kp7YHLxuJDJcOzStgd6vtpxr4ZU9kjn77e6dBsivSz+pUuAuMlE2UTdKB7jjsWT84qbS8kdCWHPETnP/ctrFsA=="
+            crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 {% endblock %}

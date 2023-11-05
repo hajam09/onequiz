@@ -8,6 +8,7 @@ app_name = "core"
 
 urlpatterns = [
     path('', views.indexView, name='index-view'),
+    path('quiz-list', views.quizListView, name='quiz-list-view'),
     path('quiz/create/', views.quizCreateView, name='quiz-create-view'),
     path('quiz/<int:quizId>/update/', views.quizUpdateView, name='quiz-update-view'),
     path('quiz/<int:quizId>/create-essay-question/', views.essayQuestionCreateView, name='essay-question-create-view'),

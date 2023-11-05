@@ -2,15 +2,7 @@
 {% load templateTags %}
 {% load static %}
 {% block content %}
-    <link type="text/css" rel="stylesheet" href="{% static 'css/baseFormStyle.css' %}">
-    <style>
-        .badge {
-            border-radius: 1rem;
-        }
-    </style>
-    <br>
-
-    <div class="container">
+    <div class="container mt-5">
         <form method="GET" action="{{ request.path }}">
             <div class="row">
                 <div class="col">
@@ -18,14 +10,15 @@
                            placeholder="Search for a quiz..."/>
                 </div>
                 <div class="col-auto">
-                    <input type="submit" class="btn btn-secondary btn-sm" value="Search"/>
+                    <input type="submit" class="btn btn-primary" value="Search"/>
                 </div>
             </div>
         </form>
-        <br><br>
+        <br>
 
         {% for quiz in quizList %}
-            <div class="col form-control">
+            <div class="container mt-3 form-control"
+                 style="background-color: #fff; border-radius: 10px; padding: 10px; box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);">
                 <h5><a href="{{ quiz.getUrl }}">{{ quiz.name }}</a></h5>
                 <p>Description: {{ quiz.description }}</p>
                 <h6>
@@ -33,8 +26,8 @@
                     <span class="badge badge-secondary">Topic: {{ quiz.topic }}</span>
                 </h6>
             </div>
-            <br>
         {% endfor %}
+        <br>
         {% paginationComponent request quizList %}
     </div>
 {% endblock %}

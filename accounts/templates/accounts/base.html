@@ -23,6 +23,29 @@
             font-family: "Roboto", sans-serif;
             color: black;
         }
+
+        /* Remove Arrows/Spinners in Input field type number */
+
+        input::-webkit-inner-spin-button,
+        input::-webkit-outer-spin-button {
+            -webkit-appearance: none;
+            margin: 0
+        }
+
+        /* Base 'Card' component style */
+        #idCardWideComponent {
+            background-color: #fff;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+        }
+        #idCardNarrowComponent {
+            background-color: #fff;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+            width: 25rem;
+        }
     </style>
 
     {% navigationPanel request as navigationPanel %}
