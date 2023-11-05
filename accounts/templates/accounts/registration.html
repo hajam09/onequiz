@@ -22,8 +22,9 @@
                     <p class="text-muted text-center small">
                         By clicking the Register Now button, you agree to our
                         <br>
-                        <a href="#" target="_blank">Terms &amp; Conditions</a>, and
-                        <a href="#" target="_blank">Privacy Policy</a>
+                        <a href="{% url 'accounts:extras' %}?page=terms-and-conditions" target="_blank">Terms &amp;
+                            Conditions</a>, and
+                        <a href="{% url 'accounts:extras' %}?page=privacy-policy" target="_blank">Privacy Policy</a>
                     </p>
                     <div class="text-muted text-center">
                         Already have an account? <a href="{% url 'accounts:login' %}">Sign in</a>

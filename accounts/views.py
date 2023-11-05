@@ -5,6 +5,7 @@ from django.contrib import messages
 from django.contrib.auth.models import User
 from django.contrib.auth.tokens import PasswordResetTokenGenerator
 from django.core.cache import cache
+from django.http import Http404
 from django.shortcuts import redirect
 from django.shortcuts import render
 from django.utils.encoding import DjangoUnicodeDecodeError
@@ -149,3 +150,14 @@ def passwordReset(request, encodedId, token):
 
     TEMPLATE = 'passwordResetForm' if user is not None and verifyToken else 'activateFailed'
     return render(request, 'accounts/{}.html'.format(TEMPLATE), context)
+
+
+def extras(request):
+    if request.GET.get('page') == 'privacy-policy':
+        template = 'accounts/privacyPolicy.html'
+    elif request.GET.get('page') == 'terms-and-conditions':
+        template = 'accounts/termsAndConditions.html'
+    else:
+        raise Http404
+
+    return render(request, template)
