@@ -13,12 +13,24 @@ from core.forms import (
     EssayQuestionUpdateForm, MultipleChoiceQuestionUpdateForm, TrueOrFalseQuestionUpdateForm,
     QuizCreateForm, QuizUpdateForm,
 )
-from core.models import Quiz, Question, QuizAttempt, Result
+from core.models import Quiz, Question, QuizAttempt, Result, Subject
 from onequiz.operations import generalOperations
 
 
 def indexView(request):
-    quizList = generalOperations.performComplexQuizSearch(request.GET.get('query'))
+    context = {
+        'subjects': Subject.objects.all()
+    }
+    return render(request, 'core/index.html', context)
+
+
+def quizListView(request):
+    filterList = [
+        reduce(
+            operator.and_, [Q(**{'isDraft': False})]
+        )
+    ]
+    quizList = generalOperations.performComplexQuizSearch(request.GET.get('query'), filterList)
 
     paginator = Paginator(quizList, 10)
     page = request.GET.get('page')

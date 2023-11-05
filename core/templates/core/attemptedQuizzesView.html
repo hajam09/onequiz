@@ -1,16 +1,15 @@
 {% extends "accounts/base.html" %}
 {% load static %}
 {% block content %}
-    <link type="text/css" rel="stylesheet" href="{% static 'css/baseFormStyle.css' %}">
-    <div style="height: 30px;"></div>
-    <div class="container">
+    <div class="container mt-5" id="idCardWideComponent">
         <div class="table-responsive-xl table-sm">
             <table class="table">
-                <thead class="thead-light">
+                <thead class="thead-dark">
                 <tr>
                     <th>Name</th>
                     <th>Subject / Topic</th>
                     <th>Status</th>
+                    <th>Date</th>
                     <th>Action</th>
                 </tr>
                 </thead>
@@ -24,6 +23,7 @@
                             <span class="badge badge-secondary">{{ quizAttempt.quiz.topic }}</span>
                         </td>
                         <td>{{ quizAttempt.get_status_display }}</td>
+                        <td>{{ quizAttempt.createdDttm }}</td>
                         <td>
                             <span>
                                 <a href={{ quizAttempt.getAttemptUrl }}>View</a>

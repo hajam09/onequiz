@@ -1,10 +1,8 @@
 {% extends "accounts/base.html" %}
 {% load static %}
 {% block content %}
-    <link type="text/css" rel="stylesheet" href="{% static 'css/baseFormStyle.css' %}">
-    <br>
-    <div class="container">
-        <form method="post" class="form-control" enctype="multipart/form-data">
+    <div class="container mt-5" id="idCardWideComponent">
+        <form method="post" enctype="multipart/form-data">
             {% csrf_token %}
             <legend>
                 <h2 class="heading-h2">{{ formTitle }}</h2>
@@ -29,7 +27,6 @@
                     <span class="form-label">{{ field.label }}</span>
                     <fieldset class="inline">
                         {% for choice in form.isCorrect %}
-
                             <div class="multiple-choice">
                                 <input class="form-control" value="{{ choice.choice_label }}"
                                        type="radio" name="{{ field.html_name }}" required>
@@ -54,6 +51,5 @@
                 <input type="reset" class="btn btn-danger" value="Reset">
             </div>
         </form>
-        <br><br>
     </div>
 {% endblock %}

@@ -1,7 +1,6 @@
 {% extends "accounts/base.html" %}
 {% load static %}
 {% block content %}
-    <link type="text/css" rel="stylesheet" href="{% static 'css/baseFormStyle.css' %}">
     <br>
     <div class="container" style="color: black;">
         {% if quiz.creator_id == user.id %}
@@ -17,8 +16,8 @@
             </div>
         {% endif %}
         <br>
-        <div class="row" style="margin: 0">
-            <form method="post" class="form-control">
+        <div id="idCardWideComponent">
+            <form method="post">
                 {% csrf_token %}
                 <legend>
                     <h2 class="heading-h2">{{ formTitle }}</h2>
@@ -36,9 +35,18 @@
                         <span class="form-label">{{ field.label }}</span>
                         {{ field }}
                     {% elif field.field.widget.input_type == 'checkbox' %}
-                        <div class="multiple-choice">
-                            {{ field }}
-                            <label class="form-label">{{ field.label }}</label>
+                        <div class="row">
+                            <div class="col-auto">
+                                <div class="multiple-choice">
+                                    <input type="checkbox" name="{{ field.name }}" class="form-control"
+                                           id="{{ field.id_for_label }}" style="height: 34px; width: 34px;" name=""
+                                            {% if field.value %} checked {% endif %}/>
+                                    <div class="mt-2"></div>
+                                </div>
+                            </div>
+                            <div class="col">
+                                <label class="form-label" style="padding-top: 5px">{{ field.label }}</label>
+                            </div>
                         </div>
                     {% else %}
                         <span class="form-label">{{ field.label }}</span>
@@ -53,14 +61,15 @@
                 {% endfor %}
 
                 {% if quiz.creator_id == user.id or not quiz %}
-                    <br><br><br><br><br>
-
                     <div class="text-right">
                         <input type="submit" class="btn btn-primary" value="Submit">
                         <input type="reset" class="btn btn-danger" value="Reset">
                     </div>
                 {% else %}
-                    <button type="button" class="btn btn-outline-primary float-right" onclick=redirectToLoginViewOrQuizAttempt('{{ quiz.id }}')>Begin Quiz</button>
+                    <div class="text-right">
+                        <input type="button" class="btn btn-outline-primary" value="Begin Quiz"
+                               onclick=redirectToLoginViewOrQuizAttempt('{{ quiz.id }}')>
+                    </div>
                 {% endif %}
             </form>
         </div>

@@ -1,40 +1,32 @@
 {% extends "accounts/base.html" %}
 {% load static %}
 {% block content %}
-    <div style="height: 70px;"></div>
-    <div class="container">
-        <div class="card">
-            <div class="card-body">
-                <legend>
-                    <h2 class="heading-h2">Quiz Results</h2>
-                </legend>
-                <h4 class="text-center">Status: {{ result.quizAttempt.status }}</h4>
-
-                <div class="container">
-                    <dl class="row">
-                        {% for item in data %}
-                            {% if item is not None %}
-                                <dd class="col-sm-3">{{ item.key }}</dd>
-                                <dt class="col-sm-9">{{ item.value }}</dt>
-                            {% else %}
-                                <br>
-                            {% endif %}
-                        {% endfor %}
-                    </dl>
+    <div class="container mt-5" id="idCardWideComponent">
+        <legend>
+            <h2 class="heading-h2">Quiz Results</h2>
+        </legend>
+        <h4 class="text-center">Status: {{ result.quizAttempt.status }}</h4>
+        <dl class="row">
+            {% for item in data %}
+                {% if item is not None %}
+                    <dd class="col-sm-3">{{ item.key }}</dd>
+                    <dt class="col-sm-9">{{ item.value }}</dt>
+                {% else %}
                     <br>
-                    <h5 class="text-center">
-                        {% if result.score >= result.quizAttempt.quiz.passMark %}
-                            <div class="alert alert-success" role="alert">
-                                {{ result.quizAttempt.quiz.successText }}
-                            </div>
-                        {% else %}
-                            <div class="alert alert-danger" role="alert">
-                                {{ result.quizAttempt.quiz.failText }}
-                            </div>
-                        {% endif %}
-                    </h5>
+                {% endif %}
+            {% endfor %}
+        </dl>
+        <div class="mt-4"></div>
+        <h5 class="text-center">
+            {% if result.score >= result.quizAttempt.quiz.passMark %}
+                <div class="alert alert-success" role="alert">
+                    {{ result.quizAttempt.quiz.successText }}
                 </div>
-            </div>
-        </div>
+            {% else %}
+                <div class="alert alert-danger" role="alert">
+                    {{ result.quizAttempt.quiz.failText }}
+                </div>
+            {% endif %}
+        </h5>
     </div>
 {% endblock %}

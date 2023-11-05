@@ -1,0 +1,66 @@
+{% extends 'accounts/base.html' %}
+{% load templateTags %}
+{% load static %}
+{% block content %}
+    <div class='container text-center mt-5' id='idCardWideComponent'>
+        <div class='jumbotron'>
+            <h1 class='display-4'>Welcome to OneQuiz</h1>
+            <p class='lead'>Test your knowledge with our fun quizzes!</p>
+        </div>
+
+        <div class='row mt-4'>
+            <div class='col-md-6 offset-md-3'>
+                <div class='card'>
+                    <div class='card-body'>
+                        <div class='form-group'>
+                            <label for='searchYourself' class='h4'>Search for a quiz</label>
+                            <input type='text' class='form-control' id='searchYourself'>
+                        </div>
+                        <div class='form-group'>
+                            <label for='subjectList' class='h4'>Or search by subject</label>
+                            <select class='form-control' id='subjectList' name='subjectList'>
+                                <option value='-1'>See all quizzes</option>
+                                {% for subject in subjects %}
+                                    <option value='{{ subject }}'>{{ subject }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <button type='submit' class='btn btn-primary btn-block' onclick='getQuizzes();'>Search</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+
+        const SEARCH_YOURSELF_COMPONENT = $('#searchYourself');
+
+        function isEmptyOrSpaces(str) {
+            return str === null || str.match(/^ *$/) !== null;
+        }
+
+        SEARCH_YOURSELF_COMPONENT.on('keyup', function (e) {
+            if (e.key === 'Enter' || e.keyCode === 13) {
+                getQuizzes();
+            }
+        });
+
+        function getQuizzes() {
+            const quizListView = '{% url 'core:quiz-list-view' %}';
+
+            const searchYourSelf = SEARCH_YOURSELF_COMPONENT.val();
+            if (!isEmptyOrSpaces(searchYourSelf)) {
+                window.location.href = quizListView + '?query=' + searchYourSelf;
+                return;
+            }
+
+            const selectedValue = $('#subjectList').find(':selected').val();
+            if (selectedValue === '-1') {
+                window.location.href = quizListView;
+            } else {
+                window.location.href = quizListView + '?query=' + selectedValue;
+            }
+        }
+    </script>
+{% endblock %}

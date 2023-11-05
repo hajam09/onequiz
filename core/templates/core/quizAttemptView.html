@@ -1,10 +1,8 @@
 {% extends "accounts/base.html" %}
 {% load static %}
 {% block content %}
-    <link type="text/css" rel="stylesheet" href="{% static 'css/baseFormStyle.css' %}">
-    <br>
-    <div class="container">
-        <div class="row form-control" id="question-container">
+    <div class="container mt-5" id="idCardWideComponent">
+        <div id="question-container">
         </div>
     </div>
 
@@ -121,16 +119,8 @@
             }
 
             render() {
-
-                const style1 = {
-                    width: '40px',
-                    paddingLeft: '10px',
-                    paddingRight: '10px'
-                }
-
-                const style2 = {
-                    fontSize: '26px'
-                }
+                const style1 = {width: '40px', paddingLeft: '10px', paddingRight: '10px'}
+                const style2 = {fontSize: '26px'}
                 return (
                     <div className="row float-right">
                         <div className="col-auto">
@@ -215,9 +205,7 @@
             }
 
             renderResponseContainer = () => {
-                const style1 = {
-                    borderRadius: 0,
-                }
+                const style1 = {borderRadius: 0}
                 return (
                     <div>
                         <h5>Your Answer</h5>
@@ -253,26 +241,25 @@
             }
 
             renderResponseContainer = () => {
+                const style1 = {marginRight: '30px'}
+                const style2 = {height: '34px', width: '34px'}
                 return (
                     <div>
                         <h5>Is the answer True or False?</h5>
-                        <fieldset className="inline">
-                            <div className="multiple-choice">
-                                <input className="form-control" value="True" type="radio" name="isCorrect"
-                                       onChange={this.whenTrueIsClicked}
-                                       required=""
-                                       checked={this.props.question.response.selectedOption != null && this.props.question.response.selectedOption === true}></input>
-                                <label className="form-label">True</label>
-                            </div>
+                        <div className="mt-1"></div>
+                        <div className="form-check form-check-inline" style={style1}>
+                            <input className="form-check-input" type="radio" style={style2} name="isCorrect"
+                                   value="True" onChange={this.whenTrueIsClicked} required=""
+                                   checked={this.props.question.response.selectedOption != null && this.props.question.response.selectedOption === true}></input>
+                            <label className="form-check-label">True</label>
+                        </div>
 
-                            <div className="multiple-choice">
-                                <input className="form-control" value="False" type="radio" name="isCorrect"
-                                       onChange={this.whenFalseIsClicked}
-                                       required=""
-                                       checked={this.props.question.response.selectedOption != null && this.props.question.response.selectedOption === false}></input>
-                                <label className="form-label">False</label>
-                            </div>
-                        </fieldset>
+                        <div className="form-check form-check-inline" style={style1}>
+                            <input className="form-check-input" type="radio" style={style2} name="isCorrect"
+                                   value="False" onChange={this.whenFalseIsClicked} required=""
+                                   checked={this.props.question.response.selectedOption != null && this.props.question.response.selectedOption === false}></input>
+                            <label className="form-check-label">False</label>
+                        </div>
                     </div>
                 )
             }
@@ -292,18 +279,17 @@
             }
 
             render() {
-                const style1 = {
-                    paddingLeft: '0px',
-                }
+                const style1 = {paddingLeft: '0px'}
+                const checkboxSize = {height: '34px', width: '34px'}
                 return (
                     <div className="row">
-                        <div className="col-1">
+                        <div className="col-auto">
                             <div className="multiple-choice" style={style1}>
-                                <input type="checkbox" className="form-control" name="answerChecked2"
+                                <input type="checkbox" className="form-control" name="answerChecked2" style={checkboxSize}
                                        ref="checkboxInputRef"
                                        checked={this.props.choice.isChecked}
                                        onChange={this.updateAnswerForThisQuestion}></input>
-                                <label className="form-label">&nbsp;</label></div>
+                                <div className="mt-2"></div></div>
                         </div>
                         <div className="col">
                             <input type="text" className="form-control col" disabled
@@ -352,9 +338,7 @@
 
             renderValidOrInvalidStatement = () => {
 
-                const style2 = {
-                    fontSize: '9.5px',
-                }
+                const style2 = {fontSize: '9.5px'}
                 if (this.state.isValid)
                     return (
                         <span>
@@ -372,9 +356,7 @@
             }
 
             render() {
-                const style1 = {
-                    height: '3px',
-                }
+                const style1 = {height: '3px'}
                 return (
                     <div>
                         {this.renderValidOrInvalidStatement()}
@@ -404,9 +386,7 @@
 
             renderValidOrInvalidIcon = () => {
 
-                const style2 = {
-                    fontSize: '9.5px',
-                }
+                const style2 = {fontSize: '9.5px'}
                 if (this.state.isValid)
                     return (
                         <span>
@@ -423,9 +403,7 @@
             }
 
             render() {
-                const style1 = {
-                    height: '3px',
-                }
+                const style1 = {height: '3px'}
                 return (
                     <div>
                         {this.renderValidOrInvalidIcon()}
@@ -715,7 +693,7 @@
 
                 let tempProgress = this.state.progress;
                 tempProgress.clazz = clazz;
-                tempProgress.percentage = percentage;
+                tempProgress.percentage = Math.round(percentage * 100) / 100;
 
                 this.setState({
                     progress: tempProgress
@@ -920,10 +898,7 @@
             }
 
             displayProgressBarComponent = () => {
-                const style1 = {
-                    width: this.state.progress.percentage + "%"
-                }
-
+                const style1 = {width: this.state.progress.percentage + "%"}
                 if (this.state.mode.canEdit()) {
                     return (
                         <span>
