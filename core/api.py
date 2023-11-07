@@ -5,6 +5,7 @@ from json import JSONDecodeError
 from django.db import transaction
 from django.http import JsonResponse
 from django.urls import reverse
+from django.utils import timezone
 from django.views import View
 
 from core.models import Question, QuizAttempt, Response, Result
@@ -115,6 +116,14 @@ class QuizAttemptQuestionsApiEventVersion1Component(View):
             quizAttempt.status = QuizAttempt.Status.MARKED
         else:
             quizAttempt.status = QuizAttempt.Status.SUBMITTED
+            Result.objects.create(
+                quizAttempt=quizAttempt,
+                timeSpent=(timezone.now() - quizAttempt.createdDttm).seconds,
+                numberOfCorrectAnswers=0,
+                numberOfPartialAnswers=0,
+                numberOfWrongAnswers=0,
+                score=0.00
+            )
 
         quizAttempt.save()
         Response.objects.bulk_update(
@@ -143,7 +152,6 @@ class QuizMarkingOccurrenceApiEventVersion1Component(View):
 
         if quizAttemptManualMarking.mark():
             resultObject = quizAttemptManualMarking.result
-            resultObject.versionNo = Result.objects.filter(quizAttempt=quizAttempt).count() + 1
             quizAttempt.status = QuizAttempt.Status.MARKED
             resultObject.save()
             quizAttempt.save()

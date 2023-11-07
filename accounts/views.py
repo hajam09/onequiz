@@ -161,3 +161,11 @@ def extras(request):
         raise Http404
 
     return render(request, template)
+
+
+def handler404(request, exception):
+    return render(request, 'accounts/404.html', status=404)
+
+
+def handler500(request):
+    return render(request, 'accounts/500.html', status=500)

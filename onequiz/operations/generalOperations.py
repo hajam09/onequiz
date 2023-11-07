@@ -227,12 +227,9 @@ class QuizAttemptManualMarking:
             totalAwardedMark += response.mark
 
         Response.objects.bulk_update(self.responseList, ['mark'])
-        self.result = Result(
-            quizAttempt=self.quizAttempt,
-            timeSpent=(timezone.now() - self.quizAttempt.createdDttm).seconds,
-            numberOfCorrectAnswers=numberOfCorrectAnswers,
-            numberOfPartialAnswers=numberOfPartialAnswers,
-            numberOfWrongAnswers=numberOfWrongAnswers,
-            score=round(totalAwardedMark / totalQuizMark * 100, 2)
-        )
+        self.result = Result.objects.filter(quizAttempt=self.quizAttempt).last()
+        self.result.numberOfCorrectAnswers = numberOfCorrectAnswers
+        self.result.numberOfPartialAnswers = numberOfPartialAnswers
+        self.result.numberOfWrongAnswers = numberOfWrongAnswers
+        self.result.score = round(totalAwardedMark / totalQuizMark * 100, 2)
         return True

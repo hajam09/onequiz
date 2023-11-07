@@ -62,7 +62,7 @@ class QuizAttemptResultViewTest(BaseTestViews):
         response = self.get()
         self.assertEquals(response.status_code, 200)
 
-    def testUnrelatedUserViewsResultThenReturnForbidden(self):
+    def testUnrelatedUserViewsResultThenReturn404(self):
         anotherUser = bakerOperations.createUser()
         self.quizAttempt.user = anotherUser
         self.quizAttempt.quiz.creator = anotherUser
@@ -70,6 +70,5 @@ class QuizAttemptResultViewTest(BaseTestViews):
         self.quizAttempt.quiz.save()
 
         response = self.get()
-        self.assertEquals(response.status_code, 403)
-        self.assertEqual(response.content, str.encode('Forbidden'))
-        self.assertEqual(response.reason_phrase, 'Forbidden')
+        self.assertEquals(response.status_code, 404)
+        self.assertTemplateUsed(response, 'accounts/404.html')

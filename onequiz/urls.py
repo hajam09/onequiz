@@ -34,3 +34,6 @@ if settings.DEBUG:
     urlpatterns += [
         path('__debug__/', include(debug_toolbar.urls)),
     ]
+
+handler404 = 'accounts.views.handler404'
+handler500 = 'accounts.views.handler500'
