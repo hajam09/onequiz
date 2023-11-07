@@ -1,0 +1,12 @@
+{% extends 'accounts/base.html' %}
+{% load templateTags %}
+{% load static %}
+{% block content %}
+    <div class='container text-center mt-5' id='idCardWideComponent'>
+        <div class='jumbotron'>
+            <span class='display-1 d-block'>500</span>
+            <div class='mb-4 lead'>Internal Server Error</div>
+            <a href='{% url 'core:index-view' %}' class='btn btn-link'>Back to Home</a>
+        </div>
+    </div>
+{% endblock %}

@@ -4,7 +4,7 @@ import random
 from django.urls import reverse
 from faker import Faker
 
-from core.models import Subject, QuizAttempt, Question
+from core.models import Subject, QuizAttempt, Question, Result
 from onequiz.operations import bakerOperations
 from onequiz.operations.generalOperations import QuestionAndResponse
 from onequiz.tests.BaseTestAjax import BaseTestAjax
@@ -110,6 +110,9 @@ class QuizAttemptQuestionsApiEventVersion1ComponentTest(BaseTestAjax):
         self.assertEqual(quizAttempt.status, QuizAttempt.Status.SUBMITTED)
         self.assertTrue(len(quizQuestionList) == quizAttempt.responses.count() == len(responseListData))
 
+        result = Result.objects.filter(quizAttempt_id=quizAttemptId).last()
+        self.assertIsNotNone(result)
+
         for a, b in zip(quizAttempt.responses.all(), responseListData):
             self.assertEqual(a.pk, b['response']['id'])
             self.assertEqual(a.answer, b['response']['text'])
@@ -136,6 +139,9 @@ class QuizAttemptQuestionsApiEventVersion1ComponentTest(BaseTestAjax):
         self.assertTrue(ajaxResponse['success'])
         self.assertEqual(quizAttempt.status, QuizAttempt.Status.MARKED)
         self.assertTrue(len(quizQuestionList) == quizAttempt.responses.count() == len(responseListData))
+
+        result = Result.objects.filter(quizAttempt_id=quizAttemptId).last()
+        self.assertIsNotNone(result)
 
         for a, b in zip(quizAttempt.responses.all(), responseListData):
             self.assertEqual(a.pk, b['response']['id'])
@@ -164,6 +170,9 @@ class QuizAttemptQuestionsApiEventVersion1ComponentTest(BaseTestAjax):
         self.assertEqual(quizAttempt.status, QuizAttempt.Status.MARKED)
         self.assertTrue(len(quizQuestionList) == quizAttempt.responses.count() == len(responseListData))
 
+        result = Result.objects.filter(quizAttempt_id=quizAttemptId).last()
+        self.assertIsNotNone(result)
+
         for a, b in zip(quizAttempt.responses.all(), responseListData):
             self.assertEqual(a.pk, b['response']['id'])
             self.assertListEqual(a.choices['choices'], b['response']['choices'])
@@ -190,6 +199,9 @@ class QuizAttemptQuestionsApiEventVersion1ComponentTest(BaseTestAjax):
         self.assertTrue(ajaxResponse['success'])
         self.assertEqual(quizAttempt.status, QuizAttempt.Status.SUBMITTED)
         self.assertTrue(len(quizQuestionList) == quizAttempt.responses.count() == len(responseListData))
+
+        result = Result.objects.filter(quizAttempt_id=quizAttemptId).last()
+        self.assertIsNotNone(result)
 
         for a, b in zip(quizAttempt.responses.all(), responseListData):
             if b['type'] == 'EssayQuestion':
@@ -224,6 +236,9 @@ class QuizAttemptQuestionsApiEventVersion1ComponentTest(BaseTestAjax):
         self.assertTrue(ajaxResponse['success'])
         self.assertEqual(quizAttempt.status, QuizAttempt.Status.MARKED)
         self.assertTrue(len(quizQuestionList) == quizAttempt.responses.count() == len(responseListData))
+
+        result = Result.objects.filter(quizAttempt_id=quizAttemptId).last()
+        self.assertIsNotNone(result)
 
         for a, b in zip(quizAttempt.responses.all(), responseListData):
             if b['type'] == 'TrueOrFalseQuestion':

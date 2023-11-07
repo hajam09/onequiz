@@ -272,15 +272,13 @@ def quizAttemptView(request, attemptId):
 
 
 def quizAttemptResultView(request, attemptId):
-    result = Result.objects.filter(quizAttempt__id=attemptId).select_related(
-        'quizAttempt__user', 'quizAttempt__quiz__creator'
-    ).last()
-    if result is None:
-        # TODO: Raise a template that quiz attempt does not have a result or its not yet to be viewed.
-        raise Http404
+    result = Result.objects.filter(
+        Q(quizAttempt_id=attemptId, quizAttempt__user_id=request.user.id) |
+        Q(quizAttempt_id=attemptId, quizAttempt__quiz__creator_id=request.user.id)
+    ).select_related('quizAttempt__quiz__creator').last()
 
-    if not result.hasViewPermission(request.user):
-        return HttpResponseForbidden('Forbidden')
+    if result is None:
+        raise Http404
 
     data = [
         {'key': 'Quiz', 'value': result.quizAttempt.quiz.name},

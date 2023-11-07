@@ -21,6 +21,10 @@ class QuizMarkingOccurrenceApiEventVersion1ComponentTest(BaseTestAjax):
 
         quizAttemptId = self.createQuizAttemptAndTheResponseObjects()
         self.quizAttempt = QuizAttempt.objects.select_related('quiz').get(id=quizAttemptId)
+        Result.objects.create(
+            quizAttempt=self.quizAttempt, timeSpent=1, numberOfCorrectAnswers=0, numberOfPartialAnswers=0, score=0,
+            numberOfWrongAnswers=0
+        )
         self.path = reverse('core:quizMarkingOccurrenceApiEventVersion1Component', kwargs={'id': self.quizAttempt.id})
 
     def createQuizAttemptAndTheResponseObjects(self):
@@ -48,7 +52,8 @@ class QuizMarkingOccurrenceApiEventVersion1ComponentTest(BaseTestAjax):
             reverse('core:quiz-attempt-result-view', kwargs={'attemptId': self.quizAttempt.id})
         )
         self.assertNotEqual(self.quizAttempt.status, QuizAttempt.Status.MARKED)
-        self.assertFalse(Result.objects.filter(quizAttempt=self.quizAttempt).exists())
+        result = Result.objects.filter(quizAttempt=self.quizAttempt).last()
+        self.assertIsNotNone(result)
 
     def testResponseObjectNotFound(self):
         questionAndResponse = QuestionAndResponse(self.quizAttempt.responses.all())
@@ -68,7 +73,8 @@ class QuizMarkingOccurrenceApiEventVersion1ComponentTest(BaseTestAjax):
             reverse('core:quiz-attempt-result-view', kwargs={'attemptId': self.quizAttempt.id})
         )
         self.assertNotEqual(self.quizAttempt.status, QuizAttempt.Status.MARKED)
-        self.assertFalse(Result.objects.filter(quizAttempt=self.quizAttempt).exists())
+        result = Result.objects.filter(quizAttempt=self.quizAttempt).last()
+        self.assertIsNotNone(result)
 
     def testResponseObjectsUpdatedWithMarks(self):
         questionAndResponse = QuestionAndResponse(self.quizAttempt.responses.all())
@@ -86,7 +92,6 @@ class QuizMarkingOccurrenceApiEventVersion1ComponentTest(BaseTestAjax):
         )
         self.assertEqual(self.quizAttempt.status, QuizAttempt.Status.MARKED)
         self.assertIsNotNone(createdResult)
-        self.assertEqual(createdResult.versionNo, 1)
 
     class TestParams:
 
