@@ -30,7 +30,7 @@ class QuizCreateTrueOrFalseQuestionViewTest(BaseTestViews):
             content='test content',
             explanation='test explanation',
             mark=-1,
-            isCorrect=True,
+            trueOrFalse=True,
         )
         response = self.post(testParams.getData())
         self.assertEquals(response.status_code, 200)
@@ -45,7 +45,7 @@ class QuizCreateTrueOrFalseQuestionViewTest(BaseTestViews):
             content='test content',
             explanation='test explanation',
             mark=80,
-            isCorrect=True,
+            trueOrFalse=True,
         )
         response = self.post(testParams.getData())
         question = self.quiz.getQuestions().first()
@@ -64,14 +64,12 @@ class QuizCreateTrueOrFalseQuestionViewTest(BaseTestViews):
 
     class TestParams:
 
-        def __init__(self, figure=None, content=None, explanation=None, mark=None, isCorrect=None):
+        def __init__(self, figure=None, content=None, explanation=None, mark=None, trueOrFalse=None):
             self.figure = figure
             self.content = content
             self.explanation = explanation
             self.mark = mark
-            self.isCorrect = isCorrect
-
-            pass
+            self.trueOrFalse = trueOrFalse
 
         def getData(self):
             data = {
@@ -79,6 +77,6 @@ class QuizCreateTrueOrFalseQuestionViewTest(BaseTestViews):
                 'content': self.content,
                 'explanation': self.explanation,
                 'mark': self.mark,
-                'isCorrect': self.isCorrect,
+                'trueOrFalse': self.trueOrFalse,
             }
             return data

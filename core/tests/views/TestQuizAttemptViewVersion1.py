@@ -8,10 +8,10 @@ from onequiz.tests.BaseTestViews import BaseTestViews
 from core.models import QuizAttempt, Subject
 
 
-class QuizAttemptViewTest(BaseTestViews):
+class QuizAttemptViewVersion1Test(BaseTestViews):
 
     def setUp(self, path=None) -> None:
-        super(QuizAttemptViewTest, self).setUp('')
+        super(QuizAttemptViewVersion1Test, self).setUp('')
         bakerOperations.createSubjects(1)
         self.subject = Subject.objects.first()
 
@@ -19,18 +19,18 @@ class QuizAttemptViewTest(BaseTestViews):
         self.quiz.questions.add(*bakerOperations.createRandomQuestions(2))
 
         self.quizAttempt = QuizAttempt.objects.create(user=self.request.user, quiz_id=self.quiz.id)
-        self.path = reverse('core:quiz-attempt-view', kwargs={'attemptId': self.quizAttempt.id})
+        self.path = reverse('core:quiz-attempt-view-v1', kwargs={'attemptId': self.quizAttempt.id})
 
     def testCreateEssayQuestionViewGet(self):
         response = self.get()
         self.assertEquals(response.status_code, 200)
-        self.assertTemplateUsed(response, 'core/quizAttemptView.html')
+        self.assertTemplateUsed(response, 'core/quizAttemptViewVersion1.html')
         self.assertTrue(isinstance(response.context['quizAttempt'], QuizAttempt))
         self.assertTrue(response.context['quizAttempt'], self.quizAttempt)
         self.assertEqual(response.context['mode'], QuizAttempt.Mode.EDIT)
 
     def testQuizAttemptDoesNotExist(self):
-        path = reverse('core:quiz-attempt-view', kwargs={'attemptId': 0})
+        path = reverse('core:quiz-attempt-view-v1', kwargs={'attemptId': 0})
         response = self.get(path=path)
         self.assertEquals(response.status_code, 404)
 
@@ -104,7 +104,7 @@ class QuizAttemptViewTest(BaseTestViews):
 
         self.assertEqual(QuizAttempt.Status.SUBMITTED, self.quizAttempt.status)
         self.assertEquals(response.status_code, 200)
-        self.assertTemplateUsed(response, 'core/quizAttemptView.html')
+        self.assertTemplateUsed(response, 'core/quizAttemptViewVersion1.html')
         self.assertTrue(isinstance(response.context['quizAttempt'], QuizAttempt))
         self.assertTrue(response.context['quizAttempt'], self.quizAttempt)
         self.assertEqual(response.context['mode'], QuizAttempt.Mode.MARK)

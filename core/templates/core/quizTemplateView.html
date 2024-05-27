@@ -1,5 +1,6 @@
 {% extends "accounts/base.html" %}
 {% load static %}
+{% load templateTags %}
 {% block content %}
     <br>
     <div class="container" style="color: black;">
@@ -24,39 +25,10 @@
                 </legend>
 
                 {% for field in form %}
-
-                    {% if field.field.widget.input_type == 'text' %}
-                        <span class="form-label">{{ field.label }}</span>
-                        {{ field }}
-                    {% elif field.field.widget.input_type == 'select' %}
-                        <span class="form-label">{{ field.label }}</span>
-                        {{ field }}
-                    {% elif field.field.widget.input_type == 'number' %}
-                        <span class="form-label">{{ field.label }}</span>
-                        {{ field }}
-                    {% elif field.field.widget.input_type == 'checkbox' %}
-                        <div class="row">
-                            <div class="col-auto">
-                                <div class="multiple-choice">
-                                    <input type="checkbox" name="{{ field.name }}" class="form-control"
-                                           id="{{ field.id_for_label }}" style="height: 34px; width: 34px;" name=""
-                                            {% if field.value %} checked {% endif %}/>
-                                    <div class="mt-2"></div>
-                                </div>
-                            </div>
-                            <div class="col">
-                                <label class="form-label" style="padding-top: 5px">{{ field.label }}</label>
-                            </div>
-                        </div>
-                    {% else %}
-                        <span class="form-label">{{ field.label }}</span>
-                        {{ field }}
-                    {% endif %}
-
+                    {% renderFormFields field %}
                     {% for error in field.errors %}
                         <p class="text-center" style="color: red;"><small>{{ error }}</small></p>
                     {% endfor %}
-
                     <br>
                 {% endfor %}
 
@@ -157,7 +129,7 @@
         }
 
         function beginQuizAttempt(quizId) {
-            const requestPath = "{% url 'core:quizAttemptObjectApiEventVersion1Component' %}?quizId=" + quizId;
+            const requestPath = "{% url 'core:quizAttemptObjectApiEventVersion2Component' %}?quizId=" + quizId;
             fetch(requestPath, {
                 method: 'POST',
                 headers: {

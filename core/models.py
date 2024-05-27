@@ -49,7 +49,7 @@ class Question(BaseModel):
     figure = models.ImageField(blank=True, null=True, upload_to='uploads/%Y/%m/%d')
     content = models.TextField()
     explanation = models.TextField(max_length=2048, blank=True, null=True)
-    mark = models.SmallIntegerField(blank=True, null=True, default=1)
+    mark = models.SmallIntegerField(blank=True, null=True, default=0, validators=[MinValueValidator(0)])
     questionType = models.CharField(max_length=32, choices=Type.choices, default=Type.NONE)
 
     # fields specific to essay
@@ -68,7 +68,7 @@ class Question(BaseModel):
 
     def orderAnswers(self, queryset):
         if self.questionType == self.Type.NONE:
-            raise Exception
+            raise ValueError('Question type cannot be NONE')
 
         if self.questionType != self.Type.MULTIPLE_CHOICE:
             return queryset
@@ -98,7 +98,16 @@ class Response(BaseModel):
 
     class Meta:
         verbose_name = 'Response'
-        verbose_name_plural = 'Response'
+        verbose_name_plural = 'Responses'
+
+    def save(self, *args, **kwargs):
+        if self.question.questionType == Question.Type.MULTIPLE_CHOICE and self.id is None:
+            choiceList = self.question.choices.get('choices')
+            for item in choiceList:
+                item['isChecked'] = False
+
+            self.choices = {'choices': choiceList}
+        super().save(*args, **kwargs)
 
 
 class Quiz(BaseModel):
@@ -109,12 +118,12 @@ class Quiz(BaseModel):
 
     name = models.CharField(max_length=255)
     description = models.TextField(blank=True, null=True)
-    url = models.SlugField(max_length=255, blank=False)
+    url = models.SlugField(max_length=255, blank=False, unique=True)
     subject = models.ForeignKey(Subject, on_delete=models.SET_NULL, null=True, blank=True)
     topic = models.CharField(max_length=255, blank=True, null=True)
     numberOfQuestions = models.PositiveIntegerField()
     quizDuration = models.IntegerField()
-    maxAttempt = models.PositiveIntegerField(default=False)
+    maxAttempt = models.PositiveIntegerField(default=1)
     difficulty = models.CharField(max_length=10, choices=Difficulty.choices, default=Difficulty.EASY)
     passMark = models.SmallIntegerField(blank=True, default=0, validators=[MaxValueValidator(100)])
     successText = models.TextField(blank=True, null=True)
@@ -128,7 +137,7 @@ class Quiz(BaseModel):
     creator = models.ForeignKey(User, on_delete=models.CASCADE, related_name='quizCreator')
 
     def __str__(self):
-        return f"{self.id} - {self.name}"
+        return f'{self.id} - {self.name}'
 
     def getQuestions(self, shuffleQuestions=False):
         questionList = self.questions.all()
@@ -142,7 +151,7 @@ class Quiz(BaseModel):
 
 class QuizAttempt(BaseModel):
     class Status(models.TextChoices):
-        NOT_ATTEMPTED = 'NOT_ATTEMPTED', _('Non Attempted')
+        NOT_ATTEMPTED = 'NOT_ATTEMPTED', _('Not Attempted')
         IN_PROGRESS = 'IN_PROGRESS', _('In Progress')
         SUBMITTED = 'SUBMITTED', _('Submitted')
         IN_REVIEW = 'IN_REVIEW', _('In Review')
@@ -159,18 +168,18 @@ class QuizAttempt(BaseModel):
     responses = models.ManyToManyField(Response, blank=True, related_name='quizAttemptResponses')
 
     class Meta:
-        verbose_name = 'QuizAttempt'
-        verbose_name_plural = 'QuizAttempts'
+        verbose_name = 'Quiz Attempt'
+        verbose_name_plural = 'Quiz Attempts'
 
     def getAttemptUrl(self):
-        return reverse('core:quiz-attempt-view', kwargs={'attemptId': self.id})
+        return reverse('core:quiz-attempt-view-v2', kwargs={'attemptId': self.id})
 
     def getAttemptResultUrl(self):
         return reverse('core:quiz-attempt-result-view', kwargs={'attemptId': self.id})
 
     def getQuizEndTime(self, uiFormat=True):
-        time = (self.createdDttm + datetime.timedelta(minutes=self.quiz.quizDuration))
-        return time.strftime('%b %d, %Y %H:%M:%S') if uiFormat else time
+        endTime = (self.createdDttm + datetime.timedelta(minutes=self.quiz.quizDuration))
+        return endTime.strftime('%b %d, %Y %H:%M:%S') if uiFormat else endTime
 
     def hasQuizEnded(self):
         return timezone.now() >= self.getQuizEndTime(False) or self.status in self.getViewStatues()
@@ -182,7 +191,7 @@ class QuizAttempt(BaseModel):
         return [self.Status.NOT_ATTEMPTED, self.Status.IN_PROGRESS]
 
     def getSecondsLeft(self):
-        return (self.getQuizEndTime(False)-timezone.now()).total_seconds()
+        return (self.getQuizEndTime(False) - timezone.now()).total_seconds()
 
     def hasViewPermission(self, user):
         if self.user == user:
@@ -201,7 +210,7 @@ class QuizAttempt(BaseModel):
         elif self.user == user and self.hasQuizEnded() and self.status in self.getViewStatues():
             mode = self.Mode.VIEW
         else:
-            raise NotImplementedError('Cannot find a permission mode for quiz attempt: ', self.id)
+            raise NotImplementedError(f'Cannot find a permission mode for quiz attempt: {self.id}')
         return mode
 
     def getResponses(self, shuffle=False):

@@ -17,26 +17,20 @@ class QuizAttemptQuestionsApiEventVersion1ComponentTest(BaseTestAjax):
         bakerOperations.createSubjects(1)
         self.subject = Subject.objects.first()
         self.quiz = bakerOperations.createQuiz(self.request.user, self.subject)
-        self.eq1 = bakerOperations.createEssayQuestion()
-        self.eq2 = bakerOperations.createEssayQuestion()
-        self.eq3 = bakerOperations.createEssayQuestion()
-        self.tf1 = bakerOperations.createTrueOrFalseQuestion()
-        self.tf2 = bakerOperations.createTrueOrFalseQuestion()
-        self.tf3 = bakerOperations.createTrueOrFalseQuestion()
-        self.mcq1 = bakerOperations.createMultipleChoiceQuestionAndAnswers()
-        self.mcq2 = bakerOperations.createMultipleChoiceQuestionAndAnswers()
-        self.mcq3 = bakerOperations.createMultipleChoiceQuestionAndAnswers()
+        self.eq = bakerOperations.createEssayQuestion()
+        self.tf = bakerOperations.createTrueOrFalseQuestion()
+        self.mcq = bakerOperations.createMultipleChoiceQuestionAndAnswers()
 
     def createQuizAttemptAndTheResponseObjects(self):
         path = reverse('core:quizAttemptObjectApiEventVersion1Component') + f'?quizId={self.quiz.id}'
         response = self.post(path=path)
         ajaxResponse = json.loads(response.content)
         self.assertEqual(200, response.status_code)
-        return ajaxResponse['redirectUrl'].split('/')[2]
+        return ajaxResponse['redirectUrl'].split('/')[3]
 
     def testGetQuizAttemptResponseComponents(self):
         self.quiz.questions.add(
-            *[self.eq1, self.eq2, self.eq3, self.tf1, self.tf2, self.tf3, self.mcq1, self.mcq2, self.mcq3]
+            *[self.eq, self.tf, self.mcq]
         )
 
         quizAttemptId = self.createQuizAttemptAndTheResponseObjects()
@@ -51,7 +45,7 @@ class QuizAttemptQuestionsApiEventVersion1ComponentTest(BaseTestAjax):
         self.assertEqual(200, response.status_code)
         self.assertTrue(ajaxResponse['success'])
         self.assertTrue(ajaxResponse['data']['quiz']['canEdit'])
-        self.assertEqual(len(ajaxResponse['data']['questions']), 9)
+        self.assertEqual(len(ajaxResponse['data']['questions']), 3)
         self.assertListEqual(ajaxResponse['data']['questions'], computedResponseList.getResponse())
 
         for item in ajaxResponse['data']['questions']:
@@ -88,7 +82,7 @@ class QuizAttemptQuestionsApiEventVersion1ComponentTest(BaseTestAjax):
                     self.assertEqual(len(choice), 3)
 
     def testUpdateEssayQuestionResponses(self):
-        quizQuestionList = [self.eq1, self.eq2, self.eq3]
+        quizQuestionList = [self.eq]
         self.quiz.questions.add(*quizQuestionList)
 
         quizAttemptId = self.createQuizAttemptAndTheResponseObjects()
@@ -118,7 +112,7 @@ class QuizAttemptQuestionsApiEventVersion1ComponentTest(BaseTestAjax):
             self.assertEqual(a.answer, b['response']['text'])
 
     def testUpdateTrueOrFalseQuestionResponses(self):
-        quizQuestionList = [self.tf1, self.tf2, self.tf3]
+        quizQuestionList = [self.tf]
         self.quiz.questions.add(*quizQuestionList)
 
         quizAttemptId = self.createQuizAttemptAndTheResponseObjects()
@@ -148,7 +142,7 @@ class QuizAttemptQuestionsApiEventVersion1ComponentTest(BaseTestAjax):
             self.assertEqual(a.trueSelected, eval(b['response']['selectedOption']))
 
     def testUpdateMultipleChoiceQuestionResponses(self):
-        quizQuestionList = [self.mcq1, self.mcq2, self.mcq3]
+        quizQuestionList = [self.mcq]
         self.quiz.questions.add(*quizQuestionList)
 
         quizAttemptId = self.createQuizAttemptAndTheResponseObjects()
@@ -178,7 +172,7 @@ class QuizAttemptQuestionsApiEventVersion1ComponentTest(BaseTestAjax):
             self.assertListEqual(a.choices['choices'], b['response']['choices'])
 
     def testWhenQuizHasEssayQuestionThenDoNotMarkTheQuiz(self):
-        quizQuestionList = [self.eq1, self.tf1, self.mcq1]
+        quizQuestionList = [self.eq, self.tf, self.mcq]
         self.quiz.questions.add(*quizQuestionList)
 
         quizAttemptId = self.createQuizAttemptAndTheResponseObjects()
@@ -215,7 +209,7 @@ class QuizAttemptQuestionsApiEventVersion1ComponentTest(BaseTestAjax):
                 self.assertListEqual(a.choices['choices'], b['response']['choices'])
 
     def testWhenQuizDoesNotHaveEssayQuestionThenMarkTheQuiz(self):
-        quizQuestionList = [self.tf1, self.tf2, self.tf3, self.mcq1, self.mcq2, self.mcq3]
+        quizQuestionList = [self.tf, self.mcq]
         self.quiz.questions.add(*quizQuestionList)
 
         quizAttemptId = self.createQuizAttemptAndTheResponseObjects()

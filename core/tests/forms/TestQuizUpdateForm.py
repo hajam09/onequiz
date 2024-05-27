@@ -20,88 +20,89 @@ class QuizUpdateFormTest(BaseTest):
 
     def testFieldsAndTypeForQuizCreator(self):
         form = QuizUpdateForm(self.request, self.quiz)
-        self.assertEqual(len(form.base_fields), 15)
+        self.assertEqual(len(form.fields), 15)
 
-        self.assertTrue(isinstance(form.base_fields.get('name'), forms.CharField))
-        self.assertEqual(form.base_fields.get('name').label, 'Quiz Name')
-        self.assertTrue(isinstance(form.base_fields.get('name').widget, forms.TextInput))
+        self.assertTrue(isinstance(form.fields.get('name'), forms.CharField))
+        self.assertEqual(form.fields.get('name').label, 'Quiz Name')
+        self.assertTrue(isinstance(form.fields.get('name').widget, forms.TextInput))
 
-        self.assertTrue(isinstance(form.base_fields.get('description'), forms.CharField))
-        self.assertEqual(form.base_fields.get('description').label, 'Description')
-        self.assertTrue(isinstance(form.base_fields.get('description').widget, forms.Textarea))
+        self.assertTrue(isinstance(form.fields.get('description'), forms.CharField))
+        self.assertEqual(form.fields.get('description').label, 'Description')
+        self.assertTrue(isinstance(form.fields.get('description').widget, forms.Textarea))
 
-        self.assertTrue(isinstance(form.base_fields.get('link'), forms.CharField))
-        self.assertEqual(form.base_fields.get('link').label, 'Quiz link')
-        self.assertTrue(isinstance(form.base_fields.get('link').widget, forms.TextInput))
+        self.assertTrue(isinstance(form.fields.get('link'), forms.CharField))
+        self.assertEqual(form.fields.get('link').label, 'Quiz link')
+        self.assertTrue(isinstance(form.fields.get('link').widget, forms.TextInput))
 
-        self.assertTrue(isinstance(form.base_fields.get('subject'), forms.MultipleChoiceField))
-        self.assertEqual(form.base_fields.get('subject').label, 'Subject')
-        self.assertTrue(isinstance(form.base_fields.get('subject').widget, forms.Select))
+        self.assertTrue(isinstance(form.fields.get('subject'), forms.MultipleChoiceField))
+        self.assertEqual(form.fields.get('subject').label, 'Subject')
+        self.assertTrue(isinstance(form.fields.get('subject').widget, forms.Select))
 
-        self.assertTrue(isinstance(form.base_fields.get('topic'), forms.CharField))
-        self.assertEqual(form.base_fields.get('topic').label, 'Topic')
-        self.assertTrue(isinstance(form.base_fields.get('topic').widget, forms.TextInput))
+        self.assertTrue(isinstance(form.fields.get('topic'), forms.CharField))
+        self.assertEqual(form.fields.get('topic').label, 'Topic')
+        self.assertTrue(isinstance(form.fields.get('topic').widget, forms.TextInput))
 
-        self.assertTrue(isinstance(form.base_fields.get('quizDuration'), forms.IntegerField))
-        self.assertEqual(form.base_fields.get('quizDuration').label, 'Quiz Duration (Minutes)')
-        self.assertTrue(isinstance(form.base_fields.get('quizDuration').widget, forms.NumberInput))
+        self.assertTrue(isinstance(form.fields.get('quizDuration'), forms.IntegerField))
+        self.assertEqual(form.fields.get('quizDuration').label, 'Quiz Duration (Minutes)')
+        self.assertTrue(isinstance(form.fields.get('quizDuration').widget, forms.NumberInput))
 
-        self.assertTrue(isinstance(form.base_fields.get('maxAttempt'), forms.IntegerField))
-        self.assertEqual(form.base_fields.get('maxAttempt').label, 'Quiz Max Attempt')
-        self.assertTrue(isinstance(form.base_fields.get('maxAttempt').widget, forms.NumberInput))
+        self.assertTrue(isinstance(form.fields.get('maxAttempt'), forms.IntegerField))
+        self.assertEqual(form.fields.get('maxAttempt').label, 'Quiz Max Attempt')
+        self.assertTrue(isinstance(form.fields.get('maxAttempt').widget, forms.NumberInput))
 
-        self.assertTrue(isinstance(form.base_fields.get('difficulty'), forms.MultipleChoiceField))
-        self.assertEqual(form.base_fields.get('difficulty').label, 'Quiz Difficulty')
-        self.assertTrue(isinstance(form.base_fields.get('difficulty').widget, forms.Select))
+        self.assertTrue(isinstance(form.fields.get('difficulty'), forms.MultipleChoiceField))
+        self.assertEqual(form.fields.get('difficulty').label, 'Quiz Difficulty')
+        self.assertTrue(isinstance(form.fields.get('difficulty').widget, forms.Select))
 
-        self.assertTrue(isinstance(form.base_fields.get('passMark'), forms.DecimalField))
-        self.assertEqual(form.base_fields.get('passMark').label, 'Quiz Pass Mark')
-        self.assertTrue(isinstance(form.base_fields.get('passMark').widget, forms.NumberInput))
+        self.assertTrue(isinstance(form.fields.get('passMark'), forms.DecimalField))
+        self.assertEqual(form.fields.get('passMark').label, 'Quiz Pass Mark')
+        self.assertTrue(isinstance(form.fields.get('passMark').widget, forms.NumberInput))
 
-        self.assertTrue(isinstance(form.base_fields.get('successText'), forms.CharField))
-        self.assertEqual(form.base_fields.get('successText').label, 'Text to display when passed')
-        self.assertTrue(isinstance(form.base_fields.get('successText').widget, forms.TextInput))
+        self.assertTrue(isinstance(form.fields.get('successText'), forms.CharField))
+        self.assertEqual(form.fields.get('successText').label, 'Text to display when passed')
+        self.assertTrue(isinstance(form.fields.get('successText').widget, forms.TextInput))
 
-        self.assertTrue(isinstance(form.base_fields.get('failText'), forms.CharField))
-        self.assertEqual(form.base_fields.get('failText').label, 'Text to display when failed')
-        self.assertTrue(isinstance(form.base_fields.get('failText').widget, forms.TextInput))
+        self.assertTrue(isinstance(form.fields.get('failText'), forms.CharField))
+        self.assertEqual(form.fields.get('failText').label, 'Text to display when failed')
+        self.assertTrue(isinstance(form.fields.get('failText').widget, forms.TextInput))
 
-        self.assertTrue(isinstance(form.base_fields.get('inRandomOrder'), forms.BooleanField))
-        self.assertEqual(form.base_fields.get('inRandomOrder').label, 'Questions in random order?')
-        self.assertTrue(isinstance(form.base_fields.get('inRandomOrder').widget, forms.CheckboxInput))
+        self.assertTrue(isinstance(form.fields.get('inRandomOrder'), forms.BooleanField))
+        self.assertEqual(form.fields.get('inRandomOrder').label, 'Questions in random order?')
+        self.assertTrue(isinstance(form.fields.get('inRandomOrder').widget, forms.CheckboxInput))
 
-        self.assertTrue(isinstance(form.base_fields.get('answerAtEnd'), forms.BooleanField))
-        self.assertEqual(form.base_fields.get('answerAtEnd').label, 'Show answers at the end?')
-        self.assertTrue(isinstance(form.base_fields.get('answerAtEnd').widget, forms.CheckboxInput))
+        self.assertTrue(isinstance(form.fields.get('answerAtEnd'), forms.BooleanField))
+        self.assertEqual(form.fields.get('answerAtEnd').label, 'Show answers at the end?')
+        self.assertTrue(isinstance(form.fields.get('answerAtEnd').widget, forms.CheckboxInput))
 
-        self.assertTrue(isinstance(form.base_fields.get('isExamPaper'), forms.BooleanField))
-        self.assertEqual(form.base_fields.get('isExamPaper').label, 'Exam paper type?')
-        self.assertTrue(isinstance(form.base_fields.get('isExamPaper').widget, forms.CheckboxInput))
+        self.assertTrue(isinstance(form.fields.get('isExamPaper'), forms.BooleanField))
+        self.assertEqual(form.fields.get('isExamPaper').label, 'Exam paper type?')
+        self.assertTrue(isinstance(form.fields.get('isExamPaper').widget, forms.CheckboxInput))
 
-        self.assertTrue(isinstance(form.base_fields.get('isDraft'), forms.BooleanField))
-        self.assertEqual(form.base_fields.get('isDraft').label, 'Is draft?')
-        self.assertTrue(isinstance(form.base_fields.get('isDraft').widget, forms.CheckboxInput))
+        self.assertTrue(isinstance(form.fields.get('isDraft'), forms.BooleanField))
+        self.assertEqual(form.fields.get('isDraft').label, 'Is draft?')
+        self.assertTrue(isinstance(form.fields.get('isDraft').widget, forms.CheckboxInput))
 
-    # def testFieldsAndTypeForNonQuizCreator(self):
-    #     form = QuizUpdateForm(self.request, self.quiz)
-    #     self.assertEqual(len(form.base_fields), 9)
-    #
-    #     self.assertTrue(form.base_fields.get('name').widget.attrs['disabled'])
-    #     self.assertTrue(form.base_fields.get('description').widget.attrs['disabled'])
-    #     self.assertTrue(form.base_fields.get('link').widget.attrs['disabled'])
-    #     self.assertTrue(form.base_fields.get('subject').widget.attrs['disabled'])
-    #     self.assertTrue(form.base_fields.get('topic').widget.attrs['disabled'])
-    #     self.assertTrue(form.base_fields.get('quizDuration').widget.attrs['disabled'])
-    #     self.assertTrue(form.base_fields.get('maxAttempt').widget.attrs['disabled'])
-    #     self.assertTrue(form.base_fields.get('difficulty').widget.attrs['disabled'])
-    #     self.assertTrue(form.base_fields.get('passMark').widget.attrs['disabled'])
-    #
-    #     self.assertIsNone(form.base_fields.get('successText'))
-    #     self.assertIsNone(form.base_fields.get('failText'))
-    #     self.assertIsNone(form.base_fields.get('inRandomOrder'))
-    #     self.assertIsNone(form.base_fields.get('answerAtEnd'))
-    #     self.assertIsNone(form.base_fields.get('isExamPaper'))
-    #     self.assertIsNone(form.base_fields.get('isDraft'))
+    def testFieldsAndTypeForNonQuizCreator(self):
+        self.quiz.creator = bakerOperations.createUser()
+        form = QuizUpdateForm(self.request, self.quiz)
+        self.assertEqual(len(form.fields), 9)
+
+        self.assertTrue(form.fields.get('name').widget.attrs['disabled'])
+        self.assertTrue(form.fields.get('description').widget.attrs['disabled'])
+        self.assertTrue(form.fields.get('link').widget.attrs['disabled'])
+        self.assertTrue(form.fields.get('subject').widget.attrs['disabled'])
+        self.assertTrue(form.fields.get('topic').widget.attrs['disabled'])
+        self.assertTrue(form.fields.get('quizDuration').widget.attrs['disabled'])
+        self.assertTrue(form.fields.get('maxAttempt').widget.attrs['disabled'])
+        self.assertTrue(form.fields.get('difficulty').widget.attrs['disabled'])
+        self.assertTrue(form.fields.get('passMark').widget.attrs['disabled'])
+
+        self.assertIsNone(form.fields.get('successText'))
+        self.assertIsNone(form.fields.get('failText'))
+        self.assertIsNone(form.fields.get('inRandomOrder'))
+        self.assertIsNone(form.fields.get('answerAtEnd'))
+        self.assertIsNone(form.fields.get('isExamPaper'))
+        self.assertIsNone(form.fields.get('isDraft'))
 
     def testRaiseExceptionWhenNoneIsPassedForQuiz(self):
         with self.assertRaisesMessage(Exception, 'Quiz is none, or is not an instance of Quiz object.'):
@@ -111,7 +112,7 @@ class QuizUpdateFormTest(BaseTest):
         form = QuizUpdateForm(self.request, self.quiz)
 
         INITIAL_SUBJECT_CHOICES = [(subject.id, subject.name) for subject in Subject.objects.all()]
-        INITIAL_SUBJECT_CHOICES.insert(0, (0, '-- Select a value --'))
+        INITIAL_SUBJECT_CHOICES.insert(0, ('', '-- Select a value --'))
         self.assertListEqual(form.base_fields.get('subject').choices, INITIAL_SUBJECT_CHOICES)
 
         self.assertEqual(form.initial['name'], self.quiz.name)
@@ -131,6 +132,7 @@ class QuizUpdateFormTest(BaseTest):
         self.assertEqual(form.initial['isDraft'], self.quiz.isDraft)
 
     def testUpdateQuizNameIsEmpty(self):
+        # todo
         pass
 
     def testUpdateQuizUrlAlreadyUsed(self):

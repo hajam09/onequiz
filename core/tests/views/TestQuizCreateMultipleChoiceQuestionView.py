@@ -67,7 +67,7 @@ class QuizCreateMultipleChoiceQuestionViewTest(BaseTestViews):
 
         choiceList = question.choices['choices']
         self.assertListEqual(
-            [(i['content'], i['isCorrect']) for i in choiceList], [(i[1], i[2]) for i in testParams.choices]
+            [(i['content'], i['isChecked']) for i in choiceList], [(i[1], i[2]) for i in testParams.choices]
         )
 
     class TestParams:
