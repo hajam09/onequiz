@@ -1,3 +1,5 @@
+import json
+
 from onequiz.tests.BaseTest import BaseTest
 
 
@@ -20,9 +22,9 @@ class BaseTestAjax(BaseTest):
     def put(self, data=None, path=None):
         data = data or {}
         path = path or self.path
-        return self.client.put(path, data, HTTP_X_REQUESTED_WITH='XMLHttpRequest', follow=True)
+        return self.client.put(path, data=json.dumps(data), content_type='application/json', follow=True)
 
     def delete(self, data=None, path=None):
         data = data or {}
         path = path or self.path
-        return self.client.delete(path, data, HTTP_X_REQUESTED_WITH='XMLHttpRequest', follow=True)
+        return self.client.delete(path, data=json.dumps(data), content_type='application/json', follow=True)

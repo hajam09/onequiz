@@ -15,27 +15,27 @@ class MultipleChoiceQuestionCreateFormTest(BaseTest):
 
     def testFieldsAndType(self):
         form = MultipleChoiceQuestionCreateForm()
-        self.assertEqual(len(form.base_fields), 5)
+        self.assertEqual(len(form.fields), 5)
 
-        self.assertTrue(isinstance(form.base_fields.get('figure'), forms.ImageField))
-        self.assertEqual(form.base_fields.get('figure').label, 'Figure (Optional)')
-        self.assertTrue(isinstance(form.base_fields.get('figure').widget, forms.ClearableFileInput))
+        self.assertTrue(isinstance(form.fields.get('figure'), forms.ImageField))
+        self.assertEqual(form.fields.get('figure').label, 'Figure (Optional)')
+        self.assertTrue(isinstance(form.fields.get('figure').widget, forms.ClearableFileInput))
 
-        self.assertTrue(isinstance(form.base_fields.get('content'), forms.CharField))
-        self.assertEqual(form.base_fields.get('content').label, 'Content (Optional)')
-        self.assertTrue(isinstance(form.base_fields.get('content').widget, forms.Textarea))
+        self.assertTrue(isinstance(form.fields.get('content'), forms.CharField))
+        self.assertEqual(form.fields.get('content').label, 'Content (Optional)')
+        self.assertTrue(isinstance(form.fields.get('content').widget, forms.Textarea))
 
-        self.assertTrue(isinstance(form.base_fields.get('explanation'), forms.CharField))
-        self.assertEqual(form.base_fields.get('explanation').label, 'Explanation (Optional)')
-        self.assertTrue(isinstance(form.base_fields.get('explanation').widget, forms.Textarea))
+        self.assertTrue(isinstance(form.fields.get('explanation'), forms.CharField))
+        self.assertEqual(form.fields.get('explanation').label, 'Explanation (Optional)')
+        self.assertTrue(isinstance(form.fields.get('explanation').widget, forms.Textarea))
 
-        self.assertTrue(isinstance(form.base_fields.get('answerOrder'), forms.MultipleChoiceField))
-        self.assertEqual(form.base_fields.get('answerOrder').label, 'Answer Order')
-        self.assertTrue(isinstance(form.base_fields.get('answerOrder').widget, forms.Select))
+        self.assertTrue(isinstance(form.fields.get('answerOrder'), forms.MultipleChoiceField))
+        self.assertEqual(form.fields.get('answerOrder').label, 'Answer Order')
+        self.assertTrue(isinstance(form.fields.get('answerOrder').widget, forms.Select))
 
-        self.assertTrue(isinstance(form.base_fields.get('mark'), forms.IntegerField))
-        self.assertEqual(form.base_fields.get('mark').label, 'Mark')
-        self.assertTrue(isinstance(form.base_fields.get('mark').widget, forms.NumberInput))
+        self.assertTrue(isinstance(form.fields.get('mark'), forms.IntegerField))
+        self.assertEqual(form.fields.get('mark').label, 'Mark')
+        self.assertTrue(isinstance(form.fields.get('mark').widget, forms.NumberInput))
 
     def testInitialValues(self):
         form = MultipleChoiceQuestionCreateForm()
@@ -51,8 +51,8 @@ class MultipleChoiceQuestionCreateFormTest(BaseTest):
         ]
 
         self.assertIn('initialAnswerOptions', form.initial)
-        self.assertIn('answerOrder', form.base_fields)
-        self.assertListEqual(form.base_fields.get('answerOrder').choices, ANSWER_ORDER_CHOICES)
+        self.assertIn('answerOrder', form.fields)
+        self.assertListEqual(form.fields.get('answerOrder').choices, ANSWER_ORDER_CHOICES)
         self.assertListEqual(form.initial.get('initialAnswerOptions'), ANSWER_OPTIONS)
 
     def testFigureAndContentIsEmpty(self):
@@ -141,7 +141,7 @@ class MultipleChoiceQuestionCreateFormTest(BaseTest):
 
         choiceList = newMultipleChoiceQuestion.choices['choices']
         self.assertListEqual(
-            [(i['content'], i['isCorrect']) for i in choiceList], [(i[1], i[2]) for i in testParams.choices]
+            [(i['content'], i['isChecked']) for i in choiceList], [(i[1], i[2]) for i in testParams.choices]
         )
 
     class TestParams:

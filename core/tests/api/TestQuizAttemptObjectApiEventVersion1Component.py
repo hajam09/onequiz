@@ -2,9 +2,9 @@ import json
 
 from django.urls import reverse
 
+from core.models import Subject, QuizAttempt
 from onequiz.operations import bakerOperations
 from onequiz.tests.BaseTestAjax import BaseTestAjax
-from core.models import Subject, QuizAttempt, Quiz
 
 
 class QuizAttemptObjectApiEventVersion1ComponentTest(BaseTestAjax):
@@ -31,7 +31,7 @@ class QuizAttemptObjectApiEventVersion1ComponentTest(BaseTestAjax):
         response = self.post()
         ajaxResponse = json.loads(response.content)
         self.assertEqual(200, response.status_code)
-        return ajaxResponse['redirectUrl'].split('/')[2]
+        return ajaxResponse['redirectUrl'].split('/')[3]
 
     def testWhenAnotherAttemptIsInProgressThenReturnItsRedirectUrl(self):
         quizAttemptId = self.createQuizAttemptAndTheResponseObjects()
@@ -43,7 +43,7 @@ class QuizAttemptObjectApiEventVersion1ComponentTest(BaseTestAjax):
         self.assertEqual(ajaxResponse['message'], 'You already have an attempt that is in progress.')
 
         self.assertIsNotNone(ajaxResponse['redirectUrl'])
-        self.assertEqual(ajaxResponse['redirectUrl'], f'/quiz-attempt/{quizAttemptId}/')
+        self.assertEqual(ajaxResponse['redirectUrl'], f'/v1/quiz-attempt/{quizAttemptId}/')
 
     def testStartQuizAttemptForNonExistingQuiz(self):
         path = reverse('core:quizAttemptObjectApiEventVersion1Component') + f'?quizId=0'
@@ -63,7 +63,7 @@ class QuizAttemptObjectApiEventVersion1ComponentTest(BaseTestAjax):
         self.assertTrue(ajaxResponse['success'])
         self.assertIsNotNone(ajaxResponse['redirectUrl'])
 
-        quizAttemptId = ajaxResponse['redirectUrl'].split('/')[2]
+        quizAttemptId = ajaxResponse['redirectUrl'].split('/')[3]
         quizAttempt = QuizAttempt.objects.get(id=quizAttemptId)
         self.assertEqual(QuizAttempt.Status.IN_PROGRESS, quizAttempt.status)
         self.assertEqual(quizAttempt.quiz.getQuestions().count(), quizAttempt.responses.count())

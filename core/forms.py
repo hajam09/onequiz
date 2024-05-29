@@ -37,6 +37,7 @@ class QuizForm(forms.Form):
     )
     subject = forms.MultipleChoiceField(
         label='Subject',
+        required=True,
         widget=forms.Select(
             attrs={
                 'class': 'form-control',
@@ -60,6 +61,7 @@ class QuizForm(forms.Form):
                 'class': 'form-control',
                 'style': 'width: 100%; border-radius: 0',
                 'required': 'required',
+                'min': '0',
             }
         ),
     )
@@ -70,11 +72,17 @@ class QuizForm(forms.Form):
                 'class': 'form-control',
                 'style': 'width: 100%',
                 'required': 'required',
+                'min': '0',
             }
         ),
     )
     difficulty = forms.MultipleChoiceField(
         label='Quiz Difficulty',
+        choices=[
+            (Quiz.Difficulty.EASY, Quiz.Difficulty.EASY.label),
+            (Quiz.Difficulty.MEDIUM, Quiz.Difficulty.MEDIUM.label),
+            (Quiz.Difficulty.HARD, Quiz.Difficulty.HARD.label)
+        ],
         widget=forms.Select(
             attrs={
                 'class': 'form-control',
@@ -90,6 +98,7 @@ class QuizForm(forms.Form):
                 'class': 'form-control',
                 'style': 'width: 100%',
                 'required': 'required',
+                'min': '0',
             }
         ),
     )
@@ -150,15 +159,8 @@ class QuizForm(forms.Form):
         kwargs.setdefault('label_suffix', '')
         super(QuizForm, self).__init__(*args, **kwargs)
 
-        SUBJECT_CHOICES = [(subject.id, subject.name) for subject in Subject.objects.all()]
-        SUBJECT_CHOICES.insert(0, (0, '-- Select a value --'))
-        DIFFICULTY_CHOICES = [
-            (Quiz.Difficulty.EASY, Quiz.Difficulty.EASY.label),
-            (Quiz.Difficulty.MEDIUM, Quiz.Difficulty.MEDIUM.label),
-            (Quiz.Difficulty.HARD, Quiz.Difficulty.HARD.label),
-        ]
-
-        self.base_fields['difficulty'].choices = DIFFICULTY_CHOICES
+        SUBJECT_CHOICES = list(Subject.objects.values_list('id', 'name'))
+        SUBJECT_CHOICES.insert(0, ('', '-- Select a value --'))
         self.base_fields['subject'].choices = SUBJECT_CHOICES
 
     def clean_name(self):
@@ -441,6 +443,7 @@ class QuestionForm(forms.Form):
                 'class': 'form-control',
                 'style': 'width: 100%',
                 'required': 'required',
+                'min': '0',
             }
         ),
     )
@@ -520,6 +523,12 @@ class EssayQuestionCreateForm(QuestionForm):
 class MultipleChoiceQuestionCreateForm(QuestionForm):
     answerOrder = forms.MultipleChoiceField(
         label='Answer Order',
+        choices=[
+            (None, '-- Select a value --'),
+            (Question.Order.SEQUENTIAL, Question.Order.SEQUENTIAL.label),
+            (Question.Order.RANDOM, Question.Order.RANDOM.label),
+            (Question.Order.NONE, Question.Order.NONE.label),
+        ],
         widget=forms.Select(
             attrs={
                 'class': 'form-control',
@@ -532,20 +541,12 @@ class MultipleChoiceQuestionCreateForm(QuestionForm):
     def __init__(self, *args, **kwargs):
         kwargs.setdefault('label_suffix', '')
         super(MultipleChoiceQuestionCreateForm, self).__init__(*args, **kwargs)
-
-        ANSWER_ORDER_CHOICES = [
-            (None, '-- Select a value --'),
-            (Question.Order.SEQUENTIAL, Question.Order.SEQUENTIAL.label),
-            (Question.Order.RANDOM, Question.Order.RANDOM.label),
-            (Question.Order.NONE, Question.Order.NONE.label),
-        ]
         # orderNo, enteredAnswer, isChecked
         ANSWER_OPTIONS = [
             (1, '', False),
             (2, '', False)
         ]
         self.initial['initialAnswerOptions'] = ANSWER_OPTIONS
-        self.base_fields['answerOrder'].choices = ANSWER_ORDER_CHOICES
 
     def clean(self):
         figure = self.cleaned_data.get('figure')
@@ -591,7 +592,7 @@ class MultipleChoiceQuestionCreateForm(QuestionForm):
             {
                 'id': uuid.uuid4().hex,
                 'content': answerOptionsList[i],
-                'isCorrect': self.data.get(f'answerChecked-{i + 1}') == 'on'
+                'isChecked': self.data.get(f'answerChecked-{i + 1}') == 'on'
             }
             for i in range(len(answerOptionsList))
         ]
@@ -609,14 +610,14 @@ class MultipleChoiceQuestionCreateForm(QuestionForm):
 
 
 class TrueOrFalseQuestionCreateForm(QuestionForm):
-    isCorrect = forms.ChoiceField(
+    trueOrFalse = forms.ChoiceField(
         label='Is the answer True or False?',
-        choices=[('True', 'True'), ('False', 'False')],
+        choices=[(True, 'True'), (False, 'False')],
         required=True,
         widget=forms.RadioSelect(
             attrs={
-                'class': 'form-control',
-                'style': 'width: 100%',
+                'class': 'form-check-input',
+                'style': 'height: 34px; width: 34px',
                 'required': 'required',
             }
         )
@@ -625,10 +626,6 @@ class TrueOrFalseQuestionCreateForm(QuestionForm):
     def __init__(self, *args, **kwargs):
         kwargs.setdefault('label_suffix', '')
         super(TrueOrFalseQuestionCreateForm, self).__init__(*args, **kwargs)
-
-        # radioName, value, label, isSelected
-        IS_CORRECT_CHOICES = [('isCorrect', 'True', 'True', 'False'), ('isCorrect', 'False', 'False', 'False')]
-        self.initial['isCorrectChoices'] = IS_CORRECT_CHOICES
 
     def clean(self):
         figure = self.cleaned_data.get('figure')
@@ -642,23 +639,6 @@ class TrueOrFalseQuestionCreateForm(QuestionForm):
         if mark < 0:
             self.errors['mark'] = self.error_class([f'Mark cannot be a negative number.'])
 
-        # radioName, value, label, isSelected
-        IS_CORRECT_CHOICES = [('isCorrect', 'True', 'True', 'False'), ('isCorrect', 'False', 'False', 'False')]
-        choiceIndexNumberToChange = 0 if self.cleaned_data.get('isCorrect') == 'True' else 1
-        tempList = list(IS_CORRECT_CHOICES[choiceIndexNumberToChange])
-        tempList[3] = 'True'
-        IS_CORRECT_CHOICES[choiceIndexNumberToChange] = tuple(tempList)
-
-        # if self.cleaned_data.get('isCorrect') == 'True':
-        #     tempList = list(IS_CORRECT_CHOICES[0])
-        #     tempList[3] = 'True'
-        #     IS_CORRECT_CHOICES[0] = tuple(tempList)
-        # else:
-        #     tempList = list(IS_CORRECT_CHOICES[1])
-        #     tempList[3] = 'True'
-        #     IS_CORRECT_CHOICES[1] = tuple(tempList)
-
-        self.initial['isCorrectChoices'] = IS_CORRECT_CHOICES
         return self.cleaned_data
 
     def save(self):
@@ -668,7 +648,7 @@ class TrueOrFalseQuestionCreateForm(QuestionForm):
             explanation=self.cleaned_data.get('explanation'),
             mark=self.cleaned_data.get('mark'),
             questionType=Question.Type.TRUE_OR_FALSE,
-            trueSelected=eval(self.cleaned_data.get('isCorrect')),
+            trueSelected=eval(self.cleaned_data.get('trueOrFalse')),
         )
         return question
 
@@ -729,15 +709,15 @@ class EssayQuestionUpdateForm(QuestionForm):
 
 
 class TrueOrFalseQuestionUpdateForm(QuestionForm):
-    isCorrect = forms.ChoiceField(
+    trueOrFalse = forms.ChoiceField(
         label='Is the answer True or False?',
-        choices=[('True', 'True'), ('False', 'False')],
-        initial='True',
+        choices=[(True, 'True'), (False, 'False')],
+        initial=None,
         required=True,
         widget=forms.RadioSelect(
             attrs={
-                'class': 'form-control',
-                'style': 'width: 100%',
+                'class': 'form-check-input',
+                'style': 'height: 34px; width: 34px',
                 'required': 'required',
             }
         )
@@ -751,19 +731,11 @@ class TrueOrFalseQuestionUpdateForm(QuestionForm):
         if self.question is None or self.question.questionType != Question.Type.TRUE_OR_FALSE:
             raise Exception('Question object is none, or is not compatible with TrueOrFalseQuestionUpdateForm.')
 
-        # radioName, value, label, isSelected
-        IS_CORRECT_CHOICES = [('isCorrect', 'True', 'True', 'False'), ('isCorrect', 'False', 'False', 'False')]
-
         # self.initial['figure'] = self.trueOrFalseQuestion.question.figure
         self.initial['content'] = self.question.content
         self.initial['explanation'] = self.question.explanation
         self.initial['mark'] = self.question.mark
-
-        choiceIndexNumberToUpdate = 0 if self.question.trueSelected else 1
-        tempList = list(IS_CORRECT_CHOICES[choiceIndexNumberToUpdate])
-        tempList[3] = 'True'
-        IS_CORRECT_CHOICES[choiceIndexNumberToUpdate] = tuple(tempList)
-        self.initial['isCorrectChoices'] = IS_CORRECT_CHOICES
+        self.fields.get('trueOrFalse').initial = question.trueSelected
 
     def clean(self):
         figure = self.cleaned_data.get('figure')
@@ -776,15 +748,6 @@ class TrueOrFalseQuestionUpdateForm(QuestionForm):
 
         if mark < 0:
             self.errors['mark'] = self.error_class([f'Mark cannot be a negative number.'])
-
-        # radioName, value, label, isSelected
-        IS_CORRECT_CHOICES = [('isCorrect', 'True', 'True', 'False'), ('isCorrect', 'False', 'False', 'False')]
-        choiceIndexNumberToChange = 0 if self.cleaned_data.get('isCorrect') == 'True' else 1
-        tempList = list(IS_CORRECT_CHOICES[choiceIndexNumberToChange])
-        tempList[3] = 'True'
-        IS_CORRECT_CHOICES[choiceIndexNumberToChange] = tuple(tempList)
-        self.initial['isCorrectChoices'] = IS_CORRECT_CHOICES
-
         return self.cleaned_data
 
     def update(self):
@@ -792,7 +755,7 @@ class TrueOrFalseQuestionUpdateForm(QuestionForm):
         self.question.content = self.cleaned_data.get('content')
         self.question.explanation = self.cleaned_data.get('explanation')
         self.question.mark = self.cleaned_data.get('mark')
-        self.question.trueSelected = eval(self.cleaned_data.get('isCorrect'))
+        self.question.trueSelected = eval(self.cleaned_data.get('trueOrFalse'))
 
         self.question.save()
         return self.question
@@ -836,7 +799,7 @@ class MultipleChoiceQuestionUpdateForm(QuestionForm):
         ]
         # orderNo, enteredAnswer, isChecked
         ANSWER_OPTIONS = [
-            (i, x['content'], x['isCorrect']) for i, x in enumerate(self.question.choices['choices'], 1)
+            (i, x['content'], x['isChecked']) for i, x in enumerate(self.question.choices['choices'], 1)
         ]
 
         self.initial['initialAnswerOptions'] = ANSWER_OPTIONS
@@ -907,7 +870,7 @@ class MultipleChoiceQuestionUpdateForm(QuestionForm):
                 newOption = {
                     'id': uuid.uuid4().hex,
                     'content': nl,
-                    'isCorrect': isChecked
+                    'isChecked': isChecked
                 }
                 oldAnswerOptionsList.append(newOption)
                 continue
@@ -916,7 +879,7 @@ class MultipleChoiceQuestionUpdateForm(QuestionForm):
                 idsToDelete.append(ol['id'])
 
             ol['content'] = nl
-            ol['isCorrect'] = isChecked
+            ol['isChecked'] = isChecked
 
         self.question.choices = {
             'choices': [i for i in oldAnswerOptionsList if i['id'] not in idsToDelete]
@@ -924,3 +887,72 @@ class MultipleChoiceQuestionUpdateForm(QuestionForm):
 
         self.question.save()
         return self.question
+
+
+class BaseResponseForm(forms.Form):
+
+    def __init__(self, response, allowEdit=True, *args, **kwargs):
+        kwargs.setdefault('label_suffix', '')
+        super(BaseResponseForm, self).__init__(*args, **kwargs)
+        self.data['response'] = response
+        self.setInitialValues(response)
+        if not allowEdit:
+            self.disableFields()
+
+    def setInitialValues(self, response):
+        raise NotImplementedError("Please implement setInitialValues() method")
+
+    def disableFields(self):
+        for field in self.fields.values():
+            field.widget.attrs['disabled'] = 'disabled'
+
+
+class EssayQuestionResponseForm(BaseResponseForm):
+    answer = forms.CharField(
+        label='Your Answer',
+        required=False,
+        widget=forms.Textarea(
+            attrs={
+                'class': 'form-control col',
+                'style': 'border-radius: 0',
+                'rows': 5,
+            }
+        )
+    )
+
+    def setInitialValues(self, response):
+        self.fields['answer'].initial = response.answer
+
+
+class TrueOrFalseQuestionResponseForm(BaseResponseForm):
+    trueOrFalse = forms.ChoiceField(
+        label='Is the answer True or False?',
+        required=False,
+        choices=[(True, 'True'), (False, 'False')],
+        widget=forms.RadioSelect(
+            attrs={
+                'class': 'form-check-input',
+                'style': 'height: 34px; width: 34px',
+            }
+        )
+    )
+
+    def setInitialValues(self, response):
+        self.fields['trueOrFalse'].initial = response.trueSelected
+
+
+class MultipleChoiceQuestionResponseForm(BaseResponseForm):
+    options = forms.MultipleChoiceField(
+        label='Select the correct answers.',
+        widget=forms.CheckboxSelectMultiple(
+            attrs={
+                'style': 'height: 34px; width:34px'
+            }
+        )
+    )
+
+    def setInitialValues(self, response):
+        CHOICES = [(choice['id'], choice['content']) for choice in response.choices.get('choices')]
+        INITIAL = [choice['id'] for choice in response.choices.get('choices') if choice['isChecked']]
+        self.fields['options'].choices = CHOICES
+        self.fields['options'].initial = INITIAL

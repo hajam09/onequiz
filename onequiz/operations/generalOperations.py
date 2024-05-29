@@ -165,7 +165,7 @@ class QuizAttemptAutomaticMarking:
                 marksPerChoice = round(response.question.mark / len(actualChoices), 2)
                 for ac in actualChoices:
                     pc = next((p for p in providedChoices if p['id'] == ac['id']))
-                    if pc is not None and ac['isCorrect'] == pc['isChecked']:
+                    if pc is not None and ac['isChecked'] == pc['isChecked']:
                         awardedMark += marksPerChoice
 
                 if awardedMark == response.question.mark:

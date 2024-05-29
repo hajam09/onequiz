@@ -4,7 +4,7 @@ from django.urls import path
 from core import views
 from core.api import *
 
-app_name = "core"
+app_name = 'core'
 
 urlpatterns = [
     path('', views.indexView, name='index-view'),
@@ -16,7 +16,9 @@ urlpatterns = [
     path('quiz/<int:quizId>/create-true-or-false-question/', views.trueOrFalseQuestionCreateView, name='true-or-false-question-create-view'),
     path('quiz/<int:quizId>/question/<int:questionId>/update', views.questionUpdateView, name='question-update-view'),
     path('my-quizzes/', views.userCreatedQuizzesView, name='user-created-quizzes-view'),
-    path('quiz-attempt/<int:attemptId>/', views.quizAttemptView, name='quiz-attempt-view'),
+    path('v1/quiz-attempt/<int:attemptId>/', views.quizAttemptViewVersion1, name='quiz-attempt-view-v1'),
+    path('v2/quiz-attempt/<int:attemptId>/', views.quizAttemptViewVersion2, name='quiz-attempt-view-v2'),
+    path('v2/quiz-attempt/<int:attemptId>/preview/', views.quizAttemptSubmissionPreview, name='quiz-attempt-submission-preview'),
     path('quiz-attempt/<int:attemptId>/result', views.quizAttemptResultView, name='quiz-attempt-result-view'),
     path('quiz/<int:quizId>/attempts/', views.quizAttemptsForQuizView, name='quiz-attempts-for-quiz-view'),
     path('my-attempted-quizzes/', login_required(views.AttemptedQuizzesView.as_view()), name='attempted-quizzes-view'),
@@ -27,6 +29,11 @@ urlpatterns += [
         'api/v1/quizAttemptObjectApiEventVersion1Component/',
         QuizAttemptObjectApiEventVersion1Component.as_view(),
         name='quizAttemptObjectApiEventVersion1Component'
+    ),
+    path(
+        'api/v2/quizAttemptObjectApiEventVersion2Component/',
+        QuizAttemptObjectApiEventVersion2Component.as_view(),
+        name='quizAttemptObjectApiEventVersion2Component'
     ),
     path(
         'api/v1/quizAttemptQuestionsApiEventVersion1Component/<int:id>',

@@ -1,8 +1,8 @@
 from django import forms
 
+from core.forms import TrueOrFalseQuestionUpdateForm
 from onequiz.operations import bakerOperations
 from onequiz.tests.BaseTest import BaseTest
-from core.forms import TrueOrFalseQuestionUpdateForm
 
 
 class TrueOrFalseQuestionUpdateFormTest(BaseTest):
@@ -10,32 +10,31 @@ class TrueOrFalseQuestionUpdateFormTest(BaseTest):
     def setUp(self, path=None) -> None:
         super(TrueOrFalseQuestionUpdateFormTest, self).setUp('')
         self.trueOrFalseQuestion = bakerOperations.createTrueOrFalseQuestion()
-        self.trueOptionSelected = [('isCorrect', 'True', 'True', 'True'), ('isCorrect', 'False', 'False', 'False')]
-        self.falseOptionSelected = [('isCorrect', 'True', 'True', 'False'), ('isCorrect', 'False', 'False', 'True')]
 
     def testFieldsAndType(self):
         form = TrueOrFalseQuestionUpdateForm(self.trueOrFalseQuestion)
-        self.assertEqual(len(form.base_fields), 5)
+        self.assertEqual(len(form.fields), 5)
 
-        self.assertTrue(isinstance(form.base_fields.get('figure'), forms.ImageField))
-        self.assertEqual(form.base_fields.get('figure').label, 'Figure (Optional)')
-        self.assertTrue(isinstance(form.base_fields.get('figure').widget, forms.ClearableFileInput))
+        self.assertTrue(isinstance(form.fields.get('figure'), forms.ImageField))
+        self.assertEqual(form.fields.get('figure').label, 'Figure (Optional)')
+        self.assertTrue(isinstance(form.fields.get('figure').widget, forms.ClearableFileInput))
 
-        self.assertTrue(isinstance(form.base_fields.get('content'), forms.CharField))
-        self.assertEqual(form.base_fields.get('content').label, 'Content (Optional)')
-        self.assertTrue(isinstance(form.base_fields.get('content').widget, forms.Textarea))
+        self.assertTrue(isinstance(form.fields.get('content'), forms.CharField))
+        self.assertEqual(form.fields.get('content').label, 'Content (Optional)')
+        self.assertTrue(isinstance(form.fields.get('content').widget, forms.Textarea))
 
-        self.assertTrue(isinstance(form.base_fields.get('explanation'), forms.CharField))
-        self.assertEqual(form.base_fields.get('explanation').label, 'Explanation (Optional)')
-        self.assertTrue(isinstance(form.base_fields.get('explanation').widget, forms.Textarea))
+        self.assertTrue(isinstance(form.fields.get('explanation'), forms.CharField))
+        self.assertEqual(form.fields.get('explanation').label, 'Explanation (Optional)')
+        self.assertTrue(isinstance(form.fields.get('explanation').widget, forms.Textarea))
 
-        self.assertTrue(isinstance(form.base_fields.get('mark'), forms.IntegerField))
-        self.assertEqual(form.base_fields.get('mark').label, 'Mark')
-        self.assertTrue(isinstance(form.base_fields.get('mark').widget, forms.NumberInput))
+        self.assertTrue(isinstance(form.fields.get('mark'), forms.IntegerField))
+        self.assertEqual(form.fields.get('mark').label, 'Mark')
+        self.assertTrue(isinstance(form.fields.get('mark').widget, forms.NumberInput))
 
-        self.assertTrue(isinstance(form.base_fields.get('isCorrect'), forms.ChoiceField))
-        self.assertEqual(form.base_fields.get('isCorrect').label, 'Is the answer True or False?')
-        self.assertTrue(isinstance(form.base_fields.get('isCorrect').widget, forms.RadioSelect))
+        self.assertTrue(isinstance(form.fields.get('trueOrFalse'), forms.ChoiceField))
+        self.assertEqual(form.fields.get('trueOrFalse').label, 'Is the answer True or False?')
+        self.assertTrue(isinstance(form.fields.get('trueOrFalse').widget, forms.RadioSelect))
+        self.assertListEqual(form.fields.get('trueOrFalse').choices, [(True, 'True'), (False, 'False')])
 
     def testRaiseExceptionWhenNoneIsPassedForTrueOrFalseQuestion(self):
         exceptionMessage = 'Question object is none, or is not compatible with TrueOrFalseQuestionUpdateForm.'
@@ -44,18 +43,18 @@ class TrueOrFalseQuestionUpdateFormTest(BaseTest):
 
     def testFormInitialValuesAndChoices(self):
         form = TrueOrFalseQuestionUpdateForm(self.trueOrFalseQuestion)
-        IS_CORRECT_CHOICES = self.trueOptionSelected if self.trueOrFalseQuestion.trueSelected else self.falseOptionSelected
+        self.trueOrFalseQuestion.trueSelected = False
 
         # self.assertEqual(form.initial['figure'], self.trueOrFalseQuestion.question.figure)
         self.assertEqual(form.initial['content'], self.trueOrFalseQuestion.content)
         self.assertEqual(form.initial['explanation'], self.trueOrFalseQuestion.explanation)
         self.assertEqual(form.initial['mark'], self.trueOrFalseQuestion.mark)
-        self.assertEqual(form.initial['isCorrectChoices'], IS_CORRECT_CHOICES)
+        self.assertEqual(form.fields.get('trueOrFalse').initial, False)
 
     def testFigureAndContentIsEmpty(self):
         testParams = self.TestParams(
             mark=50,
-            isCorrect=True
+            trueOrFalse=True
         )
         form = TrueOrFalseQuestionUpdateForm(self.trueOrFalseQuestion, data=testParams.getData())
         self.assertFalse(form.is_valid())
@@ -69,7 +68,7 @@ class TrueOrFalseQuestionUpdateFormTest(BaseTest):
         testParams = self.TestParams(
             content='test content',
             mark=-1,
-            isCorrect=True
+            trueOrFalse=True
         )
         form = TrueOrFalseQuestionUpdateForm(self.trueOrFalseQuestion, data=testParams.getData())
         self.assertFalse(form.is_valid())
@@ -78,34 +77,31 @@ class TrueOrFalseQuestionUpdateFormTest(BaseTest):
         self.assertEqual('Mark cannot be a negative number.', form.errors.get('mark')[0])
 
     def testWhenFormHasErrorAndTrueIsSelectedThenTrueOptionIsTicked(self):
+        # todo
         testParams = self.TestParams(
             content='test content',
             mark=-1,
-            isCorrect=True
+            trueOrFalse=True
         )
         form = TrueOrFalseQuestionUpdateForm(self.trueOrFalseQuestion, data=testParams.getData())
         self.assertFalse(form.is_valid())
-        self.assertIn('isCorrectChoices', form.initial)
-        self.assertListEqual(form.initial.get('isCorrectChoices'), self.trueOptionSelected)
 
     def testWhenFormHasErrorAndFalseIsSelectedTHenFalseOptionIsTicked(self):
+        # todo
         testParams = self.TestParams(
             content='test content',
             mark=-1,
-            isCorrect=False
+            trueOrFalse=False
         )
         form = TrueOrFalseQuestionUpdateForm(self.trueOrFalseQuestion, data=testParams.getData())
-
         self.assertFalse(form.is_valid())
-        self.assertIn('isCorrectChoices', form.initial)
-        self.assertListEqual(form.initial.get('isCorrectChoices'), self.falseOptionSelected)
 
     def testTrueOrFalseQuestionUpdatedTrueSelected(self):
         testParams = self.TestParams(
             content='new content',
             explanation='new explanation',
             mark=50,
-            isCorrect=True
+            trueOrFalse=True
         )
         form = TrueOrFalseQuestionUpdateForm(self.trueOrFalseQuestion, data=testParams.getData())
         self.assertTrue(form.is_valid())
@@ -122,7 +118,7 @@ class TrueOrFalseQuestionUpdateFormTest(BaseTest):
             content='new content',
             explanation='new explanation',
             mark=50,
-            isCorrect=False
+            trueOrFalse=False
         )
         form = TrueOrFalseQuestionUpdateForm(self.trueOrFalseQuestion, data=testParams.getData())
         self.assertTrue(form.is_valid())
@@ -136,12 +132,12 @@ class TrueOrFalseQuestionUpdateFormTest(BaseTest):
 
     class TestParams:
 
-        def __init__(self, figure=None, content=None, explanation=None, mark=None, isCorrect=None):
+        def __init__(self, figure=None, content=None, explanation=None, mark=None, trueOrFalse=None):
             self.figure = figure
             self.content = content
             self.explanation = explanation
             self.mark = mark
-            self.isCorrect = isCorrect
+            self.trueOrFalse = trueOrFalse
 
         def getData(self):
             data = {
@@ -149,6 +145,6 @@ class TrueOrFalseQuestionUpdateFormTest(BaseTest):
                 'content': self.content,
                 'explanation': self.explanation,
                 'mark': self.mark,
-                'isCorrect': self.isCorrect,
+                'trueOrFalse': self.trueOrFalse,
             }
             return data

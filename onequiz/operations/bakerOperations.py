@@ -140,7 +140,7 @@ def createMultipleChoiceQuestionAndAnswers(save=True):
         {
             'id': uuid.uuid4().hex,
             'content': faker.paragraph(),
-            'isCorrect': random.choice(BOOLEAN)
+            'isChecked': random.choice(BOOLEAN)
         } for _ in range(random.randint(2, 10))
     ]
 

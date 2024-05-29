@@ -46,6 +46,7 @@ class AccountsPasswordResetViewTest(BaseTestViews):
         self.assertTemplateUsed(response, 'accounts/activateFailed.html')
 
     def testGetRequestWhenEncodedIdAndTokenIsValid(self):
+        # todo
         pass
         # uid = urlsafe_base64_encode(force_bytes(self.request.user.id))
         # token = self.prtg.make_token(self.request.user)

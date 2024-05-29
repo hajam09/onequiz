@@ -16,32 +16,32 @@ class MultipleChoiceQuestionUpdateFormTest(BaseTest):
         ]
         self.multipleChoiceQuestion = bakerOperations.createMultipleChoiceQuestionAndAnswers(None)
         self.choices = [
-            (i, x['content'], x['isCorrect']) for i, x in enumerate(self.multipleChoiceQuestion.choices['choices'], 1)
+            (i, x['content'], x['isChecked']) for i, x in enumerate(self.multipleChoiceQuestion.choices['choices'], 1)
         ]
 
     def testFieldsAndType(self):
         form = MultipleChoiceQuestionUpdateForm(self.multipleChoiceQuestion)
-        self.assertEqual(len(form.base_fields), 5)
+        self.assertEqual(len(form.fields), 5)
 
-        self.assertTrue(isinstance(form.base_fields.get('figure'), forms.ImageField))
-        self.assertEqual(form.base_fields.get('figure').label, 'Figure (Optional)')
-        self.assertTrue(isinstance(form.base_fields.get('figure').widget, forms.ClearableFileInput))
+        self.assertTrue(isinstance(form.fields.get('figure'), forms.ImageField))
+        self.assertEqual(form.fields.get('figure').label, 'Figure (Optional)')
+        self.assertTrue(isinstance(form.fields.get('figure').widget, forms.ClearableFileInput))
 
-        self.assertTrue(isinstance(form.base_fields.get('content'), forms.CharField))
-        self.assertEqual(form.base_fields.get('content').label, 'Content (Optional)')
-        self.assertTrue(isinstance(form.base_fields.get('content').widget, forms.Textarea))
+        self.assertTrue(isinstance(form.fields.get('content'), forms.CharField))
+        self.assertEqual(form.fields.get('content').label, 'Content (Optional)')
+        self.assertTrue(isinstance(form.fields.get('content').widget, forms.Textarea))
 
-        self.assertTrue(isinstance(form.base_fields.get('explanation'), forms.CharField))
-        self.assertEqual(form.base_fields.get('explanation').label, 'Explanation (Optional)')
-        self.assertTrue(isinstance(form.base_fields.get('explanation').widget, forms.Textarea))
+        self.assertTrue(isinstance(form.fields.get('explanation'), forms.CharField))
+        self.assertEqual(form.fields.get('explanation').label, 'Explanation (Optional)')
+        self.assertTrue(isinstance(form.fields.get('explanation').widget, forms.Textarea))
 
-        self.assertTrue(isinstance(form.base_fields.get('answerOrder'), forms.MultipleChoiceField))
-        self.assertEqual(form.base_fields.get('answerOrder').label, 'Answer Order')
-        self.assertTrue(isinstance(form.base_fields.get('answerOrder').widget, forms.Select))
+        self.assertTrue(isinstance(form.fields.get('answerOrder'), forms.MultipleChoiceField))
+        self.assertEqual(form.fields.get('answerOrder').label, 'Answer Order')
+        self.assertTrue(isinstance(form.fields.get('answerOrder').widget, forms.Select))
 
-        self.assertTrue(isinstance(form.base_fields.get('mark'), forms.IntegerField))
-        self.assertEqual(form.base_fields.get('mark').label, 'Mark')
-        self.assertTrue(isinstance(form.base_fields.get('mark').widget, forms.NumberInput))
+        self.assertTrue(isinstance(form.fields.get('mark'), forms.IntegerField))
+        self.assertEqual(form.fields.get('mark').label, 'Mark')
+        self.assertTrue(isinstance(form.fields.get('mark').widget, forms.NumberInput))
 
     def testRaiseExceptionWhenNoneIsPassedForMultipleChoiceQuestion(self):
         exceptionMessage = 'Question object is none, or is not compatible with MultipleChoiceQuestionUpdateForm.'
@@ -51,8 +51,8 @@ class MultipleChoiceQuestionUpdateFormTest(BaseTest):
     def testFormInitialValuesAndChoices(self):
         form = MultipleChoiceQuestionUpdateForm(self.multipleChoiceQuestion)
         self.assertIn('initialAnswerOptions', form.initial)
-        self.assertIn('answerOrder', form.base_fields)
-        self.assertListEqual(form.base_fields.get('answerOrder').choices, self.answerOrderChoices)
+        self.assertIn('answerOrder', form.fields)
+        self.assertListEqual(form.fields.get('answerOrder').choices, self.answerOrderChoices)
         self.assertListEqual(form.initial.get('initialAnswerOptions'), self.choices)
 
         # self.assertEqual(form.initial['figure'], self.multipleChoiceQuestion.question.figure)
@@ -125,7 +125,7 @@ class MultipleChoiceQuestionUpdateFormTest(BaseTest):
         newChoiceList = multipleChoiceQuestion.choices['choices']
         self.assertEqual(2, len(newChoiceList))
         self.assertListEqual(
-            [(i, x['content'], x['isCorrect']) for i, x in enumerate(newChoiceList, 1)], testParams.answerOptions
+            [(i, x['content'], x['isChecked']) for i, x in enumerate(newChoiceList, 1)], testParams.answerOptions
         )
 
     def testAddNewAnswerOptionsToExistingList(self):
@@ -152,7 +152,7 @@ class MultipleChoiceQuestionUpdateFormTest(BaseTest):
         newChoiceList = multipleChoiceQuestion.choices['choices']
         self.assertEqual(len(newAnswerOptions), len(newChoiceList))
         self.assertListEqual(
-            [(i, x['content'], x['isCorrect']) for i, x in enumerate(newChoiceList, 1)], testParams.answerOptions
+            [(i, x['content'], x['isChecked']) for i, x in enumerate(newChoiceList, 1)], testParams.answerOptions
         )
 
     class TestParams:

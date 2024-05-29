@@ -26,7 +26,7 @@ class QuizAttemptObjectApiEventVersion1Component(View):
             response = {
                 "success": True,
                 "message": "You already have an attempt that is in progress.",
-                "redirectUrl": reverse('core:quiz-attempt-view', kwargs={'attemptId': existingQuizAttempt.id})
+                "redirectUrl": reverse('core:quiz-attempt-view-v1', kwargs={'attemptId': existingQuizAttempt.id})
             }
             return JsonResponse(response, status=HTTPStatus.OK)
 
@@ -53,7 +53,6 @@ class QuizAttemptObjectApiEventVersion1Component(View):
                 choiceList = question.choices['choices']
                 for item in choiceList:
                     item['isChecked'] = False
-                    del item['isCorrect']
 
                 response.choices = {'choices': choiceList}
 
@@ -68,7 +67,21 @@ class QuizAttemptObjectApiEventVersion1Component(View):
 
         response = {
             "success": True,
-            "redirectUrl": reverse('core:quiz-attempt-view', kwargs={'attemptId': newQuizAttempt.id})
+            "redirectUrl": reverse('core:quiz-attempt-view-v1', kwargs={'attemptId': newQuizAttempt.id})
+        }
+        return JsonResponse(response, status=HTTPStatus.OK)
+
+
+class QuizAttemptObjectApiEventVersion2Component(View):
+    def post(self, *args, **kwargs):
+        quizAttempt, created = QuizAttempt.objects.get_or_create(
+            quiz_id=self.request.GET.get('quizId'),
+            user=self.request.user,
+            status=QuizAttempt.Status.IN_PROGRESS,
+        )
+        response = {
+            'success': True,
+            'redirectUrl': reverse('core:quiz-attempt-view-v2', kwargs={'attemptId': quizAttempt.id})
         }
         return JsonResponse(response, status=HTTPStatus.OK)
 
