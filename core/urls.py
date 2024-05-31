@@ -26,6 +26,11 @@ urlpatterns = [
 
 urlpatterns += [
     path(
+        'api/v1/questionResponseUpdateApiEventVersion1Component/',
+        QuestionResponseUpdateApiEventVersion1Component.as_view(),
+        name='questionResponseUpdateApiEventVersion1Component'
+    ),
+    path(
         'api/v1/quizAttemptObjectApiEventVersion1Component/',
         QuizAttemptObjectApiEventVersion1Component.as_view(),
         name='quizAttemptObjectApiEventVersion1Component'
@@ -44,10 +49,5 @@ urlpatterns += [
         'api/v1/quizMarkingOccurrenceApiEventVersion1Component/<int:id>',
         QuizMarkingOccurrenceApiEventVersion1Component.as_view(),
         name='quizMarkingOccurrenceApiEventVersion1Component'
-    ),
-    path(
-        'api/v1/questionResponseUpdateApiEventVersion1Component/',
-        QuestionResponseUpdateApiEventVersion1Component.as_view(),
-        name='questionResponseUpdateApiEventVersion1Component'
-    ),
+    )
 ]
