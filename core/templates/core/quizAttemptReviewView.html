@@ -1,5 +1,6 @@
 {% extends "accounts/base.html" %}
 {% load static %}
+{% load templateTags %}
 {% block content %}
     <div class="container mt-5" id="idCardWideComponent">
         {% csrf_token %}
@@ -10,73 +11,76 @@
             </div>
             <br>
         {% endif %}
-        <div class="question-list">
-            <div class="row">
-                <div class="col"><h3>Review</h3></div>
-                <div class="col-auto" id="countdown"></div>
-            </div>
-            <p>{{ questionPaginator.object_list.0.content }}</p>
-            <div id="questions">
-                <div class="accordion" id="quizAccordion">
-                    {% for form in forms %}
-                        <div class="card">
-                            <div class="card-header" id="heading{{ forloop.counter }}">
-                                <h5 class="mb-0">
-                                    <button class="btn btn-link" data-toggle="collapse"
-                                            data-target="#collapseOne{{ forloop.counter }}"
-                                            aria-expanded="true" aria-controls="collapseOne{{ forloop.counter }}">
-                                        Question #{{ forloop.counter }}
-                                    </button>
-                                </h5>
-                            </div>
+        <form method="post">
+            <div class="question-list">
+                <div class="row">
+                    <div class="col"><h3>Review</h3></div>
+                    <div class="col-auto" id="countdown"></div>
+                </div>
+                <p>{{ questionPaginator.object_list.0.content }}</p>
+                <div id="questions">
+                    <div class="accordion" id="quizAccordion">
+                        {% for form in forms %}
+                            <div class="card {{ form.data.markResponseAlert }}">
+                                <div class="card-header" id="heading{{ forloop.counter }}">
+                                    <h5 class="mb-0">
+                                        <button class="btn btn-link" data-toggle="collapse"
+                                                data-target="#collapseOne{{ forloop.counter }}"
+                                                aria-expanded="true" aria-controls="collapseOne{{ forloop.counter }}">
+                                            Question #{{ forloop.counter }}
+                                        </button>
+                                    </h5>
+                                </div>
 
-                            <div id="collapseOne{{ forloop.counter }}" class="collapse show"
-                                 aria-labelledby="heading{{ forloop.counter }}"
-                                 data-parent="#accordion">
-                                <div class="card-body">
-                                    <p><b>Content / Question</b></p>
-                                    {{ form.data.response.question.content }}
-                                    <hr>
-                                    <p><b>Your Answer</b></p>
-                                    {% if form.data.response.question.questionType == form.data.response.question.Type.ESSAY %}
-                                        <textarea class="form-control" rows="5" cols="40"
-                                                  disabled>{{ form.answer.value }}</textarea>
-                                    {% elif form.data.response.question.questionType == form.data.response.question.Type.TRUE_OR_FALSE %}
-                                        {% for radio in form.trueOrFalse %}
-                                            <div class="form-check form-check-inline">
-                                                {{ radio.tag }}
-                                                <label class="form-check-label" for="{{ radio.id_for_label }}">
-                                                    {{ radio.choice_label }}
-                                                </label>
-                                            </div>
-                                        {% endfor %}
-                                    {% elif form.data.response.question.questionType == form.data.response.question.Type.MULTIPLE_CHOICE %}
-                                        {% for checkbox in form.options %}
-                                            <div class="row">
-                                                <div class="col-auto">
-                                                    {{ checkbox.tag }}
+                                <div id="collapseOne{{ forloop.counter }}" class="collapse show"
+                                     aria-labelledby="heading{{ forloop.counter }}"
+                                     data-parent="#accordion">
+                                    <div class="card-body">
+                                        <p><b>Content / Question</b></p>
+                                        {{ form.data.response.question.content }}
+                                        <hr>
+                                        <p><b>Your Answer</b></p>
+                                        {% if form.data.response.question.questionType == form.data.response.question.Type.ESSAY %}
+                                            <textarea class="form-control" rows="5" cols="40"
+                                                      disabled>{{ form.answer.value }}</textarea>
+                                        {% elif form.data.response.question.questionType == form.data.response.question.Type.TRUE_OR_FALSE %}
+                                            {% for radio in form.trueOrFalse %}
+                                                <div class="form-check form-check-inline">
+                                                    {{ radio.tag }}
+                                                    <label class="form-check-label" for="{{ radio.id_for_label }}">
+                                                        {{ radio.choice_label }}
+                                                    </label>
                                                 </div>
-                                                <div class="col">
-                                                    <input type="text" class="form-control col" disabled
-                                                           value="{{ checkbox.choice_label }}">
+                                            {% endfor %}
+                                        {% elif form.data.response.question.questionType == form.data.response.question.Type.MULTIPLE_CHOICE %}
+                                            {% for checkbox in form.options %}
+                                                <div class="row">
+                                                    <div class="col-auto">
+                                                        {{ checkbox.tag }}
+                                                    </div>
+                                                    <div class="col">
+                                                        <input type="text" class="form-control col" disabled
+                                                               value="{{ checkbox.choice_label }}">
+                                                    </div>
                                                 </div>
-                                            </div>
-                                        {% endfor %}
-                                    {% endif %}
+                                            {% endfor %}
+                                        {% endif %}
+                                        <br>
+                                        {% renderScoreComponent request.user quizAttempt form %}
+                                    </div>
                                 </div>
                             </div>
-                        </div>
-                        <br>
-                    {% endfor %}
+                            <br>
+                        {% endfor %}
+                    </div>
                 </div>
             </div>
-        </div>
-        <div class="text-right">
-            <span></span>&nbsp;
-            <div>
-                <button type="submit" class="btn btn-primary">Submit Quiz</button>
+            <div class="text-right">
+                {% csrf_token %}
+                <input type="hidden" name="submitQuiz">
+                <button type="submit" class="btn btn-success">Confirm</button>
             </div>
-        </div>
+        </form>
     </div>
     <script src="{% static '/js/utils.js' %}"></script>
     <script>

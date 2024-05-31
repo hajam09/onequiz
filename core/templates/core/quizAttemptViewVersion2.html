@@ -41,10 +41,9 @@
                             <p class='text-center' style='color: red;'><small>{{ error }}</small></p>
                         {% endfor %}
                         <br>
+                        {% renderScoreComponent request.user quizAttempt form %}
                     {% endfor %}
                 </div>
-
-                <br>
             </div>
             <div class="text-right">
                 <span></span>&nbsp;

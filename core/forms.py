@@ -891,13 +891,21 @@ class MultipleChoiceQuestionUpdateForm(QuestionForm):
 
 class BaseResponseForm(forms.Form):
 
-    def __init__(self, response, allowEdit=True, *args, **kwargs):
+    def __init__(self, response, allowEdit=True, validateMark=False, *args, **kwargs):
         kwargs.setdefault('label_suffix', '')
         super(BaseResponseForm, self).__init__(*args, **kwargs)
         self.data['response'] = response
         self.setInitialValues(response)
         if not allowEdit:
             self.disableFields()
+
+        if validateMark:
+            if response.mark:
+                self.data['markResponseAlert'] = 'border border-success'
+            else:
+                self.data['markResponseAlert'] = 'border border-danger'
+        else:
+            self.data['markResponseAlert'] = 'border border-secondary'
 
     def setInitialValues(self, response):
         raise NotImplementedError("Please implement setInitialValues() method")

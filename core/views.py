@@ -1,6 +1,7 @@
 import operator
 from functools import reduce
 
+from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.core.paginator import Paginator, PageNotAnInteger, EmptyPage
 from django.db.models import OuterRef, Subquery, Value
@@ -285,6 +286,10 @@ def quizAttemptViewVersion2(request, attemptId):
     if not quizAttempt.hasViewPermission(request.user):
         return HttpResponseForbidden('Forbidden')
 
+    if quizAttempt.getPermissionMode(request.user) == QuizAttempt.Mode.MARK:
+        # Quiz creator wants to mark this quiz. Temporarily redirect to quizAttemptSubmissionPreview and mark there.
+        return redirect('core:quiz-attempt-submission-preview', attemptId=attemptId)
+
     ref = request.GET.get('ref', 'next')
     questionIndex = request.GET.get('q', 1)
 
@@ -324,12 +329,13 @@ def quizAttemptViewVersion2(request, attemptId):
     )
     quizAttempt.responses.add(responseObject.id)
 
+    hasQuizEnded = not quizAttempt.hasQuizEnded()
     if currentQuestion.questionType == Question.Type.ESSAY:
-        form = EssayQuestionResponseForm(response=responseObject, allowEdit=not quizAttempt.hasQuizEnded())
+        form = EssayQuestionResponseForm(response=responseObject, allowEdit=hasQuizEnded, validateMark=False)
     elif currentQuestion.questionType == Question.Type.TRUE_OR_FALSE:
-        form = TrueOrFalseQuestionResponseForm(response=responseObject, allowEdit=not quizAttempt.hasQuizEnded())
+        form = TrueOrFalseQuestionResponseForm(response=responseObject, allowEdit=hasQuizEnded, validateMark=False)
     elif currentQuestion.questionType == Question.Type.MULTIPLE_CHOICE:
-        form = MultipleChoiceQuestionResponseForm(response=responseObject, allowEdit=not quizAttempt.hasQuizEnded())
+        form = MultipleChoiceQuestionResponseForm(response=responseObject, allowEdit=hasQuizEnded, validateMark=False)
     else:
         raise Exception('Invalid question type')
 
@@ -354,6 +360,23 @@ def quizAttemptSubmissionPreview(request, attemptId):
     if not quizAttempt.hasViewPermission(request.user):
         return HttpResponseForbidden('Forbidden')
 
+    isQuizParticipant = quizAttempt.user == request.user
+    # handleQuizAttemptUserActions
+    # - > User views all their response.
+    # - > User submits their quiz attempt.
+    if isQuizParticipant and request.method == 'POST' and 'submitQuiz' in request.POST:
+        quizAttempt.status = QuizAttempt.Status.SUBMITTED
+        quizAttempt.save(update_fields=['status'])
+        messages.success(
+            request,
+            'Your attempt has been submitted successfully, please check later for results.'
+        )
+        return redirect('core:quiz-attempt-submission-preview', attemptId=attemptId)
+
+    # handleQuizCreatorActions
+    # - > User views all the response.
+    # - > User marks all the response.
+
     # Ensure all responses exist
     questions = Question.objects.filter(quizQuestions__id=quizAttempt.quiz_id)
     responsesSubquery = Response.objects.filter(
@@ -361,32 +384,68 @@ def quizAttemptSubmissionPreview(request, attemptId):
     ).values('id')[:1]
     questionsWithResponses = questions.annotate(response_id=Coalesce(Subquery(responsesSubquery), Value(None)))
 
-    bulkResponses = []
-    mcqResponses = []
-    for question in questionsWithResponses.values('id', 'questionType', 'response_id'):
-        if question.get('response_id') is not None:
-            continue
+    bulkResponses = [
+        Response(
+            question=question,
+            choices=question.cleanAndCloneChoices() if question.questionType == Question.Type.MULTIPLE_CHOICE else None
+        )
+        for question in questionsWithResponses if question.response_id is None
+    ]
 
-        if question.get('questionType') == Question.Type.MULTIPLE_CHOICE:
-            mcqResponses.append(Response.objects.create(question_id=question.get('id')))
-        else:
-            bulkResponses.append(Response(question_id=question.get('id')))
-
-    bulkResponseCreate = Response.objects.bulk_create(bulkResponses)
-    quizAttempt.responses.add(*bulkResponseCreate)
-    quizAttempt.responses.add(*mcqResponses)
+    if bulkResponses:
+        bulkResponseCreate = Response.objects.bulk_create(bulkResponses)
+        quizAttempt.responses.add(*bulkResponseCreate)
 
     responses = Response.objects.filter(
         quizAttemptResponses__in=[quizAttempt]
     ).select_related('question').order_by('question__id')
+
     responseForms = []
-    for r in responses:
-        if r.question.questionType == Question.Type.ESSAY:
-            responseForms.append(EssayQuestionResponseForm(response=r, allowEdit=False))
-        elif r.question.questionType == Question.Type.TRUE_OR_FALSE:
-            responseForms.append(TrueOrFalseQuestionResponseForm(response=r, allowEdit=False))
-        elif r.question.questionType == Question.Type.MULTIPLE_CHOICE:
-            responseForms.append(MultipleChoiceQuestionResponseForm(response=r, allowEdit=False))
+    responseBorders = []
+    for response in responses:
+        form = None
+        isQuizCreator = quizAttempt.quiz.creator == request.user
+        confirmMark = request.method == 'POST' and 'submitQuiz' in request.POST and isQuizCreator
+
+        if response.question.questionType == Question.Type.ESSAY:
+            if confirmMark:
+                response.mark = request.POST.get(f'awarded-mark-for-essay-{response.id}')
+            form = EssayQuestionResponseForm(response=response, allowEdit=False, validateMark=confirmMark)
+
+        elif response.question.questionType == Question.Type.TRUE_OR_FALSE:
+            if confirmMark:
+                response.mark = request.POST.get(f'awarded-mark-for-true-or-false-{response.id}')
+            form = TrueOrFalseQuestionResponseForm(response=response, allowEdit=False, validateMark=confirmMark)
+
+        elif response.question.questionType == Question.Type.MULTIPLE_CHOICE:
+            if confirmMark:
+                response.mark = request.POST.get(f'awarded-mark-for-mcq-{response.id}')
+            form = MultipleChoiceQuestionResponseForm(response=response, allowEdit=False, validateMark=confirmMark)
+
+        else:
+            raise Exception(f'Unknown question type: {response.question.questionType} for response ID: {response.id}')
+
+        responseForms.append(form)
+
+        if confirmMark:
+            responseBorders.append(form.data.get('markResponseAlert'))
+
+    if 'border border-danger' in responseBorders:
+        messages.error(
+            request,
+            'Please ensure that you have assigned correct marks to all responses.'
+        )
+    if responseBorders and all(element == 'border border-success' for element in responseBorders):
+        Response.objects.bulk_update(responses, ['mark'])
+        quizAttempt.status = QuizAttempt.Status.MARKED
+        quizAttempt.save(update_fields=['status'])
+        # todo: create result for this attempt.
+        messages.success(
+            request,
+            'You have marked this quiz attempt successfully.'
+        )
+        return redirect('core:quiz-attempt-submission-preview', attemptId=attemptId)
+
     context = {
         'quizAttempt': quizAttempt,
         'forms': responseForms,
