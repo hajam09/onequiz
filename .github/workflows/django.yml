@@ -59,15 +59,17 @@ jobs:
 
       - name: Apply migrations
         run: |
+          python manage.py makemigrations
+          python manage.py migrate
+          python manage.py migrate --run-syncdb
+
+      - name: Run tests
+        run: |
           python manage.py test accounts.tests.forms
           python manage.py test accounts.tests.views
           python manage.py test core.tests.api
           python manage.py test core.tests.forms
           python manage.py test core.tests.views
-
-      - name: Run tests
-        run: |
-          python manage.py test
 
       - name: Collect static files
         run: |
