@@ -1,4 +1,5 @@
 import datetime
+import copy
 
 from django.contrib.auth.models import User
 from django.core.validators import MinValueValidator, MaxValueValidator
@@ -81,6 +82,12 @@ class Question(BaseModel):
             return queryset.order_by()
         return queryset
 
+    def cleanAndCloneChoices(self):
+        clonedChoices = copy.deepcopy(self.choices)
+        for choice in clonedChoices.get('choices'):
+            choice['isChecked'] = False
+        return clonedChoices
+
 
 class Response(BaseModel):
     question = models.ForeignKey(Question, on_delete=models.CASCADE)
@@ -102,11 +109,7 @@ class Response(BaseModel):
 
     def save(self, *args, **kwargs):
         if self.question.questionType == Question.Type.MULTIPLE_CHOICE and self.id is None:
-            choiceList = self.question.choices.get('choices')
-            for item in choiceList:
-                item['isChecked'] = False
-
-            self.choices = {'choices': choiceList}
+            self.choices = self.question.cleanAndCloneChoices()
         super().save(*args, **kwargs)
 
 
@@ -205,7 +208,7 @@ class QuizAttempt(BaseModel):
     def getPermissionMode(self, user):
         if self.user == user and not self.hasQuizEnded() and self.status in self.getEditStatues():
             mode = self.Mode.EDIT
-        elif self.quiz.creator == user and self.hasQuizEnded() and self.status != self.Status.MARKED:
+        elif self.quiz.creator == user and self.hasQuizEnded() and self.status in self.getViewStatues():
             mode = self.Mode.MARK
         elif self.user == user and self.hasQuizEnded() and self.status in self.getViewStatues():
             mode = self.Mode.VIEW

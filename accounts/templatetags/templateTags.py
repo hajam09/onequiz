@@ -13,6 +13,7 @@ from django.forms.widgets import (
 from django.urls import reverse
 from django.utils.safestring import mark_safe
 
+from core.models import QuizAttempt, Question
 from onequiz.base.utils.navigationBar import linkItem, Icon
 
 register = template.Library()
@@ -204,3 +205,55 @@ def renderFormFields(field):
     else:
         raise Exception(f'Unsupported field type: {field.field.widget.__class__}')
     return mark_safe(label + body)
+
+
+@register.simple_tag
+def renderScoreComponent(user, quizAttempt, form):
+    canMark = quizAttempt.getPermissionMode(user) == QuizAttempt.Mode.MARK
+    isMarked = quizAttempt.getPermissionMode(user) == QuizAttempt.Mode.VIEW and quizAttempt.status == QuizAttempt.Status.MARKED
+
+    if form.data.get('response').question.questionType == Question.Type.ESSAY:
+        name = f"awarded-mark-for-essay-{form.data.get('response').id}"
+    elif form.data.get('response').question.questionType == Question.Type.TRUE_OR_FALSE:
+        name = f"awarded-mark-for-true-or-false-{form.data.get('response').id}"
+    elif form.data.get('response').question.questionType == Question.Type.MULTIPLE_CHOICE:
+        name = f"awarded-mark-for-mcq-{form.data.get('response').id}"
+    else:
+        raise Exception(f"Unsupported response type: {form.data.get('response').question}")
+
+    if form.data.get('markResponseAlert') == 'border border-success':
+        awardedMark = int(form.data.get('response').mark)
+    elif form.data.get('markResponseAlert') == 'border border-secondary':
+        awardedMark = int(form.data.get('response').mark) if form.data.get('response').mark else ''
+    else:
+        awardedMark = ''
+
+    if canMark or isMarked:
+        itemContent = f'''
+        <span>
+            <div class="row">
+                <div class="col">
+                    <div class="text-right">
+                        <div class="row float-right">
+                            <div class="col-auto">
+                                <input type="number" class="form-control" value="{awardedMark}" name="{name}"
+                                {"disabled" if quizAttempt.user == user else ""}
+                                min="0" max="{form.data.get('response').question.mark}"
+                                style="width: 40px; padding-left: 10px;padding-right: 10px;">
+                            </div>
+                            <b style="font-size: 26px;">/</b>
+                            <div class="col-auto">
+                                <input disabled type="number" class="form-control"
+                                value="{form.data.get('response').question.mark}"
+                                style="width: 40px; padding-left: 10px; padding-right: 10px;">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <br>
+            </span>
+        '''
+    else:
+        itemContent = '''<span></span>'''
+    return mark_safe(itemContent)
