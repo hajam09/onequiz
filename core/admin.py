@@ -1,14 +1,17 @@
+from auditlog.registry import auditlog
 from django import forms
 from django.contrib import admin
 from django.contrib.admin.widgets import FilteredSelectMultiple
 from django.utils.translation import gettext_lazy as _
 
-from core.models import Question
-from core.models import Quiz
-from core.models import QuizAttempt
-from core.models import Response
-from core.models import Result
-from core.models import Subject
+from core.models import (
+    Question,
+    Quiz,
+    QuizAttempt,
+    Response,
+    Result,
+    Subject
+)
 
 
 class QuizAttemptAdminForm(forms.ModelForm):
@@ -78,3 +81,10 @@ admin.site.register(QuizAttempt, QuizAttemptAdmin)
 admin.site.register(Result)
 admin.site.register(Subject)
 admin.site.register(Response)
+
+auditlog.register(Question)
+auditlog.register(Quiz)
+auditlog.register(QuizAttempt)
+auditlog.register(Response)
+auditlog.register(Result)
+auditlog.register(Subject)

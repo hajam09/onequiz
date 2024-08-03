@@ -388,7 +388,8 @@ class QuizUpdateForm(QuizForm):
         self.quiz.name = self.cleaned_data.get('name')
         self.quiz.description = self.cleaned_data.get('description')
         self.quiz.url = self.cleaned_data.get('link')
-        self.quiz.subject_id = self.data.get('subject')
+        if str(self.quiz.subject_id) != self.data.get('subject'):
+            self.quiz.subject_id = self.data.get('subject')
         self.quiz.topic = self.cleaned_data.get('topic')
         self.quiz.quizDuration = self.cleaned_data.get('quizDuration')
         self.quiz.maxAttempt = self.cleaned_data.get('maxAttempt')
