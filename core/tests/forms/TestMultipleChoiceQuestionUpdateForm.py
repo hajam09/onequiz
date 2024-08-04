@@ -1,10 +1,10 @@
 from django import forms
 from django.http import QueryDict
 
-from onequiz.operations import bakerOperations
-from onequiz.tests.BaseTest import BaseTest
 from core.forms import MultipleChoiceQuestionUpdateForm
 from core.models import Question
+from onequiz.operations import bakerOperations
+from onequiz.tests.BaseTest import BaseTest
 
 
 class MultipleChoiceQuestionUpdateFormTest(BaseTest):

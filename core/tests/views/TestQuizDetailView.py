@@ -17,7 +17,7 @@ class QuizDetailViewTest(BaseTestViews):
         bakerOperations.createSubjects(1)
         self.subject = Subject.objects.first()
         self.quiz = bakerOperations.createQuiz(self.request.user, self.subject)
-        self.path = reverse('core:quiz-update-view', kwargs={'quizId': self.quiz.id})
+        self.path = reverse('core:quiz-update-view', kwargs={'url': self.quiz.url})
 
     def testQuizDetailViewGetForCreator(self):
         response = self.get()
@@ -42,7 +42,7 @@ class QuizDetailViewTest(BaseTestViews):
         self.assertTemplateUsed(response, 'core/quizTemplateView.html')
 
     def testQuizDoesNotExist(self):
-        path = reverse('core:quiz-update-view', kwargs={'quizId': 0})
+        path = reverse('core:quiz-update-view', kwargs={'url': 'non-existing-url'})
         response = self.get(path=path)
         self.assertEquals(response.status_code, 404)
 

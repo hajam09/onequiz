@@ -1,10 +1,10 @@
 from django.http import QueryDict
 from django.urls import reverse
 
-from onequiz.operations import bakerOperations
-from onequiz.tests.BaseTestViews import BaseTestViews
 from core.forms import MultipleChoiceQuestionCreateForm
 from core.models import Question
+from onequiz.operations import bakerOperations
+from onequiz.tests.BaseTestViews import BaseTestViews
 
 
 class QuizCreateMultipleChoiceQuestionViewTest(BaseTestViews):
@@ -12,7 +12,7 @@ class QuizCreateMultipleChoiceQuestionViewTest(BaseTestViews):
     def setUp(self, path=None) -> None:
         super(QuizCreateMultipleChoiceQuestionViewTest, self).setUp('')
         self.quiz = bakerOperations.createQuiz(self.request.user)
-        self.path = reverse('core:multiple-choice-question-create-view', kwargs={'quizId': self.quiz.id})
+        self.path = reverse('core:multiple-choice-question-create-view', kwargs={'url': self.quiz.url})
 
     def testCreateMultipleChoiceQuestionViewGet(self):
         response = self.get()
@@ -22,7 +22,7 @@ class QuizCreateMultipleChoiceQuestionViewTest(BaseTestViews):
         self.assertTemplateUsed(response, 'core/multipleChoiceQuestionTemplateView.html')
 
     def testQuizDoesNotExist(self):
-        path = reverse('core:multiple-choice-question-create-view', kwargs={'quizId': 0})
+        path = reverse('core:multiple-choice-question-create-view', kwargs={'url': 'non-existing-url'})
         response = self.get(path=path)
         self.assertEquals(response.status_code, 404)
 

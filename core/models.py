@@ -1,5 +1,6 @@
-import datetime
 import copy
+import datetime
+import uuid
 
 from django.contrib.auth.models import User
 from django.core.validators import MinValueValidator, MaxValueValidator
@@ -9,6 +10,10 @@ from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 
 PERCENTAGE_VALIDATOR = [MinValueValidator(0), MaxValueValidator(100)]
+
+
+def generateModelUrl():
+    return f'{uuid.uuid4().hex[:9]}'
 
 
 class BaseModel(models.Model):
@@ -47,6 +52,7 @@ class Question(BaseModel):
         RANDOM = 'RANDOM', _('Random')
         NONE = 'NONE', _('None')
 
+    url = models.CharField(max_length=10, unique=True, editable=False, default=generateModelUrl)
     figure = models.ImageField(blank=True, null=True, upload_to='uploads/%Y/%m/%d')
     content = models.TextField()
     explanation = models.TextField(max_length=2048, blank=True, null=True)
@@ -121,7 +127,7 @@ class Quiz(BaseModel):
 
     name = models.CharField(max_length=255)
     description = models.TextField(blank=True, null=True)
-    url = models.SlugField(max_length=255, blank=False, unique=True)
+    url = models.CharField(max_length=10, unique=True, editable=False, default=generateModelUrl)
     subject = models.ForeignKey(Subject, on_delete=models.SET_NULL, null=True, blank=True)
     topic = models.CharField(max_length=255, blank=True, null=True)
     numberOfQuestions = models.PositiveIntegerField()
@@ -149,7 +155,7 @@ class Quiz(BaseModel):
         return questionList
 
     def getUrl(self):
-        return reverse('core:quiz-update-view', kwargs={'quizId': self.id})
+        return reverse('core:quiz-update-view', kwargs={'url': self.url})
 
 
 class QuizAttempt(BaseModel):
@@ -165,6 +171,7 @@ class QuizAttempt(BaseModel):
         MARK = 'MARK', _('Mark')
         VIEW = 'VIEW', _('View')
 
+    url = models.CharField(max_length=10, unique=True, editable=False, default=generateModelUrl)
     quiz = models.ForeignKey(Quiz, on_delete=models.CASCADE, related_name='quizAttemptQuiz')
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='quizAttemptUser')
     status = models.CharField(max_length=30, choices=Status.choices, default=Status.NOT_ATTEMPTED)
@@ -175,10 +182,10 @@ class QuizAttempt(BaseModel):
         verbose_name_plural = 'Quiz Attempts'
 
     def getAttemptUrl(self):
-        return reverse('core:quiz-attempt-view-v2', kwargs={'attemptId': self.id})
+        return reverse('core:quiz-attempt-view-v2', kwargs={'url': self.url})
 
     def getAttemptResultUrl(self):
-        return reverse('core:quiz-attempt-result-view', kwargs={'attemptId': self.id})
+        return reverse('core:quiz-attempt-result-view', kwargs={'url': self.url})
 
     def getQuizEndTime(self, uiFormat=True):
         endTime = (self.createdDttm + datetime.timedelta(minutes=self.quiz.quizDuration))

@@ -1,7 +1,6 @@
 import operator
 import os
 import random
-import re
 from functools import reduce
 
 from django.conf import settings
@@ -41,12 +40,6 @@ def deleteImage(imageField):
             os.remove(existingImage)
     except ValueError:
         pass
-
-
-def parseStringToUrl(link):
-    link = re.sub('\s+', '-', link).lower()
-    link = ''.join(letter for letter in link if letter.isalnum() or letter == '-')
-    return link
 
 
 def performComplexQuizSearch(query, filterList=None):

@@ -85,7 +85,7 @@
     <script src="{% static '/js/utils.js' %}"></script>
     <script>
         function onTimeout() {
-            window.location.href = '{% url 'core:quiz-attempt-submission-preview' attemptId=quizAttempt.id %}'
+            window.location.href = '{% url 'core:quiz-attempt-submission-preview' url=quizAttempt.url %}'
         }
 
         window.onload = function () {

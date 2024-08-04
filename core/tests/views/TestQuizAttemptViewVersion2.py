@@ -23,19 +23,19 @@ class QuizAttemptViewVersion2Test(BaseTestViews):
         self.multipleChoiceQuestion = bakerOperations.createMultipleChoiceQuestionAndAnswers()
         self.quizAttempt = QuizAttempt.objects.create(user=self.user, quiz_id=self.quiz.id)
         self.quiz.questions.add(*[self.essayQuestion, self.trueOrFalseQuestion, self.multipleChoiceQuestion])
-        self.path = reverse('core:quiz-attempt-view-v2', kwargs={'attemptId': self.quizAttempt.id})
+        self.path = reverse('core:quiz-attempt-view-v2', kwargs={'url': self.quizAttempt.url})
 
     def testGivenQuizAttemptDoesNotExistsThenReturn404(self):
-        self.path = reverse('core:quiz-attempt-view-v2', kwargs={'attemptId': 0})
+        self.path = reverse('core:quiz-attempt-view-v2', kwargs={'url': 'non-existing-url'})
         response = self.get()
         self.assertEqual(response.status_code, 404)
 
     @patch.object(QuizAttempt, 'hasQuizEnded', return_value=True)
-    def testOnAQuizAttemptIfQuizEndedThenUpdateStatus(self, mockHasQuizEnded):
+    def testOnAQuizAttemptIfQuizEndedThenUpdateStatusAndRedirectToSubmissionPreview(self, mockHasQuizEnded):
         response = self.get()
         self.quizAttempt.refresh_from_db()
         self.assertEqual(self.quizAttempt.status, QuizAttempt.Status.SUBMITTED)
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, 302)
 
     def testWhenARandomUserVisitsQuizAttemptThenRaiseForbiddenResponse(self):
         User.objects.create_user(username='random-user', password='random-password')
@@ -79,7 +79,7 @@ class QuizAttemptViewVersion2Test(BaseTestViews):
         self.quizAttempt.status = QuizAttempt.Status.IN_PROGRESS
         response = self.get()
         self.assertEqual(response.status_code, 302)
-        self.assertRedirects(response, f'/v2/quiz-attempt/{self.quizAttempt.id}/preview/')
+        self.assertRedirects(response, f'/v2/quiz-attempt/{self.quizAttempt.url}/preview/')
 
     def testDuringQuizAttemptWhenUserLoadsNewQuestionThenCreateEssayResponseForm(self):
         self.path += '?q=1'

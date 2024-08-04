@@ -2,10 +2,8 @@ import itertools
 import uuid
 
 from django import forms
-from django.db.models import Q
 
 from core.models import Quiz, Subject, Question
-from onequiz.operations import generalOperations
 
 
 class QuizForm(forms.Form):
@@ -26,14 +24,6 @@ class QuizForm(forms.Form):
                 'rows': 5,
             }
         )
-    )
-    link = forms.CharField(
-        label='Quiz link',
-        widget=forms.TextInput(
-            attrs={
-                'class': 'form-control col',
-            }
-        ),
     )
     subject = forms.MultipleChoiceField(
         label='Subject',
@@ -179,14 +169,6 @@ class QuizForm(forms.Form):
 
         return description
 
-    def clean_link(self):
-        link = generalOperations.parseStringToUrl(self.cleaned_data.get('link'))
-
-        if Quiz.objects.filter(url__exact=link).exists():
-            raise forms.ValidationError(f'Quiz already exists with link: {link}')
-
-        return link
-
     def clean_subject(self):
         subject = self.data.get('subject')
 
@@ -296,7 +278,6 @@ class QuizCreateForm(QuizForm):
         newQuiz = Quiz()
         newQuiz.name = self.cleaned_data.get('name')
         newQuiz.description = self.cleaned_data.get('description')
-        newQuiz.url = self.cleaned_data.get('link')
         newQuiz.subject_id = self.data.get('subject')
         newQuiz.topic = self.cleaned_data.get('topic')
         newQuiz.numberOfQuestions = 1
@@ -327,7 +308,6 @@ class QuizUpdateForm(QuizForm):
 
         self.initial['name'] = quiz.name
         self.initial['description'] = quiz.description
-        self.initial['link'] = quiz.url
         self.initial['subject'] = quiz.subject.id
         self.initial['topic'] = quiz.topic
         self.initial['quizDuration'] = quiz.quizDuration
@@ -344,7 +324,6 @@ class QuizUpdateForm(QuizForm):
         if quiz.creator_id != request.user.id:
             self.fields['name'].widget.attrs['disabled'] = True
             self.fields['description'].widget.attrs['disabled'] = True
-            self.fields['link'].widget.attrs['disabled'] = True
             self.fields['subject'].widget.attrs['disabled'] = True
             self.fields['topic'].widget.attrs['disabled'] = True
             self.fields['quizDuration'].widget.attrs['disabled'] = True
@@ -367,14 +346,6 @@ class QuizUpdateForm(QuizForm):
 
         return name
 
-    def clean_link(self):
-        link = generalOperations.parseStringToUrl(self.cleaned_data.get('link'))
-
-        if Quiz.objects.filter(~Q(id=self.quiz.id), Q(url__exact=link)).exists():
-            raise forms.ValidationError(f'Quiz already exists with link: {link}')
-
-        return link
-
     def clean(self):
         del self.errors['subject']
         del self.errors['difficulty']
@@ -387,7 +358,6 @@ class QuizUpdateForm(QuizForm):
     def update(self):
         self.quiz.name = self.cleaned_data.get('name')
         self.quiz.description = self.cleaned_data.get('description')
-        self.quiz.url = self.cleaned_data.get('link')
         if str(self.quiz.subject_id) != self.data.get('subject'):
             self.quiz.subject_id = self.data.get('subject')
         self.quiz.topic = self.cleaned_data.get('topic')

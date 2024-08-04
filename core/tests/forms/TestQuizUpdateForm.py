@@ -6,7 +6,7 @@ from faker import Faker
 
 from core.forms import QuizUpdateForm
 from core.models import Quiz, Subject
-from onequiz.operations import bakerOperations, generalOperations
+from onequiz.operations import bakerOperations
 from onequiz.tests.BaseTest import BaseTest
 
 
@@ -20,7 +20,7 @@ class QuizUpdateFormTest(BaseTest):
 
     def testFieldsAndTypeForQuizCreator(self):
         form = QuizUpdateForm(self.request, self.quiz)
-        self.assertEqual(len(form.fields), 15)
+        self.assertEqual(len(form.fields), 14)
 
         self.assertTrue(isinstance(form.fields.get('name'), forms.CharField))
         self.assertEqual(form.fields.get('name').label, 'Quiz Name')
@@ -29,10 +29,6 @@ class QuizUpdateFormTest(BaseTest):
         self.assertTrue(isinstance(form.fields.get('description'), forms.CharField))
         self.assertEqual(form.fields.get('description').label, 'Description')
         self.assertTrue(isinstance(form.fields.get('description').widget, forms.Textarea))
-
-        self.assertTrue(isinstance(form.fields.get('link'), forms.CharField))
-        self.assertEqual(form.fields.get('link').label, 'Quiz link')
-        self.assertTrue(isinstance(form.fields.get('link').widget, forms.TextInput))
 
         self.assertTrue(isinstance(form.fields.get('subject'), forms.MultipleChoiceField))
         self.assertEqual(form.fields.get('subject').label, 'Subject')
@@ -85,11 +81,10 @@ class QuizUpdateFormTest(BaseTest):
     def testFieldsAndTypeForNonQuizCreator(self):
         self.quiz.creator = bakerOperations.createUser()
         form = QuizUpdateForm(self.request, self.quiz)
-        self.assertEqual(len(form.fields), 9)
+        self.assertEqual(len(form.fields), 8)
 
         self.assertTrue(form.fields.get('name').widget.attrs['disabled'])
         self.assertTrue(form.fields.get('description').widget.attrs['disabled'])
-        self.assertTrue(form.fields.get('link').widget.attrs['disabled'])
         self.assertTrue(form.fields.get('subject').widget.attrs['disabled'])
         self.assertTrue(form.fields.get('topic').widget.attrs['disabled'])
         self.assertTrue(form.fields.get('quizDuration').widget.attrs['disabled'])
@@ -117,7 +112,6 @@ class QuizUpdateFormTest(BaseTest):
 
         self.assertEqual(form.initial['name'], self.quiz.name)
         self.assertEqual(form.initial['description'], self.quiz.description)
-        self.assertEqual(form.initial['link'], self.quiz.url)
         self.assertEqual(form.initial['subject'], self.quiz.subject.id)
         self.assertEqual(form.initial['topic'], self.quiz.topic)
         self.assertEqual(form.initial['quizDuration'], self.quiz.quizDuration)
@@ -135,21 +129,9 @@ class QuizUpdateFormTest(BaseTest):
         # todo
         pass
 
-    def testUpdateQuizUrlAlreadyUsed(self):
-        quiz2 = bakerOperations.createQuiz(self.request.user, self.subject)
-        testParams = self.TestParams(self.subject)
-        testParams.link = quiz2.url
-
-        form = QuizUpdateForm(self.request, self.quiz, data=testParams.getData())
-        self.assertFalse(form.is_valid())
-        self.assertEqual(1, len(form.errors))
-        self.assertTrue(form.has_error('link'))
-        self.assertEqual(f'Quiz already exists with link: {quiz2.url}', form.errors.get('link')[0])
-
     def testQuizUpdatedSuccessfully(self):
         testParams = self.TestParams(self.subject)
         testParams.name = 'New Quiz Name'
-        testParams.link = 'New Quiz Link'
         testParams.quizDuration = 100
         testParams.difficulty = Quiz.Difficulty.MEDIUM
         testParams.successText = 'New Success Text'
@@ -163,7 +145,6 @@ class QuizUpdateFormTest(BaseTest):
         quiz = form.update()
         self.assertEqual(testParams.name, quiz.name)
         self.assertEqual(testParams.description, quiz.description)
-        self.assertEqual(generalOperations.parseStringToUrl(testParams.link), quiz.url)
         self.assertEqual(self.subject, quiz.subject)
         self.assertEqual(testParams.topic, quiz.topic)
         self.assertEqual(testParams.quizDuration, quiz.quizDuration)
@@ -185,7 +166,6 @@ class QuizUpdateFormTest(BaseTest):
 
             self.name = faker.pystr_format()
             self.description = faker.paragraph()
-            self.link = faker.paragraph()
             self.subject = subject.id
             self.topic = faker.pystr_format()
             self.quizDuration = faker.random_number(digits=2)
@@ -203,7 +183,6 @@ class QuizUpdateFormTest(BaseTest):
             data = {
                 'name': self.name,
                 'description': self.description,
-                'link': self.link,
                 'subject': self.subject,
                 'topic': self.topic,
                 'quizDuration': self.quizDuration,

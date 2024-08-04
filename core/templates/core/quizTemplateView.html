@@ -8,11 +8,11 @@
             <div class="row">
                 <div class="col">
                     <a type="button" class="btn btn-outline-dark btn-sm btn-block"
-                       href="{% url 'core:quiz-update-view' quizId=quiz.id %}">Quiz Detail</a>
+                       href="{% url 'core:quiz-update-view' url=quiz.url %}">Quiz Detail</a>
                 </div>
                 <div class="col">
                     <a type="button" class="btn btn-outline-dark btn-sm btn-block"
-                       href="{% url 'core:quiz-attempts-for-quiz-view' quizId=quiz.id %}">Quiz Attempts</a>
+                       href="{% url 'core:quiz-attempts-for-quiz-view' url=quiz.url %}">Quiz Attempts</a>
                 </div>
             </div>
         {% endif %}
@@ -50,18 +50,18 @@
             <div class="row">
                 <div class="col-sm">
                     <a class="btn btn-primary btn-sm btn-block"
-                       href="{% url 'core:essay-question-create-view' quizId=quiz.id %}" role="button">Create Essay
+                       href="{% url 'core:essay-question-create-view' url=quiz.url %}" role="button">Create Essay
                         Question</a>
                 </div>
                 <div class="col-sm">
                     <a class="btn btn-primary btn-sm btn-block"
-                       href="{% url 'core:multiple-choice-question-create-view' quizId=quiz.id %}" role="button">Create
+                       href="{% url 'core:multiple-choice-question-create-view' url=quiz.url %}" role="button">Create
                         Multiple Choice
                         Question</a>
                 </div>
                 <div class="col-sm">
                     <a class="btn btn-primary btn-sm btn-block"
-                       href="{% url 'core:true-or-false-question-create-view' quizId=quiz.id %}" role="button">Create
+                       href="{% url 'core:true-or-false-question-create-view' url=quiz.url %}" role="button">Create
                         True or
                         False
                         Question</a>
@@ -93,7 +93,7 @@
                             </div>
                             <div class="col-auto">
                                 <a class="btn btn-outline-dark btn-sm"
-                                   href="{% url 'core:question-update-view' quizId=quiz.id questionId=question.id %}"
+                                   href="{% url 'core:question-update-view' quizUrl=quiz.url questionUrl=question.url %}"
                                    role="button"><i class="far fa-edit"></i></a>
                                 {#<button type="button" class="btn btn-outline-danger btn-sm"><i class="fas fa-trash"></i></button>#}
                             </div>

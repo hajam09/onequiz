@@ -71,9 +71,9 @@ def quizCreateView(request):
     return render(request, 'core/quizTemplateView.html', context)
 
 
-def quizUpdateView(request, quizId):
+def quizUpdateView(request, url):
     try:
-        quiz = Quiz.objects.select_related('subject').get(id=quizId)  # creator=request.user
+        quiz = Quiz.objects.select_related('subject').get(url=url)  # creator=request.user
     except Quiz.DoesNotExist:
         raise Http404
 
@@ -81,7 +81,7 @@ def quizUpdateView(request, quizId):
         form = QuizUpdateForm(request, quiz, request.POST, request.FILES)
         if form.is_valid():
             form.update()
-            return redirect('core:quiz-update-view', quizId=quizId)
+            return redirect('core:quiz-update-view', url=url)
     else:
         form = QuizUpdateForm(request, quiz)
 
@@ -98,9 +98,9 @@ def quizUpdateView(request, quizId):
 
 
 @login_required
-def essayQuestionCreateView(request, quizId):
+def essayQuestionCreateView(request, url):
     try:
-        quiz = Quiz.objects.get(id=quizId, creator=request.user)
+        quiz = Quiz.objects.get(url=url, creator=request.user)
     except Quiz.DoesNotExist:
         raise Http404
 
@@ -109,7 +109,7 @@ def essayQuestionCreateView(request, quizId):
         if form.is_valid():
             question = form.save()
             quiz.questions.add(question)
-            return redirect('core:essay-question-create-view', quizId=quizId)
+            return redirect('core:essay-question-create-view', url=url)
     else:
         form = EssayQuestionCreateForm()
 
@@ -123,9 +123,9 @@ def essayQuestionCreateView(request, quizId):
 
 
 @login_required
-def multipleChoiceQuestionCreateView(request, quizId):
+def multipleChoiceQuestionCreateView(request, url):
     try:
-        quiz = Quiz.objects.get(id=quizId, creator=request.user)
+        quiz = Quiz.objects.get(url=url, creator=request.user)
     except Quiz.DoesNotExist:
         raise Http404
 
@@ -134,7 +134,7 @@ def multipleChoiceQuestionCreateView(request, quizId):
         if form.is_valid():
             question = form.save()
             quiz.questions.add(question)
-            return redirect('core:multiple-choice-question-create-view', quizId=quizId)
+            return redirect('core:multiple-choice-question-create-view', url=url)
     else:
         form = MultipleChoiceQuestionCreateForm()
 
@@ -148,9 +148,9 @@ def multipleChoiceQuestionCreateView(request, quizId):
 
 
 @login_required
-def trueOrFalseQuestionCreateView(request, quizId):
+def trueOrFalseQuestionCreateView(request, url):
     try:
-        quiz = Quiz.objects.get(id=quizId, creator=request.user)
+        quiz = Quiz.objects.get(url=url, creator=request.user)
     except Quiz.DoesNotExist:
         raise Http404
 
@@ -159,7 +159,7 @@ def trueOrFalseQuestionCreateView(request, quizId):
         if form.is_valid():
             question = form.save()
             quiz.questions.add(question)
-            return redirect('core:true-or-false-question-create-view', quizId=quizId)
+            return redirect('core:true-or-false-question-create-view', url=url)
     else:
         form = TrueOrFalseQuestionCreateForm()
 
@@ -173,10 +173,10 @@ def trueOrFalseQuestionCreateView(request, quizId):
 
 
 @login_required
-def questionUpdateView(request, quizId, questionId):
+def questionUpdateView(request, quizUrl, questionUrl):
     try:
         question = Question.objects.get(
-            id=questionId, quizQuestions=quizId, quizQuestions__creator=request.user
+            url=questionUrl, quizQuestions__url=quizUrl, quizQuestions__creator=request.user
         )
     except Question.DoesNotExist:
         raise Http404
@@ -190,7 +190,7 @@ def questionUpdateView(request, quizId, questionId):
             form = EssayQuestionUpdateForm(question, request.POST, request.FILES)
             if form.is_valid():
                 form.update()
-                return redirect('core:question-update-view', quizId=quizId, questionId=questionId)
+                return redirect('core:question-update-view', quizUrl=quizUrl, questionUrl=questionUrl)
         else:
             form = EssayQuestionUpdateForm(question)
 
@@ -202,7 +202,7 @@ def questionUpdateView(request, quizId, questionId):
             form = TrueOrFalseQuestionUpdateForm(question, request.POST, request.FILES)
             if form.is_valid():
                 form.update()
-                return redirect('core:question-update-view', quizId=quizId, questionId=questionId)
+                return redirect('core:question-update-view', quizUrl=quizUrl, questionUrl=questionUrl)
         else:
             form = TrueOrFalseQuestionUpdateForm(question)
 
@@ -214,7 +214,7 @@ def questionUpdateView(request, quizId, questionId):
             form = MultipleChoiceQuestionUpdateForm(question, request.POST, request.FILES)
             if form.is_valid():
                 form.update()
-                return redirect('core:question-update-view', quizId=quizId, questionId=questionId)
+                return redirect('core:question-update-view', quizUrl=quizUrl, questionUrl=questionUrl)
         else:
             form = MultipleChoiceQuestionUpdateForm(question)
 
@@ -255,9 +255,9 @@ def userCreatedQuizzesView(request):
 
 
 @login_required
-def quizAttemptViewVersion1(request, attemptId):
+def quizAttemptViewVersion1(request, url):
     try:
-        quizAttempt = QuizAttempt.objects.select_related('user', 'quiz__creator').get(id=attemptId)
+        quizAttempt = QuizAttempt.objects.select_related('user', 'quiz__creator').get(url=url)
     except QuizAttempt.DoesNotExist:
         raise Http404
 
@@ -276,8 +276,8 @@ def quizAttemptViewVersion1(request, attemptId):
 
 
 @login_required
-def quizAttemptViewVersion2(request, attemptId):
-    quizAttempt = get_object_or_404(QuizAttempt.objects.select_related('user'), id=attemptId)
+def quizAttemptViewVersion2(request, url):
+    quizAttempt = get_object_or_404(QuizAttempt.objects.select_related('user'), url=url)
 
     if quizAttempt.hasQuizEnded() and quizAttempt.status in quizAttempt.getEditStatues():
         quizAttempt.status = QuizAttempt.Status.SUBMITTED
@@ -288,7 +288,7 @@ def quizAttemptViewVersion2(request, attemptId):
 
     if quizAttempt.getPermissionMode(request.user) == QuizAttempt.Mode.MARK:
         # Quiz creator wants to mark this quiz. Temporarily redirect to quizAttemptSubmissionPreview and mark there.
-        return redirect('core:quiz-attempt-submission-preview', attemptId=attemptId)
+        return redirect('core:quiz-attempt-submission-preview', url=url)
 
     ref = request.GET.get('ref', 'next')
     questionIndex = request.GET.get('q', 1)
@@ -320,7 +320,7 @@ def quizAttemptViewVersion2(request, attemptId):
         questionPaginator = paginator.page(1)
     except EmptyPage:
         if int(questionIndex) > paginator.num_pages:
-            return redirect('core:quiz-attempt-submission-preview', attemptId=attemptId)
+            return redirect('core:quiz-attempt-submission-preview', url=url)
         questionPaginator = paginator.page(paginator.num_pages)
 
     currentQuestion = questionPaginator.object_list[0]
@@ -350,8 +350,8 @@ def quizAttemptViewVersion2(request, attemptId):
 
 
 @login_required
-def quizAttemptSubmissionPreview(request, attemptId):
-    quizAttempt = get_object_or_404(QuizAttempt.objects.select_related('user'), id=attemptId)
+def quizAttemptSubmissionPreview(request, url):
+    quizAttempt = get_object_or_404(QuizAttempt.objects.select_related('user'), url=url)
 
     if quizAttempt.hasQuizEnded() and quizAttempt.status in quizAttempt.getEditStatues():
         quizAttempt.status = QuizAttempt.Status.SUBMITTED
@@ -371,7 +371,7 @@ def quizAttemptSubmissionPreview(request, attemptId):
             request,
             'Your attempt has been submitted successfully, please check later for results.'
         )
-        return redirect('core:quiz-attempt-submission-preview', attemptId=attemptId)
+        return redirect('core:quiz-attempt-submission-preview', url=url)
 
     # handleQuizCreatorActions
     # - > User views all the response.
@@ -444,7 +444,7 @@ def quizAttemptSubmissionPreview(request, attemptId):
             request,
             'You have marked this quiz attempt successfully.'
         )
-        return redirect('core:quiz-attempt-submission-preview', attemptId=attemptId)
+        return redirect('core:quiz-attempt-submission-preview', url=url)
 
     context = {
         'quizAttempt': quizAttempt,
@@ -453,10 +453,10 @@ def quizAttemptSubmissionPreview(request, attemptId):
     return render(request, 'core/quizAttemptReviewView.html', context)
 
 
-def quizAttemptResultView(request, attemptId):
+def quizAttemptResultView(request, url):
     result = Result.objects.filter(
-        Q(quizAttempt_id=attemptId, quizAttempt__user_id=request.user.id) |
-        Q(quizAttempt_id=attemptId, quizAttempt__quiz__creator_id=request.user.id)
+        Q(quizAttempt__url=url, quizAttempt__user_id=request.user.id) |
+        Q(quizAttempt__url=url, quizAttempt__quiz__creator_id=request.user.id)
     ).select_related('quizAttempt__quiz__creator').last()
 
     if result is None:
@@ -481,11 +481,11 @@ def quizAttemptResultView(request, attemptId):
     return render(request, 'core/quizAttemptResultView.html', context)
 
 
-def quizAttemptsForQuizView(request, quizId):
-    quizAttemptList = QuizAttempt.objects.select_related('user').filter(quiz_id=quizId)
+def quizAttemptsForQuizView(request, url):
+    quizAttemptList = QuizAttempt.objects.select_related('user').filter(quiz__url=url)
     context = {
         'quizAttemptList': quizAttemptList,
-        'quizId': quizId,
+        'url': url,
     }
     return render(request, 'core/quizAttemptsForQuizView.html', context)
 

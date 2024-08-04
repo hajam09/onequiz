@@ -6,7 +6,6 @@ from django.contrib.auth.models import User
 from faker import Faker
 
 from core.models import Subject, Quiz, Question
-from onequiz.operations import generalOperations
 
 EMAIL_DOMAINS = ["@yahoo", "@gmail", "@outlook", "@hotmail"]
 DOMAINS = [".co.uk", ".com", ".co.in", ".net", ".us"]
@@ -59,7 +58,6 @@ def createQuiz(creator=None, subject=None, save=True):
     newQuiz = Quiz()
     newQuiz.name = faker.pystr_format()
     newQuiz.description = faker.paragraph()
-    newQuiz.url = generalOperations.parseStringToUrl(faker.paragraph())
     newQuiz.subject = subject
     newQuiz.topic = faker.pystr_format()
     newQuiz.numberOfQuestions = faker.random_number(digits=2, fix_len=False)

@@ -6,7 +6,7 @@ from faker import Faker
 
 from core.forms import QuizCreateForm
 from core.models import Quiz, Subject
-from onequiz.operations import bakerOperations, generalOperations
+from onequiz.operations import bakerOperations
 from onequiz.tests.BaseTest import BaseTest
 
 
@@ -20,7 +20,7 @@ class QuizCreateFormTest(BaseTest):
 
     def testFieldsAndType(self):
         form = QuizCreateForm(self.request)
-        self.assertEqual(len(form.fields), 15)
+        self.assertEqual(len(form.fields), 14)
 
         self.assertTrue(isinstance(form.fields.get('name'), forms.CharField))
         self.assertEqual(form.fields.get('name').label, 'Quiz Name')
@@ -29,10 +29,6 @@ class QuizCreateFormTest(BaseTest):
         self.assertTrue(isinstance(form.fields.get('description'), forms.CharField))
         self.assertEqual(form.fields.get('description').label, 'Description')
         self.assertTrue(isinstance(form.fields.get('description').widget, forms.Textarea))
-
-        self.assertTrue(isinstance(form.fields.get('link'), forms.CharField))
-        self.assertEqual(form.fields.get('link').label, 'Quiz link')
-        self.assertTrue(isinstance(form.fields.get('link').widget, forms.TextInput))
 
         self.assertTrue(isinstance(form.fields.get('subject'), forms.MultipleChoiceField))
         self.assertEqual(form.fields.get('subject').label, 'Subject')
@@ -108,16 +104,6 @@ class QuizCreateFormTest(BaseTest):
         self.assertFalse(form.is_valid())
         self.assertTrue(form.has_error('name'))
         self.assertEqual(f'Quiz already exists with name: {quiz.name}', form.errors.get('name')[0])
-
-    def testQuizLinkAlreadyExists(self):
-        quiz = bakerOperations.createQuiz(self.request.user, self.subject)
-        testParams = self.TestParams(self.subject)
-        testParams.link = quiz.url
-        form = QuizCreateForm(self.request, data=testParams.getData())
-
-        self.assertFalse(form.is_valid())
-        self.assertTrue(form.has_error('link'))
-        self.assertEqual(f'Quiz already exists with link: {testParams.link}', form.errors.get('link')[0])
 
     def testSelectedSubjectDoesNotExists(self):
         testParams = self.TestParams(self.subject)
@@ -202,7 +188,6 @@ class QuizCreateFormTest(BaseTest):
         newQuiz = form.save()
         self.assertEqual(testParams.name, newQuiz.name)
         self.assertEqual(testParams.description, newQuiz.description)
-        self.assertEqual(generalOperations.parseStringToUrl(testParams.link), newQuiz.url)
         self.assertEqual(self.subject, newQuiz.subject)
         self.assertEqual(testParams.topic, newQuiz.topic)
         self.assertEqual(1, newQuiz.numberOfQuestions)
@@ -226,7 +211,6 @@ class QuizCreateFormTest(BaseTest):
 
             self.name = faker.pystr_format()
             self.description = faker.paragraph()
-            self.link = faker.paragraph()
             self.subject = subject.id
             self.topic = faker.pystr_format()
             self.quizDuration = faker.random_number(digits=2)
@@ -244,7 +228,6 @@ class QuizCreateFormTest(BaseTest):
             data = {
                 'name': self.name,
                 'description': self.description,
-                'link': self.link,
                 'subject': self.subject,
                 'topic': self.topic,
                 'quizDuration': self.quizDuration,
