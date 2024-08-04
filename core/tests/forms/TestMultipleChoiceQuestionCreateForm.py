@@ -1,9 +1,9 @@
 from django import forms
 from django.http import QueryDict
 
+from core.forms import MultipleChoiceQuestionCreateForm
 from core.models import Question
 from onequiz.tests.BaseTest import BaseTest
-from core.forms import MultipleChoiceQuestionCreateForm
 
 
 class MultipleChoiceQuestionCreateFormTest(BaseTest):

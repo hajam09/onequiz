@@ -1,8 +1,8 @@
 from django.urls import reverse
 
+from core.forms import TrueOrFalseQuestionCreateForm
 from onequiz.operations import bakerOperations
 from onequiz.tests.BaseTestViews import BaseTestViews
-from core.forms import TrueOrFalseQuestionCreateForm
 
 
 class QuizCreateTrueOrFalseQuestionViewTest(BaseTestViews):
@@ -10,7 +10,7 @@ class QuizCreateTrueOrFalseQuestionViewTest(BaseTestViews):
     def setUp(self, path=None) -> None:
         super(QuizCreateTrueOrFalseQuestionViewTest, self).setUp('')
         self.quiz = bakerOperations.createQuiz(self.request.user)
-        self.path = reverse('core:true-or-false-question-create-view', kwargs={'quizId': self.quiz.id})
+        self.path = reverse('core:true-or-false-question-create-view', kwargs={'url': self.quiz.url})
 
     def testCreateTrueOrFalseQuestionViewGet(self):
         response = self.get()
@@ -20,7 +20,7 @@ class QuizCreateTrueOrFalseQuestionViewTest(BaseTestViews):
         self.assertTemplateUsed(response, 'core/trueOrFalseQuestionTemplateView.html')
 
     def testQuizDoesNotExist(self):
-        path = reverse('core:true-or-false-question-create-view', kwargs={'quizId': 0})
+        path = reverse('core:true-or-false-question-create-view', kwargs={'url': 'non-existing-url'})
         response = self.get(path=path)
         self.assertEquals(response.status_code, 404)
 

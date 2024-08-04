@@ -3,9 +3,9 @@ from unittest.mock import patch
 from django.urls import reverse
 from django.utils import timezone
 
+from core.models import QuizAttempt, Subject
 from onequiz.operations import bakerOperations
 from onequiz.tests.BaseTestViews import BaseTestViews
-from core.models import QuizAttempt, Subject
 
 
 class QuizAttemptViewVersion1Test(BaseTestViews):
@@ -19,7 +19,7 @@ class QuizAttemptViewVersion1Test(BaseTestViews):
         self.quiz.questions.add(*bakerOperations.createRandomQuestions(2))
 
         self.quizAttempt = QuizAttempt.objects.create(user=self.request.user, quiz_id=self.quiz.id)
-        self.path = reverse('core:quiz-attempt-view-v1', kwargs={'attemptId': self.quizAttempt.id})
+        self.path = reverse('core:quiz-attempt-view-v1', kwargs={'url': self.quizAttempt.url})
 
     def testCreateEssayQuestionViewGet(self):
         response = self.get()
@@ -30,7 +30,7 @@ class QuizAttemptViewVersion1Test(BaseTestViews):
         self.assertEqual(response.context['mode'], QuizAttempt.Mode.EDIT)
 
     def testQuizAttemptDoesNotExist(self):
-        path = reverse('core:quiz-attempt-view-v1', kwargs={'attemptId': 0})
+        path = reverse('core:quiz-attempt-view-v1', kwargs={'url': 'non-existing-url'})
         response = self.get(path=path)
         self.assertEquals(response.status_code, 404)
 

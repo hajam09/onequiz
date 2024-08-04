@@ -2,10 +2,10 @@ from unittest.mock import patch
 
 from django.urls import reverse
 
-from onequiz.operations import bakerOperations
-from onequiz.tests.BaseTestViews import BaseTestViews
 from core.forms import EssayQuestionUpdateForm, TrueOrFalseQuestionUpdateForm, MultipleChoiceQuestionUpdateForm
 from core.models import Subject
+from onequiz.operations import bakerOperations
+from onequiz.tests.BaseTestViews import BaseTestViews
 
 
 class QuizQuestionDetailViewTest(BaseTestViews):
@@ -25,13 +25,13 @@ class QuizQuestionDetailViewTest(BaseTestViews):
         ])
 
     def testQuizDoesNotExist(self):
-        path = reverse('core:question-update-view', kwargs={'quizId': self.quiz.id, 'questionId': 0})
+        path = reverse('core:question-update-view', kwargs={'quizUrl': self.quiz.url, 'questionUrl': 'non-existing-url'})
         response = self.get(path=path)
         self.assertEquals(response.status_code, 404)
 
     def testGetEssayQuestionUpdateForm(self):
         path = reverse(
-            'core:question-update-view', kwargs={'quizId': self.quiz.id, 'questionId': self.essayQuestion.id}
+            'core:question-update-view', kwargs={'quizUrl': self.quiz.url, 'questionUrl': self.essayQuestion.url}
         )
         response = self.get(path=path)
 
@@ -46,14 +46,14 @@ class QuizQuestionDetailViewTest(BaseTestViews):
         form.return_value = True
         form.update = None
         path = reverse(
-            'core:question-update-view', kwargs={'quizId': self.quiz.id, 'questionId': self.essayQuestion.id}
+            'core:question-update-view', kwargs={'quizUrl': self.quiz.url, 'questionUrl': self.essayQuestion.url}
         )
         response = self.post(path=path)
         self.assertEquals(response.status_code, 200)
 
     def testGetTrueOrFalseQuestionUpdateForm(self):
         path = reverse(
-            'core:question-update-view', kwargs={'quizId': self.quiz.id, 'questionId': self.trueOrFalseQuestion.id}
+            'core:question-update-view', kwargs={'quizUrl': self.quiz.url, 'questionUrl': self.trueOrFalseQuestion.url}
         )
         response = self.get(path=path)
 
@@ -68,14 +68,14 @@ class QuizQuestionDetailViewTest(BaseTestViews):
         form.return_value = True
         form.update = None
         path = reverse(
-            'core:question-update-view', kwargs={'quizId': self.quiz.id, 'questionId': self.trueOrFalseQuestion.id}
+            'core:question-update-view', kwargs={'quizUrl': self.quiz.url, 'questionUrl': self.trueOrFalseQuestion.url}
         )
         response = self.post(path=path)
         self.assertEquals(response.status_code, 200)
 
     def testGetMultipleChoiceQuestionUpdateForm(self):
         path = reverse(
-            'core:question-update-view', kwargs={'quizId': self.quiz.id, 'questionId': self.multipleChoiceQuestion.id}
+            'core:question-update-view', kwargs={'quizUrl': self.quiz.url, 'questionUrl': self.multipleChoiceQuestion.url}
         )
         response = self.get(path=path)
 
@@ -90,7 +90,7 @@ class QuizQuestionDetailViewTest(BaseTestViews):
         form.return_value = True
         form.update = None
         path = reverse(
-            'core:question-update-view', kwargs={'quizId': self.quiz.id, 'questionId': self.multipleChoiceQuestion.id}
+            'core:question-update-view', kwargs={'quizUrl': self.quiz.url, 'questionUrl': self.multipleChoiceQuestion.url}
         )
         response = self.post(path=path)
         self.assertEquals(response.status_code, 200)
@@ -100,7 +100,7 @@ class QuizQuestionDetailViewTest(BaseTestViews):
         self.quiz.save()
 
         path = reverse(
-            'core:question-update-view', kwargs={'quizId': self.quiz.id, 'questionId': self.essayQuestion.id}
+            'core:question-update-view', kwargs={'quizUrl': self.quiz.url, 'questionUrl': self.essayQuestion.url}
         )
         response = self.get(path=path)
         self.assertEquals(response.status_code, 404)

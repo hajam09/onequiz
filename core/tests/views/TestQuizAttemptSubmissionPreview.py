@@ -22,10 +22,10 @@ class QuizAttemptSubmissionPreviewTest(BaseTestViews):
         self.multipleChoiceQuestion = bakerOperations.createMultipleChoiceQuestionAndAnswers()
         self.quizAttempt = QuizAttempt.objects.create(user=self.user, quiz_id=self.quiz.id)
         self.quiz.questions.add(*[self.essayQuestion, self.trueOrFalseQuestion, self.multipleChoiceQuestion])
-        self.path = reverse('core:quiz-attempt-submission-preview', kwargs={'attemptId': self.quizAttempt.id})
+        self.path = reverse('core:quiz-attempt-submission-preview', kwargs={'url': self.quizAttempt.url})
 
     def testGivenQuizAttemptDoesNotExistsThenReturn404(self):
-        self.path = reverse('core:quiz-attempt-submission-preview', kwargs={'attemptId': 0})
+        self.path = reverse('core:quiz-attempt-submission-preview', kwargs={'url': 'non-existing-url'})
         response = self.get()
         self.assertEqual(response.status_code, 404)
 

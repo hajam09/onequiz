@@ -4,10 +4,10 @@ from django.http import QueryDict
 from django.urls import reverse
 from faker import Faker
 
-from onequiz.operations import bakerOperations, generalOperations
-from onequiz.tests.BaseTestViews import BaseTestViews
 from core.forms import QuizCreateForm
 from core.models import Quiz, Subject
+from onequiz.operations import bakerOperations
+from onequiz.tests.BaseTestViews import BaseTestViews
 
 
 class QuizCreateQuizViewTest(BaseTestViews):
@@ -43,7 +43,6 @@ class QuizCreateQuizViewTest(BaseTestViews):
 
         self.assertEqual(quiz.name, testParams.name)
         self.assertEqual(quiz.description, testParams.description)
-        self.assertEqual(quiz.url, generalOperations.parseStringToUrl(testParams.link))
         self.assertEqual(quiz.subject, self.subject)
         self.assertEqual(quiz.topic, testParams.topic)
         self.assertEqual(quiz.numberOfQuestions, 1)
@@ -71,7 +70,6 @@ class QuizCreateQuizViewTest(BaseTestViews):
 
             self.name = faker.pystr_format()
             self.description = faker.paragraph()
-            self.link = faker.paragraph()
             self.subject = subject.id
             self.topic = faker.pystr_format()
             self.quizDuration = faker.random_number(digits=2)
@@ -89,7 +87,6 @@ class QuizCreateQuizViewTest(BaseTestViews):
             data = {
                 'name': self.name,
                 'description': self.description,
-                'link': self.link,
                 'subject': self.subject,
                 'topic': self.topic,
                 'quizDuration': self.quizDuration,

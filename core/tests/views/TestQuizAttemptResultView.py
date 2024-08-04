@@ -20,10 +20,10 @@ class QuizAttemptResultViewTest(BaseTestViews):
             quizAttempt=self.quizAttempt, timeSpent=100, numberOfCorrectAnswers=5, numberOfPartialAnswers=5,
             numberOfWrongAnswers=5, score=33.33
         )
-        self.path = reverse('core:quiz-attempt-result-view', kwargs={'attemptId': self.quizAttempt.id})
+        self.path = reverse('core:quiz-attempt-result-view', kwargs={'url': self.quizAttempt.url})
 
     def testQuizAttemptResultDoesNotExist(self):
-        path = reverse('core:quiz-attempt-result-view', kwargs={'attemptId': 0})
+        path = reverse('core:quiz-attempt-result-view', kwargs={'url': 'non-existing-url'})
         response = self.get(path=path)
         self.assertEquals(response.status_code, 404)
 
