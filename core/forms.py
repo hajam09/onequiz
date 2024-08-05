@@ -280,7 +280,6 @@ class QuizCreateForm(QuizForm):
         newQuiz.description = self.cleaned_data.get('description')
         newQuiz.subject_id = self.data.get('subject')
         newQuiz.topic = self.cleaned_data.get('topic')
-        newQuiz.numberOfQuestions = 1
         newQuiz.quizDuration = self.cleaned_data.get('quizDuration')
         newQuiz.maxAttempt = self.cleaned_data.get('maxAttempt')
         newQuiz.difficulty = self.data.get('difficulty')

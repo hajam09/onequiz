@@ -60,7 +60,6 @@ def createQuiz(creator=None, subject=None, save=True):
     newQuiz.description = faker.paragraph()
     newQuiz.subject = subject
     newQuiz.topic = faker.pystr_format()
-    newQuiz.numberOfQuestions = faker.random_number(digits=2, fix_len=False)
     newQuiz.quizDuration = faker.random_number(digits=2)
     newQuiz.maxAttempt = faker.random_number(digits=1)
     newQuiz.difficulty = random.choice([Quiz.Difficulty.EASY, Quiz.Difficulty.MEDIUM, Quiz.Difficulty.HARD])

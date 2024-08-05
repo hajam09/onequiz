@@ -19,7 +19,7 @@ class QuizUpdateFormTest(BaseTest):
         self.quiz = bakerOperations.createQuiz(self.request.user, self.subject)
 
     def testFieldsAndTypeForQuizCreator(self):
-        form = QuizUpdateForm(self.request, self.quiz)
+        form = QuizUpdateForm(request=self.request, quiz=self.quiz)
         self.assertEqual(len(form.fields), 14)
 
         self.assertTrue(isinstance(form.fields.get('name'), forms.CharField))
@@ -80,7 +80,7 @@ class QuizUpdateFormTest(BaseTest):
 
     def testFieldsAndTypeForNonQuizCreator(self):
         self.quiz.creator = bakerOperations.createUser()
-        form = QuizUpdateForm(self.request, self.quiz)
+        form = QuizUpdateForm(request=self.request, quiz=self.quiz)
         self.assertEqual(len(form.fields), 8)
 
         self.assertTrue(form.fields.get('name').widget.attrs['disabled'])
@@ -101,10 +101,10 @@ class QuizUpdateFormTest(BaseTest):
 
     def testRaiseExceptionWhenNoneIsPassedForQuiz(self):
         with self.assertRaisesMessage(Exception, 'Quiz is none, or is not an instance of Quiz object.'):
-            QuizUpdateForm(self.request, None)
+            QuizUpdateForm(request=self.request, quiz=None)
 
     def testFormInitialValuesAndChoices(self):
-        form = QuizUpdateForm(self.request, self.quiz)
+        form = QuizUpdateForm(request=self.request, quiz=self.quiz)
 
         INITIAL_SUBJECT_CHOICES = [(subject.id, subject.name) for subject in Subject.objects.all()]
         INITIAL_SUBJECT_CHOICES.insert(0, ('', '-- Select a value --'))
@@ -126,8 +126,14 @@ class QuizUpdateFormTest(BaseTest):
         self.assertEqual(form.initial['isDraft'], self.quiz.isDraft)
 
     def testUpdateQuizNameIsEmpty(self):
-        # todo
-        pass
+        testParams = self.TestParams(self.subject)
+        testParams.name = ''
+
+        form = QuizUpdateForm(request=self.request, quiz=self.quiz, data=testParams.getData())
+        self.assertFalse(form.is_valid())
+        self.assertEqual(1, len(form.errors))
+        self.assertTrue(form.has_error('name'))
+        self.assertEqual('This field is required.', form.errors.get('name')[0])
 
     def testQuizUpdatedSuccessfully(self):
         testParams = self.TestParams(self.subject)
@@ -139,7 +145,7 @@ class QuizUpdateFormTest(BaseTest):
         testParams.inRandomOrder = 'off'
         testParams.answerAtEnd = 'on'
 
-        form = QuizUpdateForm(self.request, self.quiz, data=testParams.getData())
+        form = QuizUpdateForm(request=self.request, quiz=self.quiz, data=testParams.getData())
         self.assertTrue(form.is_valid())
 
         quiz = form.update()

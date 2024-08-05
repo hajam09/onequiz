@@ -1,4 +1,5 @@
 from django import forms
+from parameterized import parameterized
 
 from core.forms import TrueOrFalseQuestionCreateForm
 from core.models import Question
@@ -61,25 +62,19 @@ class TrueOrFalseQuestionCreateFormTest(BaseTest):
         self.assertTrue(form.has_error('mark'))
         self.assertEqual('Mark cannot be a negative number.', form.errors.get('mark')[0])
 
-    def testWhenFormHasErrorAndTrueIsSelectedThenTrueOptionIsTicked(self):
-        # todo
+    @parameterized.expand([
+        [True, True],
+        [False, False],
+    ])
+    def testWhenFormHasAnErrorThenEnsureTrueOrFalseOptionIsUnchanged(self, selected, expectedValue):
         testParams = self.TestParams(
             content='test content',
             mark=-1,
-            trueOrFalse=True
+            trueOrFalse=selected
         )
         form = TrueOrFalseQuestionCreateForm(data=testParams.getData())
         self.assertFalse(form.is_valid())
-
-    def testWhenFormHasErrorAndFalseIsSelectedTHenFalseOptionIsTicked(self):
-        # todo
-        testParams = self.TestParams(
-            content='test content',
-            mark=-1,
-            trueOrFalse=False
-        )
-        form = TrueOrFalseQuestionCreateForm(data=testParams.getData())
-        self.assertFalse(form.is_valid())
+        self.assertEqual(expectedValue, form.data.get('trueOrFalse'))
 
     def testTrueOrFalseQuestionObjectCreated(self):
         testParams = self.TestParams(

@@ -1,4 +1,5 @@
 from django import forms
+from parameterized import parameterized
 
 from core.forms import TrueOrFalseQuestionUpdateForm
 from onequiz.operations import bakerOperations
@@ -76,33 +77,34 @@ class TrueOrFalseQuestionUpdateFormTest(BaseTest):
         self.assertTrue(form.has_error('mark'))
         self.assertEqual('Mark cannot be a negative number.', form.errors.get('mark')[0])
 
-    def testWhenFormHasErrorAndTrueIsSelectedThenTrueOptionIsTicked(self):
-        # todo
+    @parameterized.expand([
+        [True, True],
+        [False, False],
+    ])
+    def testWhenFormHasAnErrorThenEnsureTrueOrFalseOptionIsUnchanged(self, selected, expectedValue):
         testParams = self.TestParams(
             content='test content',
             mark=-1,
-            trueOrFalse=True
+            trueOrFalse=selected
         )
         form = TrueOrFalseQuestionUpdateForm(self.trueOrFalseQuestion, data=testParams.getData())
         self.assertFalse(form.is_valid())
+        self.assertEqual(expectedValue, form.data.get('trueOrFalse'))
 
-    def testWhenFormHasErrorAndFalseIsSelectedTHenFalseOptionIsTicked(self):
-        # todo
-        testParams = self.TestParams(
-            content='test content',
-            mark=-1,
-            trueOrFalse=False
-        )
-        form = TrueOrFalseQuestionUpdateForm(self.trueOrFalseQuestion, data=testParams.getData())
-        self.assertFalse(form.is_valid())
-
-    def testTrueOrFalseQuestionUpdatedTrueSelected(self):
+    @parameterized.expand([
+        [True, True],
+        [True, False],
+        [False, True],
+        [False, False],
+    ])
+    def testTrueOrFalseQuestionUpdatedWithNewValueThenEnsureTrueOrFalseOptionIsUpdated(self, currentValue, newValue):
         testParams = self.TestParams(
             content='new content',
             explanation='new explanation',
             mark=50,
-            trueOrFalse=True
+            trueOrFalse=newValue
         )
+        self.trueOrFalseQuestion.trueSelected = currentValue
         form = TrueOrFalseQuestionUpdateForm(self.trueOrFalseQuestion, data=testParams.getData())
         self.assertTrue(form.is_valid())
         trueOrFalseQuestion = form.update()
@@ -111,24 +113,7 @@ class TrueOrFalseQuestionUpdateFormTest(BaseTest):
         self.assertEqual(testParams.content, trueOrFalseQuestion.content)
         self.assertEqual(testParams.explanation, trueOrFalseQuestion.explanation)
         self.assertEqual(testParams.mark, trueOrFalseQuestion.mark)
-        self.assertTrue(trueOrFalseQuestion.trueSelected)
-
-    def testTrueOrFalseQuestionUpdatedFalseSelected(self):
-        testParams = self.TestParams(
-            content='new content',
-            explanation='new explanation',
-            mark=50,
-            trueOrFalse=False
-        )
-        form = TrueOrFalseQuestionUpdateForm(self.trueOrFalseQuestion, data=testParams.getData())
-        self.assertTrue(form.is_valid())
-        trueOrFalseQuestion = form.update()
-
-        self.assertEqual(testParams.figure, trueOrFalseQuestion.figure)
-        self.assertEqual(testParams.content, trueOrFalseQuestion.content)
-        self.assertEqual(testParams.explanation, trueOrFalseQuestion.explanation)
-        self.assertEqual(testParams.mark, trueOrFalseQuestion.mark)
-        self.assertFalse(trueOrFalseQuestion.trueSelected)
+        self.assertEqual(newValue, trueOrFalseQuestion.trueSelected)
 
     class TestParams:
 

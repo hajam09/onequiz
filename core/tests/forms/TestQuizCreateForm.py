@@ -190,7 +190,6 @@ class QuizCreateFormTest(BaseTest):
         self.assertEqual(testParams.description, newQuiz.description)
         self.assertEqual(self.subject, newQuiz.subject)
         self.assertEqual(testParams.topic, newQuiz.topic)
-        self.assertEqual(1, newQuiz.numberOfQuestions)
         self.assertEqual(testParams.quizDuration, newQuiz.quizDuration)
         self.assertEqual(testParams.maxAttempt, newQuiz.maxAttempt)
         self.assertEqual(testParams.difficulty, newQuiz.difficulty)

@@ -36,6 +36,9 @@ class Subject(BaseModel):
         return self.name
 
     class Meta:
+        indexes = [
+            models.Index(fields=['name'], name='idx-subject-name')
+        ]
         verbose_name = 'Subject'
         verbose_name_plural = 'Subjects'
 
@@ -70,6 +73,9 @@ class Question(BaseModel):
     trueSelected = models.BooleanField(blank=True, null=True)
 
     class Meta:
+        indexes = [
+            models.Index(fields=['url'], name='idx-question-url')
+        ]
         verbose_name = 'Question'
         verbose_name_plural = 'Questions'
 
@@ -110,6 +116,9 @@ class Response(BaseModel):
     trueSelected = models.BooleanField(blank=True, null=True)
 
     class Meta:
+        indexes = [
+            models.Index(fields=['question'], name='idx-response-question')
+        ]
         verbose_name = 'Response'
         verbose_name_plural = 'Responses'
 
@@ -130,7 +139,6 @@ class Quiz(BaseModel):
     url = models.CharField(max_length=10, unique=True, editable=False, default=generateModelUrl)
     subject = models.ForeignKey(Subject, on_delete=models.SET_NULL, null=True, blank=True)
     topic = models.CharField(max_length=255, blank=True, null=True)
-    numberOfQuestions = models.PositiveIntegerField()
     quizDuration = models.IntegerField()
     maxAttempt = models.PositiveIntegerField(default=1)
     difficulty = models.CharField(max_length=10, choices=Difficulty.choices, default=Difficulty.EASY)
@@ -144,6 +152,14 @@ class Quiz(BaseModel):
     isExamPaper = models.BooleanField(default=False)
     isDraft = models.BooleanField(default=False)
     creator = models.ForeignKey(User, on_delete=models.CASCADE, related_name='quizCreator')
+
+    class Meta:
+        indexes = [
+            models.Index(fields=['name'], name='idx-quiz-name'),
+            models.Index(fields=['url'], name='idx-quiz-url'),
+            models.Index(fields=['subject'], name='idx-quiz-subject'),
+            models.Index(fields=['topic'], name='idx-quiz-topic')
+        ]
 
     def __str__(self):
         return f'{self.id} - {self.name}'
@@ -178,6 +194,11 @@ class QuizAttempt(BaseModel):
     responses = models.ManyToManyField(Response, blank=True, related_name='quizAttemptResponses')
 
     class Meta:
+        indexes = [
+            models.Index(fields=['url'], name='idx-quiz-attempt-url'),
+            models.Index(fields=['quiz'], name='idx-quiz-attempt-quiz'),
+            models.Index(fields=['user'], name='idx-quiz-attempt-user')
+        ]
         verbose_name = 'Quiz Attempt'
         verbose_name_plural = 'Quiz Attempts'
 
@@ -239,6 +260,9 @@ class Result(BaseModel):
     score = models.DecimalField(max_digits=5, decimal_places=2, default=0, validators=PERCENTAGE_VALIDATOR)
 
     class Meta:
+        indexes = [
+            models.Index(fields=['quizAttempt'], name='idx-result-quizAttempt')
+        ]
         verbose_name = 'Result'
         verbose_name_plural = 'Results'
 

@@ -45,7 +45,6 @@ class QuizCreateQuizViewTest(BaseTestViews):
         self.assertEqual(quiz.description, testParams.description)
         self.assertEqual(quiz.subject, self.subject)
         self.assertEqual(quiz.topic, testParams.topic)
-        self.assertEqual(quiz.numberOfQuestions, 1)
         self.assertEqual(quiz.quizDuration, testParams.quizDuration)
         self.assertEqual(quiz.maxAttempt, testParams.maxAttempt)
         self.assertEqual(quiz.difficulty, testParams.difficulty)
