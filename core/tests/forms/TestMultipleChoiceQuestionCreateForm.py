@@ -7,6 +7,7 @@ from onequiz.tests.BaseTest import BaseTest
 
 
 class MultipleChoiceQuestionCreateFormTest(BaseTest):
+    # test update
 
     def setUp(self, path=None) -> None:
         self.basePath = path
@@ -29,9 +30,9 @@ class MultipleChoiceQuestionCreateFormTest(BaseTest):
         self.assertEqual(form.fields.get('explanation').label, 'Explanation (Optional)')
         self.assertTrue(isinstance(form.fields.get('explanation').widget, forms.Textarea))
 
-        self.assertTrue(isinstance(form.fields.get('answerOrder'), forms.MultipleChoiceField))
-        self.assertEqual(form.fields.get('answerOrder').label, 'Answer Order')
-        self.assertTrue(isinstance(form.fields.get('answerOrder').widget, forms.Select))
+        self.assertTrue(isinstance(form.fields.get('choiceOrder'), forms.MultipleChoiceField))
+        self.assertEqual(form.fields.get('choiceOrder').label, 'Choice Order')
+        self.assertTrue(isinstance(form.fields.get('choiceOrder').widget, forms.Select))
 
         self.assertTrue(isinstance(form.fields.get('mark'), forms.IntegerField))
         self.assertEqual(form.fields.get('mark').label, 'Mark')
@@ -39,7 +40,7 @@ class MultipleChoiceQuestionCreateFormTest(BaseTest):
 
     def testInitialValues(self):
         form = MultipleChoiceQuestionCreateForm()
-        ANSWER_ORDER_CHOICES = [
+        CHOICE_ORDER = [
             (None, '-- Select a value --'),
             ('SEQUENTIAL', 'Sequential'),
             ('RANDOM', 'Random'),
@@ -51,13 +52,13 @@ class MultipleChoiceQuestionCreateFormTest(BaseTest):
         ]
 
         self.assertIn('initialAnswerOptions', form.initial)
-        self.assertIn('answerOrder', form.fields)
-        self.assertListEqual(form.fields.get('answerOrder').choices, ANSWER_ORDER_CHOICES)
+        self.assertIn('choiceOrder', form.fields)
+        self.assertListEqual(form.fields.get('choiceOrder').choices, CHOICE_ORDER)
         self.assertListEqual(form.initial.get('initialAnswerOptions'), ANSWER_OPTIONS)
 
     def testFigureAndContentIsEmpty(self):
         testParams = self.TestParams(
-            answerOrder=Question.Order.SEQUENTIAL
+            choiceOrder=Question.Order.SEQUENTIAL
         )
         form = MultipleChoiceQuestionCreateForm(data=testParams.getData())
 
@@ -72,7 +73,7 @@ class MultipleChoiceQuestionCreateFormTest(BaseTest):
         testParams = self.TestParams(
             content='test content',
             mark=-1,
-            answerOrder=Question.Order.SEQUENTIAL
+            choiceOrder=Question.Order.SEQUENTIAL
         )
         form = MultipleChoiceQuestionCreateForm(data=testParams.getData())
 
@@ -81,7 +82,7 @@ class MultipleChoiceQuestionCreateFormTest(BaseTest):
         self.assertTrue(form.has_error('mark'))
         self.assertEqual('Mark cannot be a negative number.', form.errors.get('mark')[0])
 
-    def testAnswerOrderOptionIsUnSelected(self):
+    def testChoiceOrderOptionIsUnSelected(self):
         testParams = self.TestParams(
             content='test content',
         )
@@ -89,23 +90,23 @@ class MultipleChoiceQuestionCreateFormTest(BaseTest):
 
         self.assertFalse(form.is_valid())
         self.assertEqual(1, len(form.errors))
-        self.assertTrue(form.has_error('answerOrder'))
-        self.assertEqual('Answer Order is empty.', form.errors.get('answerOrder')[0])
+        self.assertTrue(form.has_error('choiceOrder'))
+        self.assertEqual('Choice Order is empty.', form.errors.get('choiceOrder')[0])
 
-    def testMaintainAnswerOrderOptionWhenFormHasError(self):
+    def testMaintainChoiceOrderOptionWhenFormHasError(self):
         testParams = self.TestParams(
-            answerOrder=Question.Order.RANDOM
+            choiceOrder=Question.Order.RANDOM
         )
         form = MultipleChoiceQuestionCreateForm(data=testParams.getData())
 
         self.assertFalse(form.is_valid())
-        self.assertIn('answerOrder', form.data)
-        self.assertIn(testParams.answerOrder, form.data.get('answerOrder'))
+        self.assertIn('choiceOrder', form.data)
+        self.assertIn(testParams.choiceOrder, form.data.get('choiceOrder'))
 
     def testMaintainAnswerOptionsListWhenFormHasError(self):
         testParams = self.TestParams(
             content='test content',
-            answerOrder=Question.Order.RANDOM,
+            choiceOrder=Question.Order.RANDOM,
             choices=[(1, '', True), (2, 'Answer 2', False), (3, 'Answer 3', True), (4, 'Answer 4', False)]
         )
         form = MultipleChoiceQuestionCreateForm(data=testParams.getData(True))
@@ -120,7 +121,7 @@ class MultipleChoiceQuestionCreateFormTest(BaseTest):
     def testMultipleChoiceQuestionAndAnswerObjectsCreated(self):
         testParams = self.TestParams(
             content='test content',
-            answerOrder=Question.Order.RANDOM,
+            choiceOrder=Question.Order.RANDOM,
             choices=[(1, 'Answer 1', True), (2, 'Answer 2', False), (3, 'Answer 3', True), (4, 'Answer 4', False)]
         )
         form = MultipleChoiceQuestionCreateForm(data=testParams.getData(True))
@@ -137,7 +138,7 @@ class MultipleChoiceQuestionCreateFormTest(BaseTest):
         self.assertEqual('', newMultipleChoiceQuestion.explanation)
         self.assertEqual(testParams.mark, newMultipleChoiceQuestion.mark)
         self.assertEqual(Question.Type.MULTIPLE_CHOICE, newMultipleChoiceQuestion.questionType)
-        self.assertEqual(testParams.answerOrder, newMultipleChoiceQuestion.choicesOrder)
+        self.assertEqual(testParams.choiceOrder, newMultipleChoiceQuestion.choiceOrder)
 
         choiceList = newMultipleChoiceQuestion.choices['choices']
         self.assertListEqual(
@@ -146,12 +147,12 @@ class MultipleChoiceQuestionCreateFormTest(BaseTest):
 
     class TestParams:
 
-        def __init__(self, figure=None, content=None, explanation=None, mark=80, answerOrder=None, choices=None):
+        def __init__(self, figure=None, content=None, explanation=None, mark=80, choiceOrder=None, choices=None):
             self.figure = figure
             self.content = content
             self.explanation = explanation
             self.mark = mark
-            self.answerOrder = answerOrder
+            self.choiceOrder = choiceOrder
             self.choices = choices
 
         def getData(self, withAnswerOptions=False):
@@ -160,7 +161,7 @@ class MultipleChoiceQuestionCreateFormTest(BaseTest):
                 'content': self.content,
                 'explanation': self.explanation,
                 'mark': self.mark,
-                'answerOrder': self.answerOrder
+                'choiceOrder': self.choiceOrder
             }
 
             queryDict = QueryDict('', mutable=True)

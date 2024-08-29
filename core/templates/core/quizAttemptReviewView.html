@@ -41,28 +41,31 @@
                                         <hr>
                                         <p><b>Your Answer</b></p>
                                         {% if form.data.response.question.questionType == form.data.response.question.Type.ESSAY %}
-                                            <textarea class="form-control" rows="5" cols="40"
-                                                      disabled>{{ form.answer.value }}</textarea>
+                                            {{ form.userAnswer }}
                                         {% elif form.data.response.question.questionType == form.data.response.question.Type.TRUE_OR_FALSE %}
-                                            {% for radio in form.trueOrFalse %}
-                                                <div class="form-check form-check-inline">
-                                                    {{ radio.tag }}
-                                                    <label class="form-check-label" for="{{ radio.id_for_label }}">
-                                                        {{ radio.choice_label }}
-                                                    </label>
-                                                </div>
+                                            {% for field in form %}
+                                                {% for radio in field %}
+                                                    <div class="form-check form-check-inline">
+                                                        {{ radio.tag }}
+                                                        <label class="form-check-label" for="{{ radio.id_for_label }}">
+                                                            {{ radio.choice_label }}
+                                                        </label>
+                                                    </div>
+                                                {% endfor %}
                                             {% endfor %}
                                         {% elif form.data.response.question.questionType == form.data.response.question.Type.MULTIPLE_CHOICE %}
-                                            {% for checkbox in form.options %}
-                                                <div class="row">
-                                                    <div class="col-auto">
-                                                        {{ checkbox.tag }}
+                                            {% for field in form %}
+                                                {% for checkboxOrRadio in field %}
+                                                    <div class="row">
+                                                        <div class="col-auto">
+                                                            {{ checkboxOrRadio.tag }}
+                                                        </div>
+                                                        <div class="col">
+                                                            <input type="text" class="form-control col" disabled
+                                                                   value="{{ checkboxOrRadio.choice_label }}">
+                                                        </div>
                                                     </div>
-                                                    <div class="col">
-                                                        <input type="text" class="form-control col" disabled
-                                                               value="{{ checkbox.choice_label }}">
-                                                    </div>
-                                                </div>
+                                                {% endfor %}
                                             {% endfor %}
                                         {% endif %}
                                         <br>
@@ -78,7 +81,11 @@
             <div class="text-right">
                 {% csrf_token %}
                 <input type="hidden" name="submitQuiz">
-                <button type="submit" class="btn btn-success">Confirm</button>
+                {% if quizAttempt.status == 'IN_PROGRESS' and quizAttempt.user == request.user %}
+                    <button type="submit" class="btn btn-success">Confirm</button>
+                {% elif quizAttempt.status == 'SUBMITTED' and quizAttempt.quiz.creator == request.user %}
+                    <button type="submit" class="btn btn-success">Confirm</button>
+                {% endif %}
             </div>
         </form>
     </div>

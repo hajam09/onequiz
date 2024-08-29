@@ -183,6 +183,51 @@ class QuizAttemptAutomaticMarking:
         return True
 
 
+class QuizAttemptManualMarking2:
+    def __init__(self, quizAttempt, responseList):
+        self.quizAttempt = quizAttempt
+        self.responseList = responseList
+        self.result = None
+
+    def mark(self):
+        numberOfCorrectAnswers = 0
+        numberOfPartialAnswers = 0
+        numberOfWrongAnswers = 0
+        totalAwardedMark = 0
+        totalQuizMark = 0
+
+        for response in self.responseList:
+            responseMark = float(response.mark)
+
+            if responseMark == response.question.mark:
+                numberOfCorrectAnswers += 1
+            elif responseMark == 0:
+                numberOfWrongAnswers += 1
+            else:
+                numberOfPartialAnswers += 1
+
+            totalQuizMark += response.question.mark
+            totalAwardedMark += responseMark
+
+        score = round(totalAwardedMark / totalQuizMark * 100, 2)
+        self.result, created = Result.objects.get_or_create(
+            quizAttempt=self.quizAttempt,
+            defaults={
+                'numberOfCorrectAnswers': numberOfCorrectAnswers,
+                'numberOfPartialAnswers': numberOfPartialAnswers,
+                'numberOfWrongAnswers': numberOfWrongAnswers,
+                'score': score,
+            }
+        )
+
+        if not created:
+            self.result.numberOfCorrectAnswers = numberOfCorrectAnswers
+            self.result.numberOfPartialAnswers = numberOfPartialAnswers
+            self.result.numberOfWrongAnswers = numberOfWrongAnswers
+            self.result.score = score
+            self.result.save()
+
+
 class QuizAttemptManualMarking:
     def __init__(self, quizAttempt, responseList, awardedMarks):
         self.quizAttempt = quizAttempt

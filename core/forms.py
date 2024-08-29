@@ -1,5 +1,9 @@
-import itertools
+import random
 import uuid
+from string import (
+    ascii_uppercase,
+    digits
+)
 
 from django import forms
 
@@ -68,11 +72,7 @@ class QuizForm(forms.Form):
     )
     difficulty = forms.MultipleChoiceField(
         label='Quiz Difficulty',
-        choices=[
-            (Quiz.Difficulty.EASY, Quiz.Difficulty.EASY.label),
-            (Quiz.Difficulty.MEDIUM, Quiz.Difficulty.MEDIUM.label),
-            (Quiz.Difficulty.HARD, Quiz.Difficulty.HARD.label)
-        ],
+        choices=[(None, '-- Select a value --')] + Quiz.Difficulty.choices,
         widget=forms.Select(
             attrs={
                 'class': 'form-control',
@@ -425,7 +425,6 @@ class QuestionForm(forms.Form):
     def clean(self):
         figure = self.cleaned_data.get('figure')
         content = self.cleaned_data.get('content')
-        explanation = self.cleaned_data.get('explanation')
         mark = self.cleaned_data.get('mark')
 
         if not figure and not content:
@@ -491,14 +490,20 @@ class EssayQuestionCreateForm(QuestionForm):
 
 
 class MultipleChoiceQuestionCreateForm(QuestionForm):
-    answerOrder = forms.MultipleChoiceField(
-        label='Answer Order',
-        choices=[
-            (None, '-- Select a value --'),
-            (Question.Order.SEQUENTIAL, Question.Order.SEQUENTIAL.label),
-            (Question.Order.RANDOM, Question.Order.RANDOM.label),
-            (Question.Order.NONE, Question.Order.NONE.label),
-        ],
+    choiceOrder = forms.MultipleChoiceField(
+        label='Choice Order',
+        choices=[(None, '-- Select a value --')] + Question.ChoiceOrder.choices,
+        widget=forms.Select(
+            attrs={
+                'class': 'form-control',
+                'style': 'width: 100%; border-radius: 0',
+                'required': 'required',
+            }
+        ),
+    )
+    choiceType = forms.MultipleChoiceField(
+        label='Choice Type',
+        choices=[(None, '-- Select a value --')] + Question.ChoiceType.choices,
         widget=forms.Select(
             attrs={
                 'class': 'form-control',
@@ -511,20 +516,16 @@ class MultipleChoiceQuestionCreateForm(QuestionForm):
     def __init__(self, *args, **kwargs):
         kwargs.setdefault('label_suffix', '')
         super(MultipleChoiceQuestionCreateForm, self).__init__(*args, **kwargs)
-        # orderNo, enteredAnswer, isChecked
-        ANSWER_OPTIONS = [
-            (1, '', False),
-            (2, '', False)
-        ]
-        self.initial['initialAnswerOptions'] = ANSWER_OPTIONS
 
     def clean(self):
         figure = self.cleaned_data.get('figure')
         content = self.cleaned_data.get('content')
         mark = self.cleaned_data.get('mark')
-        answerOrder = self.data.get('answerOrder')
+        choiceOrder = self.data.get('choiceOrder')
+        choiceType = self.data.get('choiceType')
 
-        del self.errors['answerOrder']
+        del self.errors['choiceOrder']
+        del self.errors['choiceType']
 
         if not figure and not content:
             self.errors['figure'] = self.error_class([f'Cannot leave both figure and content empty.'])
@@ -533,56 +534,75 @@ class MultipleChoiceQuestionCreateForm(QuestionForm):
         if mark < 0:
             self.errors['mark'] = self.error_class([f'Mark cannot be a negative number.'])
 
-        if answerOrder is None:
-            self.errors['answerOrder'] = self.error_class(['Answer Order is empty.'])
+        if choiceOrder is None:
+            self.errors['choiceOrder'] = self.error_class(['Choice Order is empty.'])
 
-        answerOptionsList = self.data.getlist('answerOptions')
-        isAnswerOptionsValid = True
-        ANSWER_OPTIONS = []
-        for i in range(len(answerOptionsList)):
-            orderNo = i + 1
-            enteredAnswer = answerOptionsList[i]
-            isChecked = self.data.get(f'answerChecked-{orderNo}') == 'on'
-            ANSWER_OPTIONS.append((orderNo, enteredAnswer, isChecked))
+        if choiceType is None:
+            self.errors['choiceType'] = self.error_class(['Choice type is empty.'])
 
-            if not enteredAnswer:
-                isAnswerOptionsValid = False
+        if self.data.get('choiceType') in [Question.ChoiceType.SINGLE, Question.ChoiceType.MULTIPLE]:
+            answerOptionsList = self.data.getlist('answerOptions')
+            isRadioOptionSelected = self.data.get('choiceType') == Question.ChoiceType.SINGLE
 
-        if not isAnswerOptionsValid:
-            self.errors['initialAnswerOptions'] = self.error_class(
-                ['One of your answer options is empty or invalid. Please try again.']
+            answerOptions = []
+            isAnswerOptionsValid = True
+
+            for index, enteredValue in enumerate(answerOptionsList, start=1):
+                isChecked = (
+                    self.data.get('answerChecked') == f'value-{index}'
+                    if isRadioOptionSelected
+                    else self.data.get(f'answerChecked-{index}') is not None
+                )
+
+                answerOptions.append((index, enteredValue, isChecked))
+                if not enteredValue:
+                    isAnswerOptionsValid = False
+
+            self.initial['initialAnswerOptions'] = answerOptions
+            if not isAnswerOptionsValid:
+                self.errors['initialAnswerOptions'] = self.error_class(
+                    ['One of your answer options is empty or invalid. Please try again.']
+                )
+        else:
+            self.errors['choiceType'] = self.error_class(
+                ['Invalid option selected. Please select Single or Multiple only.']
             )
 
-        self.initial['initialAnswerOptions'] = ANSWER_OPTIONS
         return self.cleaned_data
 
     def save(self):
+        isRadioOptionSelected = self.data.get('choiceType') == Question.ChoiceType.SINGLE
         answerOptionsList = self.data.getlist('answerOptions')
         choices = [
             {
                 'id': uuid.uuid4().hex,
-                'content': answerOptionsList[i],
-                'isChecked': self.data.get(f'answerChecked-{i + 1}') == 'on'
+                'content': content,
+                'isChecked': (
+                    self.data.get('answerChecked') == f'value-{i + 1}'
+                    if isRadioOptionSelected
+                    else self.data.get(f'answerChecked-{i + 1}') is not None
+                )
             }
-            for i in range(len(answerOptionsList))
+            for i, content in enumerate(answerOptionsList)
         ]
+
         question = Question.objects.create(
             figure=self.cleaned_data.get('figure'),
             content=self.cleaned_data.get('content'),
             explanation=self.cleaned_data.get('explanation'),
             mark=self.cleaned_data.get('mark'),
             questionType=Question.Type.MULTIPLE_CHOICE,
-            choicesOrder=self.data.get('answerOrder'),
+            choiceOrder=self.data.get('choiceOrder'),
+            choiceType=self.data.get('choiceType'),
             choices={'choices': choices}
         )
-        question.save()
         return question
 
 
 class TrueOrFalseQuestionCreateForm(QuestionForm):
     trueOrFalse = forms.ChoiceField(
         label='Is the answer True or False?',
-        choices=[(True, 'True'), (False, 'False')],
+        choices=Question.TrueOrFalse.choices,
         required=True,
         widget=forms.RadioSelect(
             attrs={
@@ -618,7 +638,7 @@ class TrueOrFalseQuestionCreateForm(QuestionForm):
             explanation=self.cleaned_data.get('explanation'),
             mark=self.cleaned_data.get('mark'),
             questionType=Question.Type.TRUE_OR_FALSE,
-            trueSelected=eval(self.cleaned_data.get('trueOrFalse')),
+            trueOrFalse=self.cleaned_data.get('trueOrFalse')
         )
         return question
 
@@ -643,7 +663,7 @@ class EssayQuestionUpdateForm(QuestionForm):
         if self.question is None or self.question.questionType != Question.Type.ESSAY:
             raise Exception('Question object is none, or is not compatible with EssayQuestionUpdateForm.')
 
-        # self.initial['figure'] = self.figure
+        self.initial['figure'] = self.question.figure
         self.initial['content'] = self.question.content
         self.initial['explanation'] = self.question.explanation
         self.initial['mark'] = self.question.mark
@@ -681,7 +701,7 @@ class EssayQuestionUpdateForm(QuestionForm):
 class TrueOrFalseQuestionUpdateForm(QuestionForm):
     trueOrFalse = forms.ChoiceField(
         label='Is the answer True or False?',
-        choices=[(True, 'True'), (False, 'False')],
+        choices=Question.TrueOrFalse.choices,
         initial=None,
         required=True,
         widget=forms.RadioSelect(
@@ -701,11 +721,11 @@ class TrueOrFalseQuestionUpdateForm(QuestionForm):
         if self.question is None or self.question.questionType != Question.Type.TRUE_OR_FALSE:
             raise Exception('Question object is none, or is not compatible with TrueOrFalseQuestionUpdateForm.')
 
-        # self.initial['figure'] = self.trueOrFalseQuestion.question.figure
+        self.initial['figure'] = self.question.figure
         self.initial['content'] = self.question.content
         self.initial['explanation'] = self.question.explanation
         self.initial['mark'] = self.question.mark
-        self.fields.get('trueOrFalse').initial = question.trueSelected
+        self.initial['trueOrFalse'] = self.question.trueOrFalse
 
     def clean(self):
         figure = self.cleaned_data.get('figure')
@@ -725,15 +745,20 @@ class TrueOrFalseQuestionUpdateForm(QuestionForm):
         self.question.content = self.cleaned_data.get('content')
         self.question.explanation = self.cleaned_data.get('explanation')
         self.question.mark = self.cleaned_data.get('mark')
-        self.question.trueSelected = eval(self.cleaned_data.get('trueOrFalse'))
-
+        self.question.trueOrFalse = self.cleaned_data.get('trueOrFalse')
         self.question.save()
         return self.question
 
 
 class MultipleChoiceQuestionUpdateForm(QuestionForm):
-    answerOrder = forms.MultipleChoiceField(
-        label='Answer Order',
+    choiceOrder = forms.MultipleChoiceField(
+        label='Choice Order',
+        choices=[
+            (None, '-- Select a value --'),
+            (Question.ChoiceOrder.SEQUENTIAL, Question.ChoiceOrder.SEQUENTIAL.label),
+            (Question.ChoiceOrder.RANDOM, Question.ChoiceOrder.RANDOM.label),
+            (Question.ChoiceOrder.NONE, Question.ChoiceOrder.NONE.label),
+        ],
         widget=forms.Select(
             attrs={
                 'class': 'form-control',
@@ -742,12 +767,17 @@ class MultipleChoiceQuestionUpdateForm(QuestionForm):
             }
         ),
     )
-    mark = forms.IntegerField(
-        label='Mark',
-        widget=forms.NumberInput(
+    choiceType = forms.MultipleChoiceField(
+        label='Choice Type',
+        choices=[
+            (None, '-- Select a value --'),
+            (Question.ChoiceType.SINGLE, Question.ChoiceType.SINGLE.label),
+            (Question.ChoiceType.MULTIPLE, Question.ChoiceType.MULTIPLE.label),
+        ],
+        widget=forms.Select(
             attrs={
                 'class': 'form-control',
-                'style': 'width: 100%',
+                'style': 'width: 100%; border-radius: 0',
                 'required': 'required',
             }
         ),
@@ -761,33 +791,29 @@ class MultipleChoiceQuestionUpdateForm(QuestionForm):
         if self.question is None or self.question.questionType != Question.Type.MULTIPLE_CHOICE:
             raise Exception('Question object is none, or is not compatible with MultipleChoiceQuestionUpdateForm.')
 
-        ANSWER_ORDER_CHOICES = [
-            (None, '-- Select a value --'),
-            (Question.Order.SEQUENTIAL, Question.Order.SEQUENTIAL.label),
-            (Question.Order.RANDOM, Question.Order.RANDOM.label),
-            (Question.Order.NONE, Question.Order.NONE.label),
-        ]
         # orderNo, enteredAnswer, isChecked
         ANSWER_OPTIONS = [
             (i, x['content'], x['isChecked']) for i, x in enumerate(self.question.choices['choices'], 1)
         ]
 
         self.initial['initialAnswerOptions'] = ANSWER_OPTIONS
-        self.base_fields['answerOrder'].choices = ANSWER_ORDER_CHOICES
 
-        # self.initial['figure'] = essayQuestion.figure
+        self.initial['figure'] = self.question.figure
         self.initial['content'] = self.question.content
         self.initial['explanation'] = self.question.explanation
         self.initial['mark'] = self.question.mark
-        self.initial['answerOrder'] = self.question.choicesOrder
+        self.initial['choiceOrder'] = self.question.choiceOrder
+        self.initial['choiceType'] = self.question.choiceType
 
     def clean(self):
         figure = self.cleaned_data.get('figure')
         content = self.cleaned_data.get('content')
         mark = self.cleaned_data.get('mark')
-        answerOrder = self.data.get('answerOrder')
+        choiceOrder = self.data.get('choiceOrder')
+        choiceType = self.data.get('choiceType')
 
-        del self.errors['answerOrder']
+        del self.errors['choiceOrder']
+        del self.errors['choiceType']
 
         if not figure and not content:
             self.errors['figure'] = self.error_class([f'Cannot leave both figure and content empty.'])
@@ -796,27 +822,39 @@ class MultipleChoiceQuestionUpdateForm(QuestionForm):
         if mark < 0:
             self.errors['mark'] = self.error_class([f'Mark cannot be a negative number.'])
 
-        # if answerOrder == '0':
-        #     self.errors['answerOrder'] = self.error_class(['Answer Order is empty.'])
+        if choiceOrder is None:
+            self.errors['choiceOrder'] = self.error_class(['Choice Order is empty.'])
 
-        answerOptionsList = self.data.getlist('answerOptions')
-        isAnswerOptionsValid = True
-        ANSWER_OPTIONS = []
-        for i in range(len(answerOptionsList)):
-            orderNo = i + 1
-            enteredAnswer = answerOptionsList[i]
-            isChecked = self.data.get(f'answerChecked-{orderNo}') == 'on'
-            ANSWER_OPTIONS.append((orderNo, enteredAnswer, isChecked))
+        if choiceType is None:
+            self.errors['choiceType'] = self.error_class(['Choice type is empty.'])
 
-            if not enteredAnswer:
-                isAnswerOptionsValid = False
+        if self.data.get('choiceType') in [Question.ChoiceType.SINGLE, Question.ChoiceType.MULTIPLE]:
+            answerOptionsList = self.data.getlist('answerOptions')
+            isRadioOptionSelected = self.data.get('choiceType') == Question.ChoiceType.SINGLE
 
-        if not isAnswerOptionsValid:
-            self.errors['initialAnswerOptions'] = self.error_class(
-                ['One of your answer options is empty or invalid. Please try again.']
+            answerOptions = []
+            isAnswerOptionsValid = True
+
+            for index, enteredValue in enumerate(answerOptionsList, start=1):
+                isChecked = (
+                    self.data.get('answerChecked') == f'value-{index}'
+                    if isRadioOptionSelected
+                    else self.data.get(f'answerChecked-{index}') is not None
+                )
+
+                answerOptions.append((index, enteredValue, isChecked))
+                if not enteredValue:
+                    isAnswerOptionsValid = False
+
+            self.initial['initialAnswerOptions'] = answerOptions
+            if not isAnswerOptionsValid:
+                self.errors['initialAnswerOptions'] = self.error_class(
+                    ['One of your answer options is empty or invalid. Please try again.']
+                )
+        else:
+            self.errors['choiceType'] = self.error_class(
+                ['Invalid option selected. Please select Single or Multiple only.']
             )
-
-        self.initial['initialAnswerOptions'] = ANSWER_OPTIONS
         return self.cleaned_data
 
     def update(self):
@@ -824,37 +862,24 @@ class MultipleChoiceQuestionUpdateForm(QuestionForm):
         self.question.content = self.cleaned_data.get('content')
         self.question.explanation = self.cleaned_data.get('explanation')
         self.question.mark = self.cleaned_data.get('mark')
-        self.question.choicesOrder = self.data.get('answerOrder')
+        self.question.choiceOrder = self.data.get('choiceOrder')
+        self.question.choiceType = self.data.get('choiceType')
 
-        newAnswerOptionsList = self.data.getlist('answerOptions')
-        oldAnswerOptionsList = self.question.choices['choices']
-        counter = 0
-        idsToDelete = []
-
-        for (nl, ol) in itertools.zip_longest(newAnswerOptionsList, oldAnswerOptionsList):
-            counter += 1
-            isChecked = self.data.get(f'answerChecked-{counter}') == 'on'
-
-            if nl is not None and ol is None:
-                # additional answer is added.
-                newOption = {
-                    'id': uuid.uuid4().hex,
-                    'content': nl,
-                    'isChecked': isChecked
-                }
-                oldAnswerOptionsList.append(newOption)
-                continue
-            elif nl is None and ol is not None:
-                # existing answer is removed.
-                idsToDelete.append(ol['id'])
-
-            ol['content'] = nl
-            ol['isChecked'] = isChecked
-
-        self.question.choices = {
-            'choices': [i for i in oldAnswerOptionsList if i['id'] not in idsToDelete]
-        }
-
+        isRadioOptionSelected = self.data.get('choiceType') == Question.ChoiceType.SINGLE
+        answerOptionsList = self.data.getlist('answerOptions')
+        choices = [
+            {
+                'id': uuid.uuid4().hex,
+                'content': content,
+                'isChecked': (
+                    self.data.get('answerChecked') == f'value-{i + 1}'
+                    if isRadioOptionSelected
+                    else self.data.get(f'answerChecked-{i + 1}') is not None
+                )
+            }
+            for i, content in enumerate(answerOptionsList)
+        ]
+        self.question.choices = {'choices': choices}
         self.question.save()
         return self.question
 
@@ -865,8 +890,9 @@ class BaseResponseForm(forms.Form):
         kwargs.setdefault('label_suffix', '')
         super(BaseResponseForm, self).__init__(*args, **kwargs)
         self.data['response'] = response
+        self.allowEdit = allowEdit
         self.setInitialValues(response)
-        if not allowEdit:
+        if not self.allowEdit:
             self.disableFields()
 
         if validateMark:
@@ -903,34 +929,44 @@ class EssayQuestionResponseForm(BaseResponseForm):
 
 
 class TrueOrFalseQuestionResponseForm(BaseResponseForm):
-    trueOrFalse = forms.ChoiceField(
-        label='Is the answer True or False?',
-        required=False,
-        choices=[(True, 'True'), (False, 'False')],
-        widget=forms.RadioSelect(
-            attrs={
-                'class': 'form-check-input',
-                'style': 'height: 34px; width: 34px',
-            }
-        )
-    )
-
     def setInitialValues(self, response):
-        self.fields['trueOrFalse'].initial = response.trueSelected
+        field = forms.ChoiceField(
+            label='Is the answer True or False?',
+            required=False,
+            choices=Question.TrueOrFalse.choices,
+            initial=response.trueOrFalse,
+            widget=forms.RadioSelect(
+                attrs={
+                    'class': 'form-check-input',
+                    'style': 'height: 34px; width: 34px',
+                }
+            )
+        )
+        if not self.allowEdit:
+            randomString = ''.join(random.choice(ascii_uppercase + digits) for _ in range(3))
+            self.fields[f'trueOrFalse_{randomString}'] = field
+        else:
+            self.fields['trueOrFalse'] = field
 
 
 class MultipleChoiceQuestionResponseForm(BaseResponseForm):
-    options = forms.MultipleChoiceField(
-        label='Select the correct answers.',
-        widget=forms.CheckboxSelectMultiple(
-            attrs={
-                'style': 'height: 34px; width:34px'
-            }
-        )
-    )
-
     def setInitialValues(self, response):
-        CHOICES = [(choice['id'], choice['content']) for choice in response.choices.get('choices')]
-        INITIAL = [choice['id'] for choice in response.choices.get('choices') if choice['isChecked']]
-        self.fields['options'].choices = CHOICES
-        self.fields['options'].initial = INITIAL
+        choices = [(choice['id'], choice['content']) for choice in response.choices.get('choices')]
+        initial = [choice['id'] for choice in response.choices.get('choices') if choice['isChecked']]
+        label = 'Select the correct answer(s).'
+        style = {'style': 'height: 34px; width:34px'}
+
+        if response.question.choiceType == Question.ChoiceType.SINGLE:
+            widget = forms.RadioSelect(attrs=style)
+            randomString = ''.join(random.choice(ascii_uppercase + digits) for _ in range(3))
+            fieldName = f'options_{randomString}'
+        else:
+            widget = forms.CheckboxSelectMultiple(attrs=style)
+            fieldName = 'options'
+
+        self.fields[fieldName] = forms.MultipleChoiceField(
+            label=label,
+            choices=choices,
+            initial=initial,
+            widget=widget
+        )

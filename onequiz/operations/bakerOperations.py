@@ -133,13 +133,17 @@ def createTrueOrFalseQuestion(save=True):
 
 def createMultipleChoiceQuestionAndAnswers(save=True):
     faker = Faker()
+    choiceType = random.choice([Question.ChoiceType.SINGLE, Question.ChoiceType.MULTIPLE])
     choices = [
         {
             'id': uuid.uuid4().hex,
             'content': faker.paragraph(),
-            'isChecked': random.choice(BOOLEAN)
+            'isChecked': False if choiceType == Question.ChoiceType.SINGLE else random.choice(BOOLEAN)
         } for _ in range(random.randint(2, 10))
     ]
+
+    if choiceType == Question.ChoiceType.SINGLE:
+        random.choice(choices)['isChecked'] = True
 
     question = Question(
         figure=None,
@@ -147,7 +151,8 @@ def createMultipleChoiceQuestionAndAnswers(save=True):
         explanation=faker.paragraph(),
         mark=faker.random_number(digits=2),
         questionType=Question.Type.MULTIPLE_CHOICE,
-        choicesOrder=random.choice([Question.Order.SEQUENTIAL, Question.Order.RANDOM, Question.Order.NONE]),
+        choiceOrder=random.choice([Question.ChoiceOrder.SEQUENTIAL, Question.ChoiceOrder.RANDOM, Question.ChoiceOrder.NONE]),
+        choiceType=choiceType,
         choices={'choices': choices}
     )
 

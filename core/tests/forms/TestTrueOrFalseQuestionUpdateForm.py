@@ -7,6 +7,7 @@ from onequiz.tests.BaseTest import BaseTest
 
 
 class TrueOrFalseQuestionUpdateFormTest(BaseTest):
+    # test update
 
     def setUp(self, path=None) -> None:
         super(TrueOrFalseQuestionUpdateFormTest, self).setUp('')

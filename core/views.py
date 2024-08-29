@@ -19,6 +19,7 @@ from core.forms import (
 )
 from core.models import Quiz, Question, QuizAttempt, Result, Subject, Response
 from onequiz.operations import generalOperations
+from onequiz.operations.generalOperations import QuizAttemptManualMarking2
 
 
 def indexView(request):
@@ -118,6 +119,7 @@ def essayQuestionCreateView(request, url):
     context = {
         'form': form,
         'formTitle': formTitle,
+        'quizUrl': url,
     }
     return render(request, 'core/essayQuestionTemplateView.html', context)
 
@@ -143,6 +145,7 @@ def multipleChoiceQuestionCreateView(request, url):
     context = {
         'form': form,
         'formTitle': formTitle,
+        'quizUrl': url,
     }
     return render(request, 'core/multipleChoiceQuestionTemplateView.html', context)
 
@@ -168,6 +171,7 @@ def trueOrFalseQuestionCreateView(request, url):
     context = {
         'form': form,
         'formTitle': formTitle,
+        'quizUrl': url,
     }
     return render(request, 'core/trueOrFalseQuestionTemplateView.html', context)
 
@@ -224,6 +228,7 @@ def questionUpdateView(request, quizUrl, questionUrl):
     context = {
         'form': form,
         'formTitle': formTitle,
+        'quizUrl': quizUrl,
     }
     return render(request, template, context)
 
@@ -307,10 +312,14 @@ def quizAttemptViewVersion2(request, url):
         if respondedQuestionObject.questionType == Question.Type.ESSAY:
             responseObject.answer = request.POST.get('answer')
         elif respondedQuestionObject.questionType == Question.Type.TRUE_OR_FALSE:
-            responseObject.trueSelected = eval(str(request.POST.get('trueOrFalse')))
+            responseObject.trueOrFalse = request.POST.get('trueOrFalse')
         elif respondedQuestionObject.questionType == Question.Type.MULTIPLE_CHOICE:
-            for choice in responseObject.choices.get('choices'):
-                choice['isChecked'] = choice['id'] in request.POST.getlist('options')
+            for key in request.POST:
+                if key.startswith('options'):
+                    checkedOptionsIds = request.POST.getlist(key)
+                    for choice in responseObject.choices.get('choices'):
+                        if choice['id'] in checkedOptionsIds:
+                            choice['isChecked'] = True
 
         responseObject.save()
 
@@ -324,7 +333,7 @@ def quizAttemptViewVersion2(request, url):
         questionPaginator = paginator.page(paginator.num_pages)
 
     currentQuestion = questionPaginator.object_list[0]
-    responseObject, created = Response.objects.get_or_create(
+    responseObject, created = Response.objects.select_related('question').get_or_create(
         quizAttemptResponses__in=[quizAttempt], question=currentQuestion
     )
     quizAttempt.responses.add(responseObject.id)
@@ -343,6 +352,7 @@ def quizAttemptViewVersion2(request, url):
     context = {
         'quizAttempt': quizAttempt,
         'questionPaginator': questionPaginator,
+        'currentQuestion': currentQuestion,
         'form': form,
         'progress': round((questionPaginator.number / numberOfQuestions) * 100, 0)
     }
@@ -355,7 +365,7 @@ def quizAttemptSubmissionPreview(request, url):
 
     if quizAttempt.hasQuizEnded() and quizAttempt.status in quizAttempt.getEditStatues():
         quizAttempt.status = QuizAttempt.Status.SUBMITTED
-        quizAttempt.save(update_fields=['status'])
+        # quizAttempt.save(update_fields=['status'])
 
     if not quizAttempt.hasViewPermission(request.user):
         return HttpResponseForbidden('Forbidden')
@@ -439,7 +449,10 @@ def quizAttemptSubmissionPreview(request, url):
         Response.objects.bulk_update(responses, ['mark'])
         quizAttempt.status = QuizAttempt.Status.MARKED
         quizAttempt.save(update_fields=['status'])
-        # todo: create result for this attempt.
+
+        quizAttemptManualMarking2 = QuizAttemptManualMarking2(quizAttempt, responses)
+        quizAttemptManualMarking2.mark()
+
         messages.success(
             request,
             'You have marked this quiz attempt successfully.'
