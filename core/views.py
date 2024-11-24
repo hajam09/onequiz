@@ -3,6 +3,7 @@ from functools import reduce
 
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
+from django.core.cache import cache
 from django.core.paginator import Paginator, PageNotAnInteger, EmptyPage
 from django.db.models import OuterRef, Subquery, Value
 from django.db.models import Q
@@ -298,7 +299,12 @@ def quizAttemptViewVersion2(request, url):
     ref = request.GET.get('ref', 'next')
     questionIndex = request.GET.get('q', 1)
 
-    questions = Question.objects.filter(quizQuestions__id=quizAttempt.quiz_id)
+    questions = cache.get(f'quiz-attempt-v2-{url}')
+    if questions is None:
+        questions = Question.objects.filter(quizQuestions__id=quizAttempt.quiz_id)
+        if quizAttempt.quiz.inRandomOrder:
+            questions = questions.order_by('?')
+        cache.set(f'quiz-attempt-v2-{url}', questions, quizAttempt.quiz.quizDuration * 60 + 30)
     paginator = Paginator(questions, 1)
 
     if request.method == 'POST' and quizAttempt.status != QuizAttempt.Status.SUBMITTED:
@@ -377,6 +383,7 @@ def quizAttemptSubmissionPreview(request, url):
     if isQuizParticipant and request.method == 'POST' and 'submitQuiz' in request.POST:
         quizAttempt.status = QuizAttempt.Status.SUBMITTED
         quizAttempt.save(update_fields=['status'])
+        cache.delete(f'quiz-attempt-v2-{url}')
         messages.success(
             request,
             'Your attempt has been submitted successfully, please check later for results.'
