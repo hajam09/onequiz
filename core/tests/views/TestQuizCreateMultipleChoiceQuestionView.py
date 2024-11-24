@@ -8,6 +8,7 @@ from onequiz.tests.BaseTestViews import BaseTestViews
 
 
 class QuizCreateMultipleChoiceQuestionViewTest(BaseTestViews):
+    # test update
 
     def setUp(self, path=None) -> None:
         super(QuizCreateMultipleChoiceQuestionViewTest, self).setUp('')
@@ -32,7 +33,7 @@ class QuizCreateMultipleChoiceQuestionViewTest(BaseTestViews):
             content='test content',
             explanation='test explanation',
             mark=-1,
-            answerOrder=Question.Order.RANDOM
+            choiceOrder=Question.Order.RANDOM
         )
         response = self.post(testParams.getData())
         self.assertEquals(response.status_code, 200)
@@ -46,7 +47,7 @@ class QuizCreateMultipleChoiceQuestionViewTest(BaseTestViews):
             figure='',
             content='test content',
             explanation='test explanation',
-            answerOrder=Question.Order.RANDOM,
+            choiceOrder=Question.Order.RANDOM,
             choices=[(1, 'Answer 1', True), (2, 'Answer 2', False), (3, 'Answer 3', True), (4, 'Answer 4', False)]
         )
 
@@ -63,7 +64,7 @@ class QuizCreateMultipleChoiceQuestionViewTest(BaseTestViews):
         self.assertEqual(question.content, testParams.content)
         self.assertEqual(question.explanation, testParams.explanation)
         self.assertEqual(question.mark, testParams.mark)
-        self.assertEqual(question.choicesOrder, testParams.answerOrder)
+        self.assertEqual(question.choiceOrder, testParams.choiceOrder)
 
         choiceList = question.choices['choices']
         self.assertListEqual(
@@ -72,12 +73,12 @@ class QuizCreateMultipleChoiceQuestionViewTest(BaseTestViews):
 
     class TestParams:
 
-        def __init__(self, figure=None, content=None, explanation=None, mark=80, answerOrder=None, choices=None):
+        def __init__(self, figure=None, content=None, explanation=None, mark=80, choiceOrder=None, choices=None):
             self.figure = figure
             self.content = content
             self.explanation = explanation
             self.mark = mark
-            self.answerOrder = answerOrder
+            self.choiceOrder = choiceOrder
             self.choices = choices
 
         def getData(self, withAnswerOptions=False):
@@ -86,7 +87,7 @@ class QuizCreateMultipleChoiceQuestionViewTest(BaseTestViews):
                 'content': self.content,
                 'explanation': self.explanation,
                 'mark': self.mark,
-                'answerOrder': self.answerOrder
+                'choiceOrder': self.choiceOrder
             }
 
             queryDict = QueryDict('', mutable=True)

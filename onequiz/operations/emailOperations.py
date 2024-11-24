@@ -9,9 +9,6 @@ from django.utils.http import urlsafe_base64_encode
 
 
 def sendEmailToActivateAccount(request, user: User):
-    if settings.DEBUG or user.is_active:
-        return
-
     currentSite = get_current_site(request)
     emailSubject = "Activate your OneQuiz Account"
     fullName = user.get_full_name()

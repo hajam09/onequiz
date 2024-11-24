@@ -116,7 +116,7 @@ class QuizAttemptObjectApiEventVersion2Component(View):
         )
         response = {
             'success': True,
-            'redirectUrl': reverse('core:quiz-attempt-view-v2', kwargs={'attemptId': quizAttempt.id})
+            'redirectUrl': reverse('core:quiz-attempt-view-v2', kwargs={'url': quizAttempt.url})
         }
         return JsonResponse(response, status=HTTPStatus.OK)
 

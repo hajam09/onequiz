@@ -9,6 +9,7 @@ from onequiz.tests.BaseTestViews import BaseTestViews
 
 
 class QuizAttemptViewVersion1Test(BaseTestViews):
+    # test update
 
     def setUp(self, path=None) -> None:
         super(QuizAttemptViewVersion1Test, self).setUp('')

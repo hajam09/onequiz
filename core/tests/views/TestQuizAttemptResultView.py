@@ -6,6 +6,7 @@ from onequiz.tests.BaseTestViews import BaseTestViews
 
 
 class QuizAttemptResultViewTest(BaseTestViews):
+    # test update
 
     def setUp(self, path=None) -> None:
         super(QuizAttemptResultViewTest, self).setUp('')

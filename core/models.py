@@ -50,10 +50,18 @@ class Question(BaseModel):
         TRUE_OR_FALSE = 'TRUE_OR_FALSE', _('True or False')
         NONE = 'NONE', _('None')
 
-    class Order(models.TextChoices):
+    class ChoiceOrder(models.TextChoices):
         SEQUENTIAL = 'SEQUENTIAL', _('Sequential')
         RANDOM = 'RANDOM', _('Random')
         NONE = 'NONE', _('None')
+
+    class ChoiceType(models.TextChoices):
+        SINGLE = 'SINGLE', _('Single - Allows single choice to be selected')
+        MULTIPLE = 'MULTIPLE', _('Multiple - Allows multiple choices to be selected')
+
+    class TrueOrFalse(models.TextChoices):
+        TRUE = 'TRUE', _('True')
+        FALSE = 'FALSE', _('False')
 
     url = models.CharField(max_length=10, unique=True, editable=False, default=generateModelUrl)
     figure = models.ImageField(blank=True, null=True, upload_to='uploads/%Y/%m/%d')
@@ -66,11 +74,12 @@ class Question(BaseModel):
     answer = models.TextField(blank=True, null=True)
 
     # fields specific to multiple choice
-    choicesOrder = models.CharField(max_length=32, choices=Order.choices, default=Order.RANDOM)
+    choiceOrder = models.CharField(max_length=32, choices=ChoiceOrder.choices, default=ChoiceOrder.RANDOM)
+    choiceType = models.CharField(max_length=32, choices=ChoiceType.choices, default=ChoiceType.SINGLE)
     choices = models.JSONField(blank=True, null=True)
 
     # fields specific to true or false
-    trueSelected = models.BooleanField(blank=True, null=True)
+    trueOrFalse = models.CharField(max_length=8, blank=True, null=True, choices=TrueOrFalse.choices)
 
     class Meta:
         indexes = [
@@ -86,11 +95,11 @@ class Question(BaseModel):
         if self.questionType != self.Type.MULTIPLE_CHOICE:
             return queryset
 
-        if self.choicesOrder == self.Order.SEQUENTIAL:
+        if self.choiceOrder == self.ChoiceOrder.SEQUENTIAL:
             return queryset.order_by('id')
-        if self.choicesOrder == self.Order.RANDOM:
+        if self.choiceOrder == self.ChoiceOrder.RANDOM:
             return queryset.order_by('?')
-        if self.choicesOrder == self.Order.NONE:
+        if self.choiceOrder == self.ChoiceOrder.NONE:
             return queryset.order_by()
         return queryset
 
@@ -113,7 +122,7 @@ class Response(BaseModel):
     choices = models.JSONField(blank=True, null=True)
 
     # fields specific to true or false
-    trueSelected = models.BooleanField(blank=True, null=True)
+    trueOrFalse = models.CharField(max_length=8, blank=True, null=True, choices=Question.TrueOrFalse.choices)
 
     class Meta:
         indexes = [
@@ -271,3 +280,8 @@ class Result(BaseModel):
 
     def hasViewPermission(self, user):
         return self.quizAttempt.user == user or self.quizAttempt.quiz.creator == user
+
+    def save(self, *args, **kwargs):
+        if not self.timeSpent and self.quizAttempt:
+            self.timeSpent = (timezone.now() - self.quizAttempt.createdDttm).seconds
+        super(Result, self).save(*args, **kwargs)

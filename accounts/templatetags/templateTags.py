@@ -175,33 +175,21 @@ def renderFormFields(field):
                         <label class="form-label" style="padding-top: 5px">{field.label}</label>
                     </div>
                 </div>'''
-    elif isinstance(field.field.widget, CheckboxSelectMultiple):
+    elif isinstance(field.field.widget, CheckboxSelectMultiple) or isinstance(field.field.widget, RadioSelect):
         label = f'<h5 class="form-label">{field.label}</h5>'
-        for checkbox in field.subwidgets:
+        for widget in field.subwidgets:
             body += f'''
                 <div class="row">
                     <div class="col-auto">
-                        <input type={checkbox.data.get('type')} name={checkbox.data.get('name')}
-                                value={checkbox.data.get('value')} style="{checkbox.data.get('attrs').get('style')}"
-                                id={checkbox.data.get('attrs').get('id')} {checkbox.data.get('attrs').get('disabled')}
-                                {"checked" if checkbox.data.get('selected') else ""}>
+                        <input type={widget.data.get('type')} name={widget.data.get('name')}
+                                value={widget.data.get('value')} style="{widget.data.get('attrs').get('style')}"
+                                id={widget.data.get('attrs').get('id')} {widget.data.get('attrs').get('disabled')}
+                                {"checked" if widget.data.get('selected') else ""}>
                     </div>
                     <div class="col">
-                    <input type="text" class="form-control col" disabled="" value="{checkbox.data.get('label')}">
+                    <input type="text" class="form-control col" disabled="" value="{widget.data.get('label')}">
                 </div>
             </div>'''
-    elif isinstance(field.field.widget, RadioSelect):
-        label = f'<h5 class="form-label">{field.label}</h5>'
-        for radio in field.subwidgets:
-            body += f'''
-                <div class="form-check form-check-inline">
-                    <input type={radio.data.get('type')} name={radio.data.get('name')} value={radio.data.get('value')}
-                    class={radio.data.get('attrs').get('class')} style="{radio.data.get('attrs').get('style')}"
-                    {"required" if radio.data.get('attrs').get('required') else ""}
-                    {radio.data.get('attrs').get('disabled')}
-                    id={radio.data.get('attrs').get('id')} {"checked" if radio.data.get('selected') else ""}>
-                    <label class="form-check-label" for={radio.data.get('attrs').get('id')}>{radio.choice_label}</label>
-                </div>'''
     else:
         raise Exception(f'Unsupported field type: {field.field.widget.__class__}')
     return mark_safe(label + body)

@@ -17,9 +17,16 @@
                 <br>
             {% endfor %}
 
-            <div class='text-right'>
-                <input type='submit' class='btn btn-primary' value='Submit'>
-                <input type='reset' class='btn btn-danger' value='Reset'>
+            <div class='row'>
+                <div class='col'>
+                    <a class='btn btn-outline-dark' href='{% url 'core:quiz-update-view' url=quizUrl %}' role='button'>
+                        Back to quiz
+                    </a>
+                </div>
+                <div class='col text-right'>
+                    <input type='reset' class='btn btn-secondary' value='Reset'>
+                    <input type='submit' class='btn btn-primary' value='Submit'>
+                </div>
             </div>
         </form>
     </div>
