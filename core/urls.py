@@ -5,6 +5,7 @@ from core.api import (
     QuestionResponseUpdateApiEventVersion1Component,
     QuizAttemptObjectApiEventVersion1Component,
     QuizAttemptObjectApiEventVersion2Component,
+    QuizAttemptObjectApiEventVersion3Component,
     QuizAttemptQuestionsApiEventVersion1Component,
     QuizMarkingOccurrenceApiEventVersion1Component
 )
@@ -20,6 +21,7 @@ from core.views import (
     userCreatedQuizzesView,
     quizAttemptViewVersion1,
     quizAttemptViewVersion2,
+    quizAttemptViewVersion3,
     quizAttemptSubmissionPreview,
     quizAttemptResultView,
     quizAttemptsForQuizView,
@@ -40,6 +42,7 @@ urlpatterns = [
     path('my-quizzes/', userCreatedQuizzesView, name='user-created-quizzes-view'),
     path('v1/quiz-attempt/<slug:url>/', quizAttemptViewVersion1, name='quiz-attempt-view-v1'),
     path('v2/quiz-attempt/<slug:url>/', quizAttemptViewVersion2, name='quiz-attempt-view-v2'),
+    path('v3/quiz-attempt/<slug:url>/', quizAttemptViewVersion3, name='quiz-attempt-view-v3'),
     path('v2/quiz-attempt/<slug:url>/preview/', quizAttemptSubmissionPreview, name='quiz-attempt-submission-preview'),
     path('quiz-attempt/<slug:url>/result/', quizAttemptResultView, name='quiz-attempt-result-view'),
     path('quiz/<slug:url>/attempts/', quizAttemptsForQuizView, name='quiz-attempts-for-quiz-view'),
@@ -61,6 +64,11 @@ urlpatterns += [
         'api/v2/quizAttemptObjectApiEventVersion2Component/',
         QuizAttemptObjectApiEventVersion2Component.as_view(),
         name='quizAttemptObjectApiEventVersion2Component'
+    ),
+    path(
+        'api/v3/quizAttemptObjectApiEventVersion3Component/',
+        QuizAttemptObjectApiEventVersion3Component.as_view(),
+        name='quizAttemptObjectApiEventVersion3Component'
     ),
     path(
         'api/v1/quizAttemptQuestionsApiEventVersion1Component/<int:id>/',

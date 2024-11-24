@@ -366,6 +366,88 @@ def quizAttemptViewVersion2(request, url):
 
 
 @login_required
+def quizAttemptViewVersion3(request, url):
+    quizAttempt = get_object_or_404(QuizAttempt.objects.select_related('user'), url=url)
+
+    if quizAttempt.hasQuizEnded() and quizAttempt.status in quizAttempt.getEditStatues():
+        quizAttempt.status = QuizAttempt.Status.SUBMITTED
+        quizAttempt.save(update_fields=['status'])
+
+    if not quizAttempt.hasViewPermission(request.user):
+        return HttpResponseForbidden('Forbidden')
+
+    if quizAttempt.getPermissionMode(request.user) == QuizAttempt.Mode.MARK:
+        # Quiz creator wants to mark this quiz. Temporarily redirect to quizAttemptSubmissionPreview and mark there.
+        return redirect('core:quiz-attempt-submission-preview', url=url)
+
+    questions = cache.get(f'quiz-attempt-v3-{url}')
+    if questions is None:
+        questions = Question.objects.filter(quizQuestions__id=quizAttempt.quiz_id)
+        if quizAttempt.quiz.inRandomOrder:
+            questions = questions.order_by('?')
+        cache.set(f'quiz-attempt-v3-{url}', questions, quizAttempt.quiz.quizDuration * 60 + 30)
+    paginator = Paginator(questions, 1)
+
+    ref = request.GET.get('ref', 'next')
+    questionIndex = request.GET.get('q', 1)
+
+    if request.method == 'POST' and quizAttempt.status != QuizAttempt.Status.SUBMITTED:
+        # When there is a POST request, it can mean the user wants to view the next question or the previous question.
+        # Determine the index shift based on the navigation direction
+        indexShift = -1 if ref == 'next' else 1
+        respondedQuestionIndex = int(questionIndex) + indexShift
+        respondedQuestionObject = paginator.page(respondedQuestionIndex).object_list[0]
+        responseObject = Response.objects.get(quizAttemptResponses__in=[quizAttempt], question=respondedQuestionObject)
+
+        if respondedQuestionObject.questionType == Question.Type.ESSAY:
+            responseObject.answer = request.POST.get('answer')
+        elif respondedQuestionObject.questionType == Question.Type.TRUE_OR_FALSE:
+            responseObject.trueOrFalse = request.POST.get('trueOrFalse')
+        elif respondedQuestionObject.questionType == Question.Type.MULTIPLE_CHOICE:
+            for key in request.POST:
+                if key.startswith('options'):
+                    checkedOptionsIds = request.POST.getlist(key)
+                    for choice in responseObject.choices.get('choices'):
+                        if choice['id'] in checkedOptionsIds:
+                            choice['isChecked'] = True
+
+        responseObject.save()
+
+    try:
+        questionPaginator = paginator.page(questionIndex)
+    except PageNotAnInteger:
+        questionPaginator = paginator.page(1)
+    except EmptyPage:
+        if int(questionIndex) > paginator.num_pages:
+            return redirect('core:quiz-attempt-submission-preview', url=url)
+        questionPaginator = paginator.page(paginator.num_pages)
+
+    currentQuestion = questionPaginator.object_list[0]
+    responseObject = Response.objects.select_related('question').get(
+        quizAttemptResponses__in=[quizAttempt], question=currentQuestion
+    )
+    hasQuizEnded = not quizAttempt.hasQuizEnded()
+    if currentQuestion.questionType == Question.Type.ESSAY:
+        form = EssayQuestionResponseForm(response=responseObject, allowEdit=hasQuizEnded, validateMark=False)
+    elif currentQuestion.questionType == Question.Type.TRUE_OR_FALSE:
+        form = TrueOrFalseQuestionResponseForm(response=responseObject, allowEdit=hasQuizEnded, validateMark=False)
+    elif currentQuestion.questionType == Question.Type.MULTIPLE_CHOICE:
+        form = MultipleChoiceQuestionResponseForm(response=responseObject, allowEdit=hasQuizEnded, validateMark=False)
+    else:
+        raise Exception('Invalid question type')
+
+    numberOfQuestions = questionPaginator.paginator.page_range.stop - questionPaginator.paginator.page_range.start
+    context = {
+        'quizAttempt': quizAttempt,
+        'questionPaginator': questionPaginator,
+        'currentQuestion': currentQuestion,
+        'form': form,
+        'progress': round((questionPaginator.number / numberOfQuestions) * 100, 0)
+    }
+    return render(request, 'core/quizAttemptViewVersion3.html', context)
+
+
+@login_required
 def quizAttemptSubmissionPreview(request, url):
     quizAttempt = get_object_or_404(QuizAttempt.objects.select_related('user'), url=url)
 
@@ -402,10 +484,7 @@ def quizAttemptSubmissionPreview(request, url):
     questionsWithResponses = questions.annotate(response_id=Coalesce(Subquery(responsesSubquery), Value(None)))
 
     bulkResponses = [
-        Response(
-            question=question,
-            choices=question.cleanAndCloneChoices() if question.questionType == Question.Type.MULTIPLE_CHOICE else None
-        )
+        Response(question=question)
         for question in questionsWithResponses if question.response_id is None
     ]
 

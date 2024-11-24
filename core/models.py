@@ -80,6 +80,7 @@ class Question(BaseModel):
 
     # fields specific to true or false
     trueOrFalse = models.CharField(max_length=8, blank=True, null=True, choices=TrueOrFalse.choices)
+    # todo: refactor old usage of trueSelected
 
     class Meta:
         indexes = [
@@ -103,7 +104,7 @@ class Question(BaseModel):
             return queryset.order_by()
         return queryset
 
-    def cleanAndCloneChoices(self):
+    def cloneAndCleanChoices(self):
         clonedChoices = copy.deepcopy(self.choices)
         for choice in clonedChoices.get('choices'):
             choice['isChecked'] = False
@@ -124,6 +125,11 @@ class Response(BaseModel):
     # fields specific to true or false
     trueOrFalse = models.CharField(max_length=8, blank=True, null=True, choices=Question.TrueOrFalse.choices)
 
+    def save(self, *args, **kwargs):
+        if self.question.questionType == Question.Type.MULTIPLE_CHOICE and self.id is None:
+            self.choices = self.question.cloneAndCleanChoices()
+        super().save(*args, **kwargs)
+
     class Meta:
         indexes = [
             models.Index(fields=['question'], name='idx-response-question')
@@ -131,10 +137,14 @@ class Response(BaseModel):
         verbose_name = 'Response'
         verbose_name_plural = 'Responses'
 
-    def save(self, *args, **kwargs):
-        if self.question.questionType == Question.Type.MULTIPLE_CHOICE and self.id is None:
-            self.choices = self.question.cleanAndCloneChoices()
-        super().save(*args, **kwargs)
+    class ModelManager(models.Manager):
+        def bulk_create(self, objs, batch_size=None, ignore_conflicts=False):
+            for obj in objs:
+                if obj.question.questionType == Question.Type.MULTIPLE_CHOICE and obj.id is None:
+                    obj.choices = obj.question.cloneAndCleanChoices()
+            return super().bulk_create(objs, batch_size, ignore_conflicts)
+
+    objects = ModelManager()
 
 
 class Quiz(BaseModel):

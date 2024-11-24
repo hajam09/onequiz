@@ -129,7 +129,7 @@
         }
 
         function beginQuizAttempt(quizId) {
-            const requestPath = "{% url 'core:quizAttemptObjectApiEventVersion2Component' %}?quizId=" + quizId;
+            const requestPath = "{% url 'core:quizAttemptObjectApiEventVersion3Component' %}?quizId=" + quizId;
             fetch(requestPath, {
                 method: 'POST',
                 headers: {

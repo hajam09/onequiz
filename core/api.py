@@ -7,6 +7,7 @@ from django.urls import reverse
 from django.utils import timezone
 from django.views import View
 from rest_framework import status
+from rest_framework.response import Response as DRFResponse
 from rest_framework.views import APIView
 
 from core.models import Question, QuizAttempt, Response, Result
@@ -32,19 +33,19 @@ class QuestionResponseUpdateApiEventVersion1Component(View):
         responseId = put.get('response').get('id')
 
         if not all([quizAttemptId, questionId, responseId]):
-            return Response({'success': False, 'message': 'Invalid data provided.'}, status=status.HTTP_400_BAD_REQUEST)
+            return DRFResponse({'success': False, 'message': 'Invalid data provided.'}, status=status.HTTP_400_BAD_REQUEST)
 
         try:
             quizAttempt = QuizAttempt.objects.select_related('quiz').prefetch_related('responses__question').get(
                 id=questionId
             )
         except QuizAttempt.DoesNotExist:
-            return Response({'success': False, 'message': 'Quiz attempt not found.'}, status=status.HTTP_404_NOT_FOUND)
+            return DRFResponse({'success': False, 'message': 'Quiz attempt not found.'}, status=status.HTTP_404_NOT_FOUND)
 
         try:
             responseInstance = quizAttempt.responses.get(question_id=questionId, id=responseId)
         except Response.DoesNotExist:
-            return Response({'success': False, 'message': 'Response not found.'}, status=status.HTTP_404_NOT_FOUND)
+            return DRFResponse({'success': False, 'message': 'Response not found.'}, status=status.HTTP_404_NOT_FOUND)
 
         if put.get('question').get('type') == 'EssayQuestion':
             responseInstance.answer = put.get('response').get('text')
@@ -54,7 +55,7 @@ class QuestionResponseUpdateApiEventVersion1Component(View):
             responseInstance.choices['choices'] = put.get('response').get('choices')
 
         responseInstance.save()
-        return Response({'success': True}, status=status.HTTP_200_OK)
+        return DRFResponse({'success': True}, status=status.HTTP_200_OK)
 
 
 class QuizAttemptObjectApiEventVersion1Component(APIView):
@@ -71,7 +72,7 @@ class QuizAttemptObjectApiEventVersion1Component(APIView):
                 'message': 'You already have an attempt that is in progress.',
                 'redirectUrl': reverse('core:quiz-attempt-view-v1', kwargs={'attemptId': existingQuizAttempt.id})
             }
-            return Response(response, status=status.HTTP_200_OK)
+            return DRFResponse(response, status=status.HTTP_200_OK)
 
         questionsFromQuiz = Question.objects.filter(quizQuestions__id=quizId)
         if not questionsFromQuiz.exists():
@@ -79,7 +80,7 @@ class QuizAttemptObjectApiEventVersion1Component(APIView):
                 'success': False,
                 'message': 'No questions found for this quiz. Unable to create an attempt.',
             }
-            return Response(response, status=status.HTTP_200_OK)
+            return DRFResponse(response, status=status.HTTP_200_OK)
 
         bulkResponse = []
         for question in questionsFromQuiz:
@@ -90,7 +91,7 @@ class QuizAttemptObjectApiEventVersion1Component(APIView):
             elif question.questionType == Question.Type.TRUE_OR_FALSE:
                 response.trueSelected = None
             elif question.questionType == Question.Type.MULTIPLE_CHOICE:
-                response.choices = question.cleanAndCloneChoices()
+                response.choices = question.cloneAndCleanChoices()
             bulkResponse.append(response)
 
         with transaction.atomic():
@@ -104,7 +105,7 @@ class QuizAttemptObjectApiEventVersion1Component(APIView):
             'success': True,
             'redirectUrl': reverse('core:quiz-attempt-view-v1', kwargs={'attemptId': newQuizAttempt.id})
         }
-        return Response(response, status=status.HTTP_200_OK)
+        return DRFResponse(response, status=status.HTTP_200_OK)
 
 
 class QuizAttemptObjectApiEventVersion2Component(View):
@@ -121,13 +122,37 @@ class QuizAttemptObjectApiEventVersion2Component(View):
         return JsonResponse(response, status=HTTPStatus.OK)
 
 
+class QuizAttemptObjectApiEventVersion3Component(APIView):
+    def post(self, request, *args, **kwargs):
+        quizAttempt, created = QuizAttempt.objects.get_or_create(
+            quiz_id=self.request.GET.get('quizId'),
+            user=self.request.user,
+            status=QuizAttempt.Status.IN_PROGRESS,
+        )
+
+        if created:
+            responseList = [
+                Response(question=question)
+                for question in Question.objects.filter(quizQuestions__id=self.request.GET.get('quizId'))
+            ]
+
+            with transaction.atomic():
+                quizAttempt.responses.add(*Response.objects.bulk_create(responseList))
+
+        response = {
+            'success': True,
+            'redirectUrl': reverse('core:quiz-attempt-view-v3', kwargs={'url': quizAttempt.url})
+        }
+        return DRFResponse(response, status=status.HTTP_200_OK)
+
+
 class QuizAttemptQuestionsApiEventVersion1Component(APIView):
 
     def get(self, request, *args, **kwargs):
         try:
             quizAttempt = QuizAttempt.objects.prefetch_related('responses__question').get(id=kwargs.get('id'))
         except QuizAttempt.DoesNotExist:
-            return Response({'success': False, 'message': 'Quiz attempt not found.'}, status=status.HTTP_404_NOT_FOUND)
+            return DRFResponse({'success': False, 'message': 'Quiz attempt not found.'}, status=status.HTTP_404_NOT_FOUND)
 
         responseList = quizAttempt.getResponses()
         computedResponseList = QuestionAndResponse(responseList)
@@ -147,7 +172,7 @@ class QuizAttemptQuestionsApiEventVersion1Component(APIView):
         try:
             quizAttempt = QuizAttempt.objects.select_related('quiz').get(id=kwargs.get('id'))
         except QuizAttempt.DoesNotExist:
-            return Response({'success': False, 'message': 'Quiz attempt not found.'}, status=status.HTTP_404_NOT_FOUND)
+            return DRFResponse({'success': False, 'message': 'Quiz attempt not found.'}, status=status.HTTP_404_NOT_FOUND)
 
         put = json.loads(self.request.body)
         userResponse = put.get('response', [])
@@ -190,7 +215,7 @@ class QuizMarkingOccurrenceApiEventVersion1Component(APIView):
         try:
             quizAttempt = QuizAttempt.objects.get(id=kwargs.get('id'))
         except QuizAttempt.DoesNotExist:
-            return Response({'success': False, 'message': 'Quiz attempt not found.'}, status=status.HTTP_404_NOT_FOUND)
+            return DRFResponse({'success': False, 'message': 'Quiz attempt not found.'}, status=status.HTTP_404_NOT_FOUND)
 
         put = json.loads(self.request.body)
         responseList = quizAttempt.responses.all().select_related('question')

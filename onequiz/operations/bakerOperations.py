@@ -123,7 +123,7 @@ def createTrueOrFalseQuestion(save=True):
         explanation=faker.paragraph(),
         mark=faker.random_number(digits=2),
         questionType=Question.Type.TRUE_OR_FALSE,
-        trueSelected=random.choice(BOOLEAN)
+        trueOrFalse=random.choice([Question.TrueOrFalse.TRUE, Question.TrueOrFalse.FALSE])
     )
 
     if save:
