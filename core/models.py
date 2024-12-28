@@ -222,7 +222,7 @@ class QuizAttempt(BaseModel):
         verbose_name_plural = 'Quiz Attempts'
 
     def getAttemptUrl(self):
-        return reverse('core:quiz-attempt-view-v2', kwargs={'url': self.url})
+        return reverse('core:quiz-attempt-view-v3', kwargs={'url': self.url})
 
     def getAttemptResultUrl(self):
         return reverse('core:quiz-attempt-result-view', kwargs={'url': self.url})

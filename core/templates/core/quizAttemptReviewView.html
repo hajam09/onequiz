@@ -38,10 +38,25 @@
                                     <div class="card-body">
                                         <p><b>Content / Question</b></p>
                                         {{ form.data.response.question.content }}
+
+                                        {% if quizAttempt.quiz.creator == request.user %}
+                                            <hr>
+                                            <p><b>Answer</b></p>
+                                            {% if form.data.response.question.questionType == form.data.response.question.Type.ESSAY %}
+                                            {% elif form.data.response.question.questionType == form.data.response.question.Type.TRUE_OR_FALSE %}
+                                            {% elif form.data.response.question.questionType == form.data.response.question.Type.MULTIPLE_CHOICE %}
+                                            {% endif %}
+                                        {% endif %}
+
                                         <hr>
-                                        <p><b>Your Answer</b></p>
+                                        {% if quizAttempt.quiz.creator == request.user %}
+                                            <p><b>User Answer</b></p>
+                                        {% else %}
+                                            <p><b>Your Answer</b></p>
+                                        {% endif %}
+
                                         {% if form.data.response.question.questionType == form.data.response.question.Type.ESSAY %}
-                                            {{ form.userAnswer }}
+                                            {{ form.answer }}
                                         {% elif form.data.response.question.questionType == form.data.response.question.Type.TRUE_OR_FALSE %}
                                             {% for field in form %}
                                                 {% for radio in field %}

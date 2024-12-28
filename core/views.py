@@ -9,7 +9,7 @@ from django.db.models import OuterRef, Subquery, Value
 from django.db.models import Q
 from django.db.models.functions import Coalesce
 from django.http import Http404, HttpResponseForbidden
-from django.shortcuts import render, redirect, get_object_or_404
+from django.shortcuts import get_object_or_404, render, redirect, reverse
 from django.views.generic import ListView
 
 from core.forms import (
@@ -320,12 +320,10 @@ def quizAttemptViewVersion2(request, url):
         elif respondedQuestionObject.questionType == Question.Type.TRUE_OR_FALSE:
             responseObject.trueOrFalse = request.POST.get('trueOrFalse')
         elif respondedQuestionObject.questionType == Question.Type.MULTIPLE_CHOICE:
-            for key in request.POST:
-                if key.startswith('options'):
-                    checkedOptionsIds = request.POST.getlist(key)
-                    for choice in responseObject.choices.get('choices'):
-                        if choice['id'] in checkedOptionsIds:
-                            choice['isChecked'] = True
+            optionsKey = next((key for key in request.POST if key.startswith('option')), None)
+            checkedOptionsIds = set(request.POST.getlist(optionsKey))
+            for choice in responseObject.choices.get('choices'):
+                choice['isChecked'] = choice['id'] in checkedOptionsIds
 
         responseObject.save()
 
@@ -388,13 +386,18 @@ def quizAttemptViewVersion3(request, url):
         cache.set(f'quiz-attempt-v3-{url}', questions, quizAttempt.quiz.quizDuration * 60 + 30)
     paginator = Paginator(questions, 1)
 
-    ref = request.GET.get('ref', 'next')
     questionIndex = request.GET.get('q', 1)
 
     if request.method == 'POST' and quizAttempt.status != QuizAttempt.Status.SUBMITTED:
         # When there is a POST request, it can mean the user wants to view the next question or the previous question.
         # Determine the index shift based on the navigation direction
-        indexShift = -1 if ref == 'next' else 1
+        if request.POST.get('ref') == 'next':
+            indexShift = -1
+        elif request.POST.get('ref') == 'prev':
+            indexShift = 1
+        else:
+            raise Exception('IndexShift not provided in the POST request to determine question index.')
+
         respondedQuestionIndex = int(questionIndex) + indexShift
         respondedQuestionObject = paginator.page(respondedQuestionIndex).object_list[0]
         responseObject = Response.objects.get(quizAttemptResponses__in=[quizAttempt], question=respondedQuestionObject)
@@ -404,14 +407,13 @@ def quizAttemptViewVersion3(request, url):
         elif respondedQuestionObject.questionType == Question.Type.TRUE_OR_FALSE:
             responseObject.trueOrFalse = request.POST.get('trueOrFalse')
         elif respondedQuestionObject.questionType == Question.Type.MULTIPLE_CHOICE:
-            for key in request.POST:
-                if key.startswith('options'):
-                    checkedOptionsIds = request.POST.getlist(key)
-                    for choice in responseObject.choices.get('choices'):
-                        if choice['id'] in checkedOptionsIds:
-                            choice['isChecked'] = True
+            optionsKey = next((key for key in request.POST if key.startswith('option')), None)
+            checkedOptionsIds = set(request.POST.getlist(optionsKey))
+            for choice in responseObject.choices.get('choices'):
+                choice['isChecked'] = choice['id'] in checkedOptionsIds
 
         responseObject.save()
+        return redirect(reverse('core:quiz-attempt-view-v3', kwargs={'url': url}) + f'?q={questionIndex}')
 
     try:
         questionPaginator = paginator.page(questionIndex)
@@ -453,7 +455,7 @@ def quizAttemptSubmissionPreview(request, url):
 
     if quizAttempt.hasQuizEnded() and quizAttempt.status in quizAttempt.getEditStatues():
         quizAttempt.status = QuizAttempt.Status.SUBMITTED
-        # quizAttempt.save(update_fields=['status'])
+        quizAttempt.save(update_fields=['status'])
 
     if not quizAttempt.hasViewPermission(request.user):
         return HttpResponseForbidden('Forbidden')

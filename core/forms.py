@@ -381,6 +381,7 @@ class QuestionForm(forms.Form):
         widget=forms.ClearableFileInput(
             attrs={
                 'class': 'form-control',
+                'accept': 'image/*',
             }
         ),
     )
