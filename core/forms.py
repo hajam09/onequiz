@@ -893,6 +893,7 @@ class BaseResponseForm(forms.Form):
         self.data['response'] = response
         self.allowEdit = allowEdit
         self.setInitialValues(response)
+        self.showSystemAnswerWhileMarking(response)
         if not self.allowEdit:
             self.disableFields()
 
@@ -906,6 +907,9 @@ class BaseResponseForm(forms.Form):
 
     def setInitialValues(self, response):
         raise NotImplementedError("Please implement setInitialValues() method")
+
+    def showSystemAnswerWhileMarking(self, response):
+        raise NotImplementedError("Please implement showSystemAnswerWhileMarking() method")
 
     def disableFields(self):
         for field in self.fields.values():
@@ -928,6 +932,20 @@ class EssayQuestionResponseForm(BaseResponseForm):
     def setInitialValues(self, response):
         self.fields['answer'].initial = response.answer
 
+    def showSystemAnswerWhileMarking(self, response):
+        if not self.allowEdit:
+            self.fields['systemAnswer'] = forms.CharField(
+                initial=response.question.answer,
+                required=False,
+                widget=forms.Textarea(
+                    attrs={
+                        'class': 'form-control col',
+                        'style': 'border-radius: 0',
+                        'rows': 5,
+                    }
+                )
+            )
+
 
 class TrueOrFalseQuestionResponseForm(BaseResponseForm):
     def setInitialValues(self, response):
@@ -949,11 +967,25 @@ class TrueOrFalseQuestionResponseForm(BaseResponseForm):
         else:
             self.fields['trueOrFalse'] = field
 
+    def showSystemAnswerWhileMarking(self, response):
+        if not self.allowEdit:
+            randomString = ''.join(random.choice(ascii_uppercase + digits) for _ in range(3))
+            self.fields[f'systemAnswer_{randomString}'] = forms.ChoiceField(
+                label='Is the answer True or False?',
+                required=False,
+                choices=Question.TrueOrFalse.choices,
+                initial=response.question.trueOrFalse,
+                widget=forms.RadioSelect(
+                    attrs={
+                        'class': 'form-check-input',
+                        'style': 'height: 34px; width: 34px',
+                    }
+                )
+            )
+
 
 class MultipleChoiceQuestionResponseForm(BaseResponseForm):
     def setInitialValues(self, response):
-        choices = [(choice['id'], choice['content']) for choice in response.choices.get('choices')]
-        initial = [choice['id'] for choice in response.choices.get('choices') if choice['isChecked']]
         label = 'Select the correct answer(s).'
         style = {'style': 'height: 34px; width:34px'}
 
@@ -967,7 +999,20 @@ class MultipleChoiceQuestionResponseForm(BaseResponseForm):
 
         self.fields[fieldName] = forms.MultipleChoiceField(
             label=label,
-            choices=choices,
-            initial=initial,
+            choices=[(choice['id'], choice['content']) for choice in response.choices.get('choices')],
+            initial=[choice['id'] for choice in response.choices.get('choices') if choice['isChecked']],
             widget=widget
         )
+
+    def showSystemAnswerWhileMarking(self, response):
+        if not self.allowEdit:
+            style = {'style': 'height: 34px; width:34px'}
+            if response.question.choiceType == Question.ChoiceType.SINGLE:
+                widget = forms.RadioSelect(attrs=style)
+            else:
+                widget = forms.CheckboxSelectMultiple(attrs=style)
+            self.fields['systemAnswer'] = forms.MultipleChoiceField(
+                choices=[(choice['id'], choice['content']) for choice in response.question.choices.get('choices')],
+                initial=[choice['id'] for choice in response.question.choices.get('choices') if choice['isChecked']],
+                widget=widget
+            )

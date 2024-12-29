@@ -41,10 +41,43 @@
 
                                         {% if quizAttempt.quiz.creator == request.user %}
                                             <hr>
-                                            <p><b>Answer</b></p>
+                                            <p><b>System Answer</b></p>
                                             {% if form.data.response.question.questionType == form.data.response.question.Type.ESSAY %}
+                                                {% for field in form %}
+                                                    {% if field.name == 'systemAnswer' %}
+                                                        {{ form.systemAnswer }}
+                                                    {% endif %}
+                                                {% endfor %}
                                             {% elif form.data.response.question.questionType == form.data.response.question.Type.TRUE_OR_FALSE %}
+                                                {% for field in form %}
+                                                    {% if field.name|startswith:'systemAnswer' %}
+                                                        {% for radio in field %}
+                                                            <div class="form-check form-check-inline">
+                                                                {{ radio.tag }}
+                                                                <label class="form-check-label"
+                                                                       for="{{ radio.id_for_label }}">
+                                                                    {{ radio.choice_label }}
+                                                                </label>
+                                                            </div>
+                                                        {% endfor %}
+                                                    {% endif %}
+                                                {% endfor %}
                                             {% elif form.data.response.question.questionType == form.data.response.question.Type.MULTIPLE_CHOICE %}
+                                                {% for field in form %}
+                                                    {% if field.name|startswith:'systemAnswer' %}
+                                                        {% for checkboxOrRadio in field %}
+                                                            <div class="row">
+                                                                <div class="col-auto">
+                                                                    {{ checkboxOrRadio.tag }}
+                                                                </div>
+                                                                <div class="col">
+                                                                    <input type="text" class="form-control col" disabled
+                                                                           value="{{ checkboxOrRadio.choice_label }}">
+                                                                </div>
+                                                            </div>
+                                                        {% endfor %}
+                                                    {% endif %}
+                                                {% endfor %}
                                             {% endif %}
                                         {% endif %}
 
@@ -56,31 +89,40 @@
                                         {% endif %}
 
                                         {% if form.data.response.question.questionType == form.data.response.question.Type.ESSAY %}
-                                            {{ form.answer }}
+                                            {% for field in form %}
+                                                {% if field.name == 'answer' %}
+                                                    {{ form.answer }}
+                                                {% endif %}
+                                            {% endfor %}
                                         {% elif form.data.response.question.questionType == form.data.response.question.Type.TRUE_OR_FALSE %}
                                             {% for field in form %}
-                                                {% for radio in field %}
-                                                    <div class="form-check form-check-inline">
-                                                        {{ radio.tag }}
-                                                        <label class="form-check-label" for="{{ radio.id_for_label }}">
-                                                            {{ radio.choice_label }}
-                                                        </label>
-                                                    </div>
-                                                {% endfor %}
+                                                {% if field.name|startswith:'trueOrFalse' %}
+                                                    {% for radio in field %}
+                                                        <div class="form-check form-check-inline">
+                                                            {{ radio.tag }}
+                                                            <label class="form-check-label"
+                                                                   for="{{ radio.id_for_label }}">
+                                                                {{ radio.choice_label }}
+                                                            </label>
+                                                        </div>
+                                                    {% endfor %}
+                                                {% endif %}
                                             {% endfor %}
                                         {% elif form.data.response.question.questionType == form.data.response.question.Type.MULTIPLE_CHOICE %}
                                             {% for field in form %}
-                                                {% for checkboxOrRadio in field %}
-                                                    <div class="row">
-                                                        <div class="col-auto">
-                                                            {{ checkboxOrRadio.tag }}
+                                                {% if field.name|startswith:'options' %}
+                                                    {% for checkboxOrRadio in field %}
+                                                        <div class="row">
+                                                            <div class="col-auto">
+                                                                {{ checkboxOrRadio.tag }}
+                                                            </div>
+                                                            <div class="col">
+                                                                <input type="text" class="form-control col" disabled
+                                                                       value="{{ checkboxOrRadio.choice_label }}">
+                                                            </div>
                                                         </div>
-                                                        <div class="col">
-                                                            <input type="text" class="form-control col" disabled
-                                                                   value="{{ checkboxOrRadio.choice_label }}">
-                                                        </div>
-                                                    </div>
-                                                {% endfor %}
+                                                    {% endfor %}
+                                                {% endif %}
                                             {% endfor %}
                                         {% endif %}
                                         <br>

@@ -212,7 +212,7 @@ def renderScoreComponent(user, quizAttempt, form):
     if form.data.get('markResponseAlert') == 'border border-success':
         awardedMark = int(form.data.get('response').mark)
     elif form.data.get('markResponseAlert') == 'border border-secondary':
-        awardedMark = int(form.data.get('response').mark) if form.data.get('response').mark else ''
+        awardedMark = '' if form.data.get('response').mark is None else int(form.data.get('response').mark)
     else:
         awardedMark = ''
 
@@ -245,3 +245,8 @@ def renderScoreComponent(user, quizAttempt, form):
     else:
         itemContent = '''<span></span>'''
     return mark_safe(itemContent)
+
+
+@register.filter
+def startswith(value, arg):
+    return value.startswith(arg)
