@@ -39,7 +39,7 @@
                                         <p><b>Content / Question</b></p>
                                         {{ form.data.response.question.content }}
 
-                                        {% if quizAttempt.quiz.creator == request.user %}
+                                        {% if quizAttempt.quiz.creator == request.user or quizAttempt.user == request.user and quizAttempt.quiz.answerAtEnd and quizAttempt.status in 'SUBMITTED,IN_REVIEW,MARKED' %}
                                             <hr>
                                             <p><b>System Answer</b></p>
                                             {% if form.data.response.question.questionType == form.data.response.question.Type.ESSAY %}

@@ -451,7 +451,7 @@ def quizAttemptViewVersion3(request, url):
 
 @login_required
 def quizAttemptSubmissionPreview(request, url):
-    quizAttempt = get_object_or_404(QuizAttempt.objects.select_related('user'), url=url)
+    quizAttempt = get_object_or_404(QuizAttempt.objects.select_related('quiz', 'user'), url=url)
 
     if quizAttempt.hasQuizEnded() and quizAttempt.status in quizAttempt.getEditStatues():
         quizAttempt.status = QuizAttempt.Status.SUBMITTED
@@ -467,7 +467,7 @@ def quizAttemptSubmissionPreview(request, url):
     if isQuizParticipant and request.method == 'POST' and 'submitQuiz' in request.POST:
         quizAttempt.status = QuizAttempt.Status.SUBMITTED
         quizAttempt.save(update_fields=['status'])
-        cache.delete(f'quiz-attempt-v2-{url}')
+        cache.delete(f'quiz-attempt-v3-{url}')
         messages.success(
             request,
             'Your attempt has been submitted successfully, please check later for results.'

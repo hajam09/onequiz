@@ -1,6 +1,7 @@
 import json
 from http import HTTPStatus
 
+from django.contrib import messages
 from django.db import transaction
 from django.http import JsonResponse
 from django.urls import reverse
@@ -10,7 +11,7 @@ from rest_framework import status
 from rest_framework.response import Response as DRFResponse
 from rest_framework.views import APIView
 
-from core.models import Question, QuizAttempt, Response, Result
+from core.models import Question, QuizAttempt, Response, Result, Quiz
 from onequiz.operations.featureFlagOperations import featureFlagOperations, FeatureFlagType
 from onequiz.operations.generalOperations import (
     QuestionAndResponse, QuizAttemptAutomaticMarking, QuizAttemptManualMarking
@@ -124,20 +125,49 @@ class QuizAttemptObjectApiEventVersion2Component(View):
 
 class QuizAttemptObjectApiEventVersion3Component(APIView):
     def post(self, request, *args, **kwargs):
-        quizAttempt, created = QuizAttempt.objects.get_or_create(
-            quiz_id=self.request.GET.get('quizId'),
-            user=self.request.user,
-            status=QuizAttempt.Status.IN_PROGRESS,
-        )
+        quizId = self.request.GET.get('quizId')
+        user = self.request.user
 
-        if created:
+        existingInProgressAttempt = QuizAttempt.objects.filter(
+            quiz_id=quizId,
+            user=user,
+            status=QuizAttempt.Status.IN_PROGRESS
+        ).first()
+
+        if existingInProgressAttempt:
+            response = {
+                'success': True,
+                'redirectUrl': reverse('core:quiz-attempt-view-v3', kwargs={'url': existingInProgressAttempt.url})
+            }
+            return DRFResponse(response, status=status.HTTP_200_OK)
+
+        totalAttempts = QuizAttempt.objects.filter(
+            quiz_id=quizId,
+            user=user
+        ).count()
+
+        quiz = Quiz.objects.get(id=quizId)
+        if totalAttempts >= quiz.maxAttempt:
+            response = {
+                'success': False,
+                'message': 'Maximum attempts reached for this quiz.'
+            }
+            messages.info(
+                request, 'Maximum attempts reached for this quiz.'
+            )
+            return DRFResponse(response, status=status.HTTP_400_BAD_REQUEST)
+
+        with transaction.atomic():
+            quizAttempt = QuizAttempt.objects.create(
+                quiz=quiz,
+                user=user,
+                status=QuizAttempt.Status.IN_PROGRESS
+            )
             responseList = [
                 Response(question=question)
-                for question in Question.objects.filter(quizQuestions__id=self.request.GET.get('quizId'))
+                for question in Question.objects.filter(quizQuestions__id=quizId)
             ]
-
-            with transaction.atomic():
-                quizAttempt.responses.add(*Response.objects.bulk_create(responseList))
+            quizAttempt.responses.add(*Response.objects.bulk_create(responseList))
 
         response = {
             'success': True,
@@ -152,7 +182,8 @@ class QuizAttemptQuestionsApiEventVersion1Component(APIView):
         try:
             quizAttempt = QuizAttempt.objects.prefetch_related('responses__question').get(id=kwargs.get('id'))
         except QuizAttempt.DoesNotExist:
-            return DRFResponse({'success': False, 'message': 'Quiz attempt not found.'}, status=status.HTTP_404_NOT_FOUND)
+            return DRFResponse({'success': False, 'message': 'Quiz attempt not found.'},
+                               status=status.HTTP_404_NOT_FOUND)
 
         responseList = quizAttempt.getResponses()
         computedResponseList = QuestionAndResponse(responseList)
@@ -172,7 +203,8 @@ class QuizAttemptQuestionsApiEventVersion1Component(APIView):
         try:
             quizAttempt = QuizAttempt.objects.select_related('quiz').get(id=kwargs.get('id'))
         except QuizAttempt.DoesNotExist:
-            return DRFResponse({'success': False, 'message': 'Quiz attempt not found.'}, status=status.HTTP_404_NOT_FOUND)
+            return DRFResponse({'success': False, 'message': 'Quiz attempt not found.'},
+                               status=status.HTTP_404_NOT_FOUND)
 
         put = json.loads(self.request.body)
         userResponse = put.get('response', [])
@@ -215,7 +247,8 @@ class QuizMarkingOccurrenceApiEventVersion1Component(APIView):
         try:
             quizAttempt = QuizAttempt.objects.get(id=kwargs.get('id'))
         except QuizAttempt.DoesNotExist:
-            return DRFResponse({'success': False, 'message': 'Quiz attempt not found.'}, status=status.HTTP_404_NOT_FOUND)
+            return DRFResponse({'success': False, 'message': 'Quiz attempt not found.'},
+                               status=status.HTTP_404_NOT_FOUND)
 
         put = json.loads(self.request.body)
         responseList = quizAttempt.responses.all().select_related('question')
