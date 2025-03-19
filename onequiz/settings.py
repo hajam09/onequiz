@@ -45,6 +45,7 @@ INSTALLED_APPS = [
     'crispy_forms',
     'core',
     'rest_framework',
+    'audit',
 ]
 
 MIDDLEWARE = [
@@ -56,6 +57,7 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'auditlog.middleware.AuditlogMiddleware',
+    'audit.middleware.ModelChangeTrackingMiddleware',
 ]
 
 ROOT_URLCONF = 'onequiz.urls'

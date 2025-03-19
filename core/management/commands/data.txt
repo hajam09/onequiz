@@ -1,0 +1,7 @@
+
+Q: Which AWS service or feature can be used to prevent SQL injection attacks?
+A: Security groups
+B: Network ACLs
+C: AWS WAF
+D: IAM policy
+Correct_answer: C

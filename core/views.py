@@ -178,6 +178,19 @@ def trueOrFalseQuestionCreateView(request, url):
 
 
 @login_required
+def bulkQuestionCreateView(request, url):
+    try:
+        quiz = Quiz.objects.get(url=url, creator=request.user)
+    except Quiz.DoesNotExist:
+        raise Http404
+
+    context = {
+
+    }
+    return render(request, 'core/bulkQuestionCreateTemplateView.html', context)
+
+
+@login_required
 def questionUpdateView(request, quizUrl, questionUrl):
     try:
         question = Question.objects.get(
