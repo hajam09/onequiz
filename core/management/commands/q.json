@@ -1,29 +1,27 @@
 [
   {
-    "question": "your EC2 instances. What two parts of the VPC do you need to check to accomplish this task?",
-    "options": {
-      "A": "Network ACLs and Traffic Manager.",
-      "B": "Network ACLs and Subnets.",
-      "C": "Security Groups and Internet Gateways.",
-      "D": "Security Groups and Network ACLs."
-    },
-    "correct_answer": [
-      "D"
-    ],
-    "explanation": "This is the explanation."
+    "content": "Question 1",
+    "explanation": "Question 1 explanation",
+    "mark": "2",
+    "answer": "Question 1 answer"
   },
   {
-    "question": "What does the AWS 'Business' support plan provide? (Choose TWO)",
+    "content": "Question 2",
+    "explanation": "Question 2 explanation",
+    "mark": "2",
     "options": {
-      "A": "Access to the full set of Trusted Advisor checks.",
-      "B": "Support Concierge Service.",
-      "C": "Less than 15 minutes response-time support if your business critical system goes down.",
-      "D": "AWS Support API.",
-      "E": "Proactive Technical Account Management."
+      "A": "Option A",
+      "B": "Option B",
+      "C": "Option C"
     },
-    "correct_answer": [
-      "A",
-      "D"
+    "option_answers": [
+      "A, C"
     ]
+  },
+  {
+    "content": "Question 3",
+    "explanation": "Question 3 explanation",
+    "mark": "2",
+    "trueOrFalse": "True"
   }
 ]

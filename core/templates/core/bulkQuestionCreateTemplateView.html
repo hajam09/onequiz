@@ -5,8 +5,61 @@
         <legend>
             <h2 class="text-center">Create questions in bulk via uploading a file.</h2>
         </legend>
-        <p>Following format(s) are supported at the moment: .txt</p>
+        <p>Following format(s) are supported at the moment: .json</p>
 
-        If you are uploading a text file
+        Sample json format:<br>
+        <code>
+            [
+            <br>&nbsp;
+            {
+            <br>
+            &nbsp;&nbsp;&nbsp;&nbsp;"content": "Question 1",<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;"explanation": "Question 1 explanation",<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;"mark": "2",<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;"answer": "Question 1 answer",<br>
+            &nbsp;
+            },
+            <br>&nbsp;
+            {
+            <br>
+            &nbsp;&nbsp;&nbsp;&nbsp;"content": "Question 2",<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;"explanation": "Question 2 explanation",<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;"mark": "2",<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;"choice_order": "SEQUENTIAL" | "RANDOM" | "NONE",<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;"options": {<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"A": "Option A",<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"B": "Option B",<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"C": "Option C",<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;...,<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;},<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;"option_answers": ["A", "C"],<br>
+            &nbsp;
+            },
+            <br>&nbsp;
+            {
+            <br>
+            &nbsp;&nbsp;&nbsp;&nbsp;"content": "Question 3",<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;"explanation": "Question 3 explanation",<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;"mark": "2",<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;"true_or_false": "TRUE" | "FALSE",<br>
+            &nbsp;
+            },
+            <br>
+            ]
+        </code>
+        <br>
+        <br>
+        <form method='post' enctype='multipart/form-data'>
+            {% csrf_token %}
+            <input type="file" name="file" class="form-control"
+                   accept=".json,.txt,.csv,application/json,text/plain,text/csv">
+            <br>
+            <div class='col text-right'>
+                <input type='reset' class='btn btn-secondary' value='Reset'>
+                <input type='submit' class='btn btn-primary' value='Submit'>
+            </div>
+        </form>
+
+
     </div>
 {% endblock %}

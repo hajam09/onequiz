@@ -1,4 +1,6 @@
+import json
 import operator
+import uuid
 from functools import reduce
 
 from django.contrib import messages
@@ -183,6 +185,62 @@ def bulkQuestionCreateView(request, url):
         quiz = Quiz.objects.get(url=url, creator=request.user)
     except Quiz.DoesNotExist:
         raise Http404
+
+    if request.method == 'POST':
+        bulk_questions = []
+        file = request.FILES.get('file')
+        if file.content_type == 'application/json':
+            for question in json.load(file):
+                new_question = Question()
+
+                if 'answer' in question:
+                    question_type = Question.Type.ESSAY
+                    new_question.answer = question.get('answer')
+                elif 'options' in question:
+                    question_type = Question.Type.MULTIPLE_CHOICE
+                    new_question.choiceOrder = question.get('choice_order')
+
+                    if len(question.get('option_answers')) == 1:
+                        new_question.choiceType = Question.ChoiceType.SINGLE
+                    else:
+                        new_question.choiceType = Question.ChoiceType.MULTIPLE
+
+                    for correct_answer in question.get('option_answers'):
+                        if correct_answer not in question.get('options'):
+                            messages.error(
+                                request,
+                                f'''The option(s) provided in option_answers are invalid.
+                                Ensure all values in option_answers correspond to the available options'''
+                            )
+
+                    choices = [
+                        {
+                            'id': uuid.uuid4().hex,
+                            'content': value,
+                            'isChecked': key in question.get('option_answers')
+                        }
+                        for key, value in question.get('options').items()
+                    ]
+                    new_question.choices = {'choices': choices}
+
+                elif 'true_or_false' in question:
+                    question_type = Question.Type.TRUE_OR_FALSE
+                    new_question.trueOrFalse = question.get('true_or_false')
+                else:
+                    question_type = Question.Type.NONE
+
+                new_question.content = question.get('content')
+                new_question.explanation = question.get('explanation')
+                new_question.mark = question.get('mark')
+                new_question.questionType = question_type
+                bulk_questions.append(
+                    new_question
+                )
+
+            Question.objects.bulk_create(bulk_questions, 20)
+            quiz.questions.add(*bulk_questions)
+        elif file.content_type == 'text/plain':
+            pass
 
     context = {
 
