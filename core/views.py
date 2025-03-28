@@ -1,6 +1,5 @@
 import json
 import operator
-import uuid
 from functools import reduce
 
 from django.contrib import messages
@@ -21,7 +20,7 @@ from core.forms import (
     MultipleChoiceQuestionResponseForm,
 )
 from core.models import Quiz, Question, QuizAttempt, Result, Subject, Response
-from onequiz.operations import generalOperations
+from onequiz.operations import generalOperations, bulkOperations
 from onequiz.operations.generalOperations import QuizAttemptManualMarking2
 
 
@@ -189,78 +188,54 @@ def bulkQuestionCreateView(request, url):
     if request.method == 'POST':
         bulk_questions = []
         file = request.FILES.get('file')
+
         if file.content_type == 'application/json':
             for question in json.load(file):
-                new_question = Question()
-                new_question.content = question.get('content')
-                new_question.explanation = question.get('explanation')
-                new_question.mark = question.get('mark')
 
-                if Question.objects.filter(quizQuestions__id=quiz.id, content__icontains=new_question.content).exists():
+                content = question.get('content')
+                explanation = question.get('explanation')
+                mark = question.get('mark')
+
+                if Question.objects.filter(quizQuestions__id=quiz.id, content__icontains=content).exists():
                     continue
 
                 if 'answer' in question:
-                    question_type = Question.Type.ESSAY
-                    new_question.answer = question.get('answer')
+                    _question = bulkOperations.create_essay_question(
+                        request,
+                        content,
+                        explanation,
+                        mark,
+                        question.get('answer')
+                    )
                 elif 'options' in question:
-                    question_type = Question.Type.MULTIPLE_CHOICE
-
-                    if not question.get('choice_order').upper() in Question.ChoiceOrder.values:
-                        messages.error(
-                            request,
-                            f'''The choice_order {question.get('choice_order')} is not a valid value.
-                            Must be either {" or ".join(Question.ChoiceOrder.values)}'''
-                        )
-                    else:
-                        new_question.choiceOrder = question.get('choice_order')
-
-                    if len(question.get('option_answers')) == 1:
-                        new_question.choiceType = Question.ChoiceType.SINGLE
-                    else:
-                        new_question.choiceType = Question.ChoiceType.MULTIPLE
-
-                    for correct_answer in question.get('option_answers'):
-                        if correct_answer not in question.get('options'):
-                            messages.error(
-                                request,
-                                f'''The option(s) provided in option_answers are invalid.
-                                Ensure all values in option_answers correspond to the available options'''
-                            )
-
-                    choices = [
-                        {
-                            'id': uuid.uuid4().hex,
-                            'content': value,
-                            'isChecked': key in question.get('option_answers')
-                        }
-                        for key, value in question.get('options').items()
-                    ]
-                    new_question.choices = {'choices': choices}
-
+                    _question = bulkOperations.create_multiple_choice_question(
+                        request,
+                        content,
+                        explanation,
+                        mark,
+                        question.get('choice_order'),
+                        question.get('option_answers'),
+                        question.get('options')
+                    )
                 elif 'true_or_false' in question:
-                    question_type = Question.Type.TRUE_OR_FALSE
-
-                    if not question.get('true_or_false').upper() in Question.TrueOrFalse.values:
-                        messages.error(
-                            request,
-                            f'''The choice_order {question.get('true_or_false')} is not a valid value.
-                            Must be either {" or ".join(Question.TrueOrFalse.values)}'''
-                        )
-                    else:
-                        new_question.trueOrFalse = question.get('true_or_false')
+                    _question = bulkOperations.create_true_or_false_question(
+                        request,
+                        content,
+                        explanation,
+                        mark,
+                        question.get('true_or_false'),
+                    )
                 else:
-                    question_type = Question.Type.NONE
+                    raise Exception
 
-                new_question.questionType = question_type
-                bulk_questions.append(
-                    new_question
-                )
-
-            Question.objects.bulk_create(bulk_questions, 20)
-            quiz.questions.add(*bulk_questions)
+                if _question is None:
+                    break
+                bulk_questions.append(_question)
         elif file.content_type == 'text/plain':
             pass
 
+        Question.objects.bulk_create(bulk_questions, 20)
+        quiz.questions.add(*bulk_questions)
         return redirect('core:bulk-question-create-view', url=url)
     return render(request, 'core/bulkQuestionCreateTemplateView.html')
 
