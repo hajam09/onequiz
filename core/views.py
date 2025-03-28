@@ -192,13 +192,27 @@ def bulkQuestionCreateView(request, url):
         if file.content_type == 'application/json':
             for question in json.load(file):
                 new_question = Question()
+                new_question.content = question.get('content')
+                new_question.explanation = question.get('explanation')
+                new_question.mark = question.get('mark')
+
+                if Question.objects.filter(quizQuestions__id=quiz.id, content__icontains=new_question.content).exists():
+                    continue
 
                 if 'answer' in question:
                     question_type = Question.Type.ESSAY
                     new_question.answer = question.get('answer')
                 elif 'options' in question:
                     question_type = Question.Type.MULTIPLE_CHOICE
-                    new_question.choiceOrder = question.get('choice_order')
+
+                    if not question.get('choice_order').upper() in Question.ChoiceOrder.values:
+                        messages.error(
+                            request,
+                            f'''The choice_order {question.get('choice_order')} is not a valid value.
+                            Must be either {" or ".join(Question.ChoiceOrder.values)}'''
+                        )
+                    else:
+                        new_question.choiceOrder = question.get('choice_order')
 
                     if len(question.get('option_answers')) == 1:
                         new_question.choiceType = Question.ChoiceType.SINGLE
@@ -225,13 +239,18 @@ def bulkQuestionCreateView(request, url):
 
                 elif 'true_or_false' in question:
                     question_type = Question.Type.TRUE_OR_FALSE
-                    new_question.trueOrFalse = question.get('true_or_false')
+
+                    if not question.get('true_or_false').upper() in Question.TrueOrFalse.values:
+                        messages.error(
+                            request,
+                            f'''The choice_order {question.get('true_or_false')} is not a valid value.
+                            Must be either {" or ".join(Question.TrueOrFalse.values)}'''
+                        )
+                    else:
+                        new_question.trueOrFalse = question.get('true_or_false')
                 else:
                     question_type = Question.Type.NONE
 
-                new_question.content = question.get('content')
-                new_question.explanation = question.get('explanation')
-                new_question.mark = question.get('mark')
                 new_question.questionType = question_type
                 bulk_questions.append(
                     new_question
@@ -242,10 +261,8 @@ def bulkQuestionCreateView(request, url):
         elif file.content_type == 'text/plain':
             pass
 
-    context = {
-
-    }
-    return render(request, 'core/bulkQuestionCreateTemplateView.html', context)
+        return redirect('core:bulk-question-create-view', url=url)
+    return render(request, 'core/bulkQuestionCreateTemplateView.html')
 
 
 @login_required

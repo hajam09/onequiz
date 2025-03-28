@@ -167,7 +167,8 @@ class QuizAttemptObjectApiEventVersion3Component(APIView):
                 Response(question=question)
                 for question in Question.objects.filter(quizQuestions__id=quizId)
             ]
-            quizAttempt.responses.add(*Response.objects.bulk_create(responseList))
+            Response.objects.bulk_create(responseList, 100)
+            quizAttempt.responses.add(*responseList)
 
         response = {
             'success': True,
