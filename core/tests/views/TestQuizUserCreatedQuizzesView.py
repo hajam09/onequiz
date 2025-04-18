@@ -19,7 +19,7 @@ class QuizUserCreatedQuizzesViewTest(BaseTestViews):
 
     def testUserCreatedQuizzesViewGet(self):
         response = self.get()
-        self.assertEquals(response.status_code, 200)
+        self.assertEqual(response.status_code, 200)
         self.assertTrue(isinstance(response.context['quizList'], Page))
         self.assertEqual(len(self.quizList), len(response.context['quizList']))
         self.assertTemplateUsed(response, 'core/quizListView.html')
@@ -28,7 +28,7 @@ class QuizUserCreatedQuizzesViewTest(BaseTestViews):
         query = self.quizList[0].name
         quizWithName = [i for i in self.quizList if query in i.name]
         response = self.get(path=f"{self.path}?query={query}")
-        self.assertEquals(response.status_code, 200)
+        self.assertEqual(response.status_code, 200)
         self.assertTrue(isinstance(response.context['quizList'], Page))
         self.assertEqual(len(quizWithName), len(response.context['quizList']))
         self.assertTemplateUsed(response, 'core/quizListView.html')
@@ -37,7 +37,7 @@ class QuizUserCreatedQuizzesViewTest(BaseTestViews):
         query = self.quizList[0].description
         quizWithDescription = [i for i in self.quizList if query in i.description]
         response = self.get(path=f"{self.path}?query={query}")
-        self.assertEquals(response.status_code, 200)
+        self.assertEqual(response.status_code, 200)
         self.assertTrue(isinstance(response.context['quizList'], Page))
         self.assertEqual(len(quizWithDescription), len(response.context['quizList']))
         self.assertTemplateUsed(response, 'core/quizListView.html')
@@ -46,7 +46,7 @@ class QuizUserCreatedQuizzesViewTest(BaseTestViews):
         query = self.quizList[0].topic
         quizWithTopicName = [i for i in self.quizList if query in i.topic]
         response = self.get(path=f"{self.path}?query={query}")
-        self.assertEquals(response.status_code, 200)
+        self.assertEqual(response.status_code, 200)
         self.assertTrue(isinstance(response.context['quizList'], Page))
         self.assertEqual(len(quizWithTopicName), len(response.context['quizList']))
         self.assertTemplateUsed(response, 'core/quizListView.html')
@@ -55,7 +55,7 @@ class QuizUserCreatedQuizzesViewTest(BaseTestViews):
         query = self.quizList[0].subject.name
         quizWithSubjectName = [i for i in self.quizList if query in i.subject.name]
         response = self.get(path=f"{self.path}?query={query}")
-        self.assertEquals(response.status_code, 200)
+        self.assertEqual(response.status_code, 200)
         self.assertTrue(isinstance(response.context['quizList'], Page))
         self.assertEqual(len(quizWithSubjectName), len(response.context['quizList']))
         self.assertTemplateUsed(response, 'core/quizListView.html')
@@ -64,7 +64,7 @@ class QuizUserCreatedQuizzesViewTest(BaseTestViews):
         query = self.quizList[0].subject.description
         quizWithSubjectDescription = [i for i in self.quizList if query in i.subject.description]
         response = self.get(path=f"{self.path}?query={query}")
-        self.assertEquals(response.status_code, 200)
+        self.assertEqual(response.status_code, 200)
         self.assertTrue(isinstance(response.context['quizList'], Page))
         self.assertEqual(len(quizWithSubjectDescription), len(response.context['quizList']))
         self.assertTemplateUsed(response, 'core/quizListView.html')

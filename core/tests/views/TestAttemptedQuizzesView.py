@@ -22,7 +22,7 @@ class AttemptedQuizzesViewTest(BaseTestViews):
 
     def testAttemptedQuizzesViewGet(self):
         response = self.get()
-        self.assertEquals(response.status_code, 200)
+        self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, 'core/attemptedQuizzesView.html')
         self.assertEqual(len(response.context['quizAttemptList']), 10)
         self.assertTrue(isinstance(response.context['quizAttemptList'], QuerySet))

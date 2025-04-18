@@ -12,16 +12,16 @@ class ExtrasViewTest(BaseTestViews):
     def testExtrasViewGetForPrivacyPolicy(self):
         path = reverse('accounts:extras') + '?page=privacy-policy'
         response = self.get(path=path)
-        self.assertEquals(response.status_code, 200)
+        self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, 'accounts/privacyPolicy.html')
 
     def testExtrasViewGetForTermsAndConditions(self):
         path = reverse('accounts:extras') + '?page=terms-and-conditions'
         response = self.get(path=path)
-        self.assertEquals(response.status_code, 200)
+        self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, 'accounts/termsAndConditions.html')
 
     def testExtrasPageDoesNotExist(self):
         path = reverse('accounts:extras') + '?page=non-existing-page'
         response = self.get(path=path)
-        self.assertEquals(response.status_code, 404)
+        self.assertEqual(response.status_code, 404)

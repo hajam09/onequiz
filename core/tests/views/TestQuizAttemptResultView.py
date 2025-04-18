@@ -26,7 +26,7 @@ class QuizAttemptResultViewTest(BaseTestViews):
     def testQuizAttemptResultDoesNotExist(self):
         path = reverse('core:quiz-attempt-result-view', kwargs={'url': 'non-existing-url'})
         response = self.get(path=path)
-        self.assertEquals(response.status_code, 404)
+        self.assertEqual(response.status_code, 404)
 
     def testQuizAttemptResultViewGet(self):
         data = [
@@ -42,7 +42,7 @@ class QuizAttemptResultViewTest(BaseTestViews):
         ]
 
         response = self.get()
-        self.assertEquals(response.status_code, 200)
+        self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, 'core/quizAttemptResultView.html')
         self.assertTrue(isinstance(response.context['result'], Result))
         self.assertTrue(isinstance(response.context['data'], list))
@@ -54,14 +54,14 @@ class QuizAttemptResultViewTest(BaseTestViews):
         self.quizAttempt.save()
 
         response = self.get()
-        self.assertEquals(response.status_code, 200)
+        self.assertEqual(response.status_code, 200)
 
     def testQuizAttemptedUserViewsResultThenReturnOK(self):
         self.quizAttempt.quiz.creator = bakerOperations.createUser()
         self.quizAttempt.quiz.save()
 
         response = self.get()
-        self.assertEquals(response.status_code, 200)
+        self.assertEqual(response.status_code, 200)
 
     def testUnrelatedUserViewsResultThenReturn404(self):
         anotherUser = bakerOperations.createUser()
@@ -71,5 +71,5 @@ class QuizAttemptResultViewTest(BaseTestViews):
         self.quizAttempt.quiz.save()
 
         response = self.get()
-        self.assertEquals(response.status_code, 404)
+        self.assertEqual(response.status_code, 404)
         self.assertTemplateUsed(response, 'accounts/404.html')

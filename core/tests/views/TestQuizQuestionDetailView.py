@@ -28,7 +28,7 @@ class QuizQuestionDetailViewTest(BaseTestViews):
     def testQuizDoesNotExist(self):
         path = reverse('core:question-update-view', kwargs={'quizUrl': self.quiz.url, 'questionUrl': 'non-existing-url'})
         response = self.get(path=path)
-        self.assertEquals(response.status_code, 404)
+        self.assertEqual(response.status_code, 404)
 
     def testGetEssayQuestionUpdateForm(self):
         path = reverse(
@@ -36,7 +36,7 @@ class QuizQuestionDetailViewTest(BaseTestViews):
         )
         response = self.get(path=path)
 
-        self.assertEquals(response.status_code, 200)
+        self.assertEqual(response.status_code, 200)
         self.assertTrue(isinstance(response.context['form'], EssayQuestionUpdateForm))
         self.assertTrue(response.context['formTitle'], 'View or Update Essay Question')
         self.assertTemplateUsed(response, 'core/essayQuestionTemplateView.html')
@@ -50,7 +50,7 @@ class QuizQuestionDetailViewTest(BaseTestViews):
             'core:question-update-view', kwargs={'quizUrl': self.quiz.url, 'questionUrl': self.essayQuestion.url}
         )
         response = self.post(path=path)
-        self.assertEquals(response.status_code, 200)
+        self.assertEqual(response.status_code, 200)
 
     def testGetTrueOrFalseQuestionUpdateForm(self):
         path = reverse(
@@ -58,7 +58,7 @@ class QuizQuestionDetailViewTest(BaseTestViews):
         )
         response = self.get(path=path)
 
-        self.assertEquals(response.status_code, 200)
+        self.assertEqual(response.status_code, 200)
         self.assertTrue(isinstance(response.context['form'], TrueOrFalseQuestionUpdateForm))
         self.assertTrue(response.context['formTitle'], 'View or Update True or False Question')
         self.assertTemplateUsed(response, 'core/trueOrFalseQuestionTemplateView.html')
@@ -72,7 +72,7 @@ class QuizQuestionDetailViewTest(BaseTestViews):
             'core:question-update-view', kwargs={'quizUrl': self.quiz.url, 'questionUrl': self.trueOrFalseQuestion.url}
         )
         response = self.post(path=path)
-        self.assertEquals(response.status_code, 200)
+        self.assertEqual(response.status_code, 200)
 
     def testGetMultipleChoiceQuestionUpdateForm(self):
         path = reverse(
@@ -80,7 +80,7 @@ class QuizQuestionDetailViewTest(BaseTestViews):
         )
         response = self.get(path=path)
 
-        self.assertEquals(response.status_code, 200)
+        self.assertEqual(response.status_code, 200)
         self.assertTrue(isinstance(response.context['form'], MultipleChoiceQuestionUpdateForm))
         self.assertTrue(response.context['formTitle'], 'View or Update Multiple Choice Question')
         self.assertTemplateUsed(response, 'core/multipleChoiceQuestionTemplateView.html')
@@ -94,7 +94,7 @@ class QuizQuestionDetailViewTest(BaseTestViews):
             'core:question-update-view', kwargs={'quizUrl': self.quiz.url, 'questionUrl': self.multipleChoiceQuestion.url}
         )
         response = self.post(path=path)
-        self.assertEquals(response.status_code, 200)
+        self.assertEqual(response.status_code, 200)
 
     def testUnrelatedUserViewsQuestionDetailThenReturnNotFound(self):
         self.quiz.creator = bakerOperations.createUser()
@@ -104,5 +104,5 @@ class QuizQuestionDetailViewTest(BaseTestViews):
             'core:question-update-view', kwargs={'quizUrl': self.quiz.url, 'questionUrl': self.essayQuestion.url}
         )
         response = self.get(path=path)
-        self.assertEquals(response.status_code, 404)
+        self.assertEqual(response.status_code, 404)
         self.assertEqual(response.reason_phrase, 'Not Found')

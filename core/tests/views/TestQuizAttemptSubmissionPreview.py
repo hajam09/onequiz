@@ -53,7 +53,7 @@ class QuizAttemptSubmissionPreviewTest(BaseTestViews):
             self.quizAttempt.responses.filter(question__questionType=Question.Type.MULTIPLE_CHOICE).exists()
         )
 
-        self.assertEquals(response.status_code, 200)
+        self.assertEqual(response.status_code, 200)
         e = next(form for form in response.context['forms'] if isinstance(form, EssayQuestionResponseForm))
         self.assertIsNotNone(e)
         self.assertEqual('disabled', e.fields.get('answer').widget.attrs.get('disabled'))

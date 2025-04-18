@@ -14,7 +14,7 @@ class AccountsPasswordForgottenTest(BaseTestViews):
 
     def testLoginGet(self):
         response = self.get()
-        self.assertEquals(response.status_code, 200)
+        self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, 'accounts/passwordForgotten.html')
 
     @patch('onequiz.operations.emailOperations.sendEmailToResetPassword')
@@ -33,7 +33,7 @@ class AccountsPasswordForgottenTest(BaseTestViews):
 
     @patch('onequiz.operations.emailOperations.sendEmailToResetPassword')
     def testPasswordRequestNonExistingUser(self, mockSendEmailToResetPassword):
-        testParams = self.TestParams("example@example.com")
+        testParams = self.TestParams('example@example.com')
         response = self.post(testParams.getData())
         messages = self.getMessages(response)
 

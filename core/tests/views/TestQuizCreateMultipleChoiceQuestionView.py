@@ -17,7 +17,7 @@ class QuizCreateMultipleChoiceQuestionViewTest(BaseTestViews):
 
     def testCreateMultipleChoiceQuestionViewGet(self):
         response = self.get()
-        self.assertEquals(response.status_code, 200)
+        self.assertEqual(response.status_code, 200)
         self.assertTrue(isinstance(response.context['form'], MultipleChoiceQuestionCreateForm))
         self.assertTrue(response.context['formTitle'], 'Create Multiple Choice Question')
         self.assertTemplateUsed(response, 'core/multipleChoiceQuestionTemplateView.html')
@@ -25,7 +25,7 @@ class QuizCreateMultipleChoiceQuestionViewTest(BaseTestViews):
     def testQuizDoesNotExist(self):
         path = reverse('core:multiple-choice-question-create-view', kwargs={'url': 'non-existing-url'})
         response = self.get(path=path)
-        self.assertEquals(response.status_code, 404)
+        self.assertEqual(response.status_code, 404)
 
     def testFormIsInvalidAndObjectIsNotCreated(self):
         testParams = self.TestParams(
@@ -36,7 +36,7 @@ class QuizCreateMultipleChoiceQuestionViewTest(BaseTestViews):
             choiceOrder=Question.Order.RANDOM
         )
         response = self.post(testParams.getData())
-        self.assertEquals(response.status_code, 200)
+        self.assertEqual(response.status_code, 200)
         self.assertEqual(0, self.quiz.getQuestions().count())
         self.assertTrue(isinstance(response.context['form'], MultipleChoiceQuestionCreateForm))
         self.assertTrue(response.context['formTitle'], 'Create Multiple Choice Question')
@@ -55,7 +55,7 @@ class QuizCreateMultipleChoiceQuestionViewTest(BaseTestViews):
         question = self.quiz.getQuestions().first()
         self.assertEqual(1, self.quiz.getQuestions().count())
 
-        self.assertEquals(response.status_code, 200)
+        self.assertEqual(response.status_code, 200)
         self.assertTrue(isinstance(response.context['form'], MultipleChoiceQuestionCreateForm))
         self.assertTrue(response.context['formTitle'], 'Create Multiple Choice Question')
         self.assertTemplateUsed(response, 'core/multipleChoiceQuestionTemplateView.html')

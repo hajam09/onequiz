@@ -22,7 +22,7 @@ def login(request):
     if not request.session.session_key:
         request.session.save()
 
-    if request.method == "POST":
+    if request.method == 'POST':
         uniqueVisitorId = request.session.session_key
 
         if cache.get(uniqueVisitorId) is not None and cache.get(uniqueVisitorId) > 3:
@@ -51,13 +51,13 @@ def login(request):
         form = LoginForm(request)
 
     context = {
-        "form": form
+        'form': form
     }
     return render(request, 'accounts/login.html', context)
 
 
 def register(request):
-    if request.method == "POST":
+    if request.method == 'POST':
         form = RegistrationForm(request.POST)
         if form.is_valid():
             newUser = form.save()
@@ -71,7 +71,7 @@ def register(request):
         form = RegistrationForm()
 
     context = {
-        "form": form
+        'form': form
     }
     return render(request, 'accounts/registration.html', context)
 
@@ -105,12 +105,12 @@ def activateAccount(request, encodedId, token):
         )
         return redirect('accounts:login')
 
-    return render(request, "accounts/activateFailed.html", status=HTTPStatus.UNAUTHORIZED)
+    return render(request, 'accounts/activateFailed.html', status=HTTPStatus.UNAUTHORIZED)
 
 
 def passwordForgotten(request):
-    if request.method == "POST":
-        email = request.POST["email"]
+    if request.method == 'POST':
+        email = request.POST.get('email')
 
         try:
             user = User.objects.get(username=email)
@@ -124,7 +124,7 @@ def passwordForgotten(request):
             request, 'Check your email for a password change link.'
         )
 
-    return render(request, "accounts/passwordForgotten.html")
+    return render(request, 'accounts/passwordForgotten.html')
 
 
 def passwordReset(request, encodedId, token):
@@ -137,12 +137,12 @@ def passwordReset(request, encodedId, token):
     passwordResetTokenGenerator = PasswordResetTokenGenerator()
     verifyToken = passwordResetTokenGenerator.check_token(user, token)
 
-    if request.method == "POST" and user is not None and verifyToken:
+    if request.method == 'POST' and user is not None and verifyToken:
         form = PasswordResetForm(request, user, request.POST)
 
         if form.is_valid():
             form.updatePassword()
-            return redirect("accounts:login")
+            return redirect('accounts:login')
 
     context = {
         'form': PasswordResetForm(),

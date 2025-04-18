@@ -24,7 +24,7 @@ class QuizAttemptViewVersion1Test(BaseTestViews):
 
     def testCreateEssayQuestionViewGet(self):
         response = self.get()
-        self.assertEquals(response.status_code, 200)
+        self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, 'core/quizAttemptViewVersion1.html')
         self.assertTrue(isinstance(response.context['quizAttempt'], QuizAttempt))
         self.assertTrue(response.context['quizAttempt'], self.quizAttempt)
@@ -33,14 +33,14 @@ class QuizAttemptViewVersion1Test(BaseTestViews):
     def testQuizAttemptDoesNotExist(self):
         path = reverse('core:quiz-attempt-view-v1', kwargs={'url': 'non-existing-url'})
         response = self.get(path=path)
-        self.assertEquals(response.status_code, 404)
+        self.assertEqual(response.status_code, 404)
 
     def testQuizCreatorViewsQuizDuringInProgressThenReturnForbidden(self):
         self.quizAttempt.user = bakerOperations.createUser()
         self.quizAttempt.save()
 
         response = self.get()
-        self.assertEquals(response.status_code, 403)
+        self.assertEqual(response.status_code, 403)
         self.assertEqual(response.content, str.encode('Forbidden'))
         self.assertEqual(response.reason_phrase, 'Forbidden')
 
@@ -50,7 +50,7 @@ class QuizAttemptViewVersion1Test(BaseTestViews):
         self.quizAttempt.save()
 
         response = self.get()
-        self.assertEquals(response.status_code, 200)
+        self.assertEqual(response.status_code, 200)
 
     def testUnrelatedUserViewsQuizDuringInProgressThenReturnForbidden(self):
         anotherUser = bakerOperations.createUser()
@@ -60,7 +60,7 @@ class QuizAttemptViewVersion1Test(BaseTestViews):
         self.quizAttempt.save()
 
         response = self.get()
-        self.assertEquals(response.status_code, 403)
+        self.assertEqual(response.status_code, 403)
         self.assertEqual(response.content, str.encode('Forbidden'))
         self.assertEqual(response.reason_phrase, 'Forbidden')
 
@@ -73,7 +73,7 @@ class QuizAttemptViewVersion1Test(BaseTestViews):
         self.quizAttempt.save()
 
         response = self.get()
-        self.assertEquals(response.status_code, 403)
+        self.assertEqual(response.status_code, 403)
         self.assertEqual(response.content, str.encode('Forbidden'))
         self.assertEqual(response.reason_phrase, 'Forbidden')
 
@@ -83,7 +83,7 @@ class QuizAttemptViewVersion1Test(BaseTestViews):
         self.quizAttempt.quiz.save()
 
         response = self.get()
-        self.assertEquals(response.status_code, 200)
+        self.assertEqual(response.status_code, 200)
 
     def testQuizAttemptedUserViewsQuizAfterSubmittedThenReturnOK(self):
         anotherUser = bakerOperations.createUser()
@@ -93,7 +93,7 @@ class QuizAttemptViewVersion1Test(BaseTestViews):
         self.quizAttempt.save()
 
         response = self.get()
-        self.assertEquals(response.status_code, 200)
+        self.assertEqual(response.status_code, 200)
 
     @patch('core.views.QuizAttempt.getQuizEndTime')
     def testUpdateStatusWhenDurationEndedAndNotSubmitted(self, mockGetQuizEndTime):
@@ -104,7 +104,7 @@ class QuizAttemptViewVersion1Test(BaseTestViews):
         self.quizAttempt.refresh_from_db()
 
         self.assertEqual(QuizAttempt.Status.SUBMITTED, self.quizAttempt.status)
-        self.assertEquals(response.status_code, 200)
+        self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, 'core/quizAttemptViewVersion1.html')
         self.assertTrue(isinstance(response.context['quizAttempt'], QuizAttempt))
         self.assertTrue(response.context['quizAttempt'], self.quizAttempt)

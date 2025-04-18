@@ -13,7 +13,7 @@ class QuizIndexViewTest(BaseTestViews):
 
     def testIndexViewGet(self):
         response = self.get()
-        self.assertEquals(response.status_code, 200)
+        self.assertEqual(response.status_code, 200)
         self.assertTrue(isinstance(response.context['subjects'], QuerySet))
         self.assertEqual(Subject.objects.count(), len(response.context['subjects']))
         self.assertTemplateUsed(response, 'core/index.html')

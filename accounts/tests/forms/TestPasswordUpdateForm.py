@@ -13,24 +13,24 @@ class PasswordUpdateFormTest(BaseTest):
         form = PasswordUpdateForm(request=self.request, data=testParams.getData())
         self.assertFalse(form.is_valid())
 
-        for message in form.errors.as_data().get('__all__')[0]:
-            self.assertEquals(message, 'Your current password does not match with the account\'s existing password.')
+        for message in form.errors.as_data()['__all__'][0]:
+            self.assertEqual(message, 'Your current password does not match with the account\'s existing password.')
 
     def testNewAndConfirmPasswordNotEqual(self):
         testParams = self.TestParams(TEST_PASSWORD, 'RaNdOmPaSsWoRd56', 'RaNdOmPaSsWoRd65')
         form = PasswordUpdateForm(request=self.request, data=testParams.getData())
         self.assertFalse(form.is_valid())
 
-        for message in form.errors.as_data().get('__all__')[0]:
-            self.assertEquals(message, 'Your new password and confirm password does not match.')
+        for message in form.errors.as_data()['__all__'][0]:
+            self.assertEqual(message, 'Your new password and confirm password does not match.')
 
     def testNewPasswordIsWeak(self):
         testParams = self.TestParams(TEST_PASSWORD, '123', '123')
         form = PasswordUpdateForm(request=self.request, data=testParams.getData())
         self.assertFalse(form.is_valid())
 
-        for message in form.errors.as_data().get('__all__')[0]:
-            self.assertEquals(message, 'Your new password is not strong enough.')
+        for message in form.errors.as_data()['__all__'][0]:
+            self.assertEqual(message, 'Your new password is not strong enough.')
 
     def testUpdateNewPasswordSuccessfully(self):
         testParams = self.TestParams(TEST_PASSWORD, 'RaNdOmPaSsWoRd56', 'RaNdOmPaSsWoRd56')

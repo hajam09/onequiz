@@ -21,7 +21,7 @@ class QuizDetailViewTest(BaseTestViews):
 
     def testQuizDetailViewGetForCreator(self):
         response = self.get()
-        self.assertEquals(response.status_code, 200)
+        self.assertEqual(response.status_code, 200)
         self.assertTrue(isinstance(response.context['form'], QuizUpdateForm))
         self.assertTrue(response.context['formTitle'], 'View or Update Quiz')
         self.assertTrue(response.context['quiz'], self.quiz)
@@ -33,7 +33,7 @@ class QuizDetailViewTest(BaseTestViews):
         user2 = bakerOperations.createUser()
         self.client.login(username=user2.username, password=TEST_PASSWORD)
         response = self.get()
-        self.assertEquals(response.status_code, 200)
+        self.assertEqual(response.status_code, 200)
         self.assertTrue(isinstance(response.context['form'], QuizUpdateForm))
         self.assertTrue(response.context['formTitle'], 'View Quiz')
         self.assertTrue(response.context['quiz'], self.quiz)
@@ -44,7 +44,7 @@ class QuizDetailViewTest(BaseTestViews):
     def testQuizDoesNotExist(self):
         path = reverse('core:quiz-update-view', kwargs={'url': 'non-existing-url'})
         response = self.get(path=path)
-        self.assertEquals(response.status_code, 404)
+        self.assertEqual(response.status_code, 404)
 
     @patch('core.views.QuizUpdateForm.is_valid')
     @patch('core.views.QuizUpdateForm.update')
@@ -52,4 +52,4 @@ class QuizDetailViewTest(BaseTestViews):
         form.return_value = True
         form.update = None
         response = self.post()
-        self.assertEquals(response.status_code, 200)
+        self.assertEqual(response.status_code, 200)

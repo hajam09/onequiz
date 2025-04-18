@@ -19,7 +19,7 @@ class QuizCreateQuizViewTest(BaseTestViews):
 
     def testCreateQuizViewGet(self):
         response = self.get()
-        self.assertEquals(response.status_code, 200)
+        self.assertEqual(response.status_code, 200)
         self.assertTrue(isinstance(response.context['form'], QuizCreateForm))
         self.assertTrue(response.context['formTitle'], 'Create Quiz')
         self.assertTemplateUsed(response, 'core/quizTemplateView.html')
@@ -29,7 +29,7 @@ class QuizCreateQuizViewTest(BaseTestViews):
         testParams.passMark = 101
 
         response = self.post(testParams.getData())
-        self.assertEquals(response.status_code, 200)
+        self.assertEqual(response.status_code, 200)
         self.assertEqual(0, Quiz.objects.count())
         self.assertTrue(isinstance(response.context['form'], QuizCreateForm))
         self.assertTrue(response.context['formTitle'], 'Create Quiz')
@@ -56,7 +56,7 @@ class QuizCreateQuizViewTest(BaseTestViews):
         self.assertEqual(quiz.isExamPaper, testParams.isExamPaper == 'on')
         self.assertEqual(quiz.isDraft, testParams.isDraft == 'on')
 
-        self.assertEquals(response.status_code, 200)
+        self.assertEqual(response.status_code, 200)
         self.assertTrue(isinstance(response.context['form'], QuizCreateForm))
         self.assertTrue(response.context['formTitle'], 'Create Quiz')
         self.assertTemplateUsed(response, 'core/quizTemplateView.html')

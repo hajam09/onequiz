@@ -17,7 +17,7 @@ class AccountsRegisterViewTest(BaseTestViews):
 
     def testRegisterGet(self):
         response = self.get()
-        self.assertEquals(response.status_code, 200)
+        self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, 'accounts/registration.html')
         self.assertTrue(isinstance(response.context['form'], RegistrationForm))
 

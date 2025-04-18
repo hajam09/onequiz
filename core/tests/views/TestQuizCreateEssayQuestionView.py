@@ -15,7 +15,7 @@ class QuizCreateEssayQuestionViewTest(BaseTestViews):
 
     def testCreateEssayQuestionViewGet(self):
         response = self.get()
-        self.assertEquals(response.status_code, 200)
+        self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, 'core/essayQuestionTemplateView.html')
         self.assertTrue(isinstance(response.context['form'], EssayQuestionCreateForm))
         self.assertTrue(response.context['formTitle'], 'Create Essay Question')
@@ -23,7 +23,7 @@ class QuizCreateEssayQuestionViewTest(BaseTestViews):
     def testQuizDoesNotExist(self):
         path = reverse('core:essay-question-create-view', kwargs={'url': 'non-existing-url'})
         response = self.get(path=path)
-        self.assertEquals(response.status_code, 404)
+        self.assertEqual(response.status_code, 404)
 
     def testFormIsInvalidAndObjectIsNotCreated(self):
         testParams = self.TestParams(
@@ -34,7 +34,7 @@ class QuizCreateEssayQuestionViewTest(BaseTestViews):
             answer='test answer'
         )
         response = self.post(testParams.getData())
-        self.assertEquals(response.status_code, 200)
+        self.assertEqual(response.status_code, 200)
         self.assertEqual(0, self.quiz.getQuestions().count())
         self.assertTrue(isinstance(response.context['form'], EssayQuestionCreateForm))
         self.assertTrue(response.context['formTitle'], 'Create Essay Question')
@@ -58,7 +58,7 @@ class QuizCreateEssayQuestionViewTest(BaseTestViews):
         self.assertEqual(question.mark, testParams.mark)
         self.assertEqual(question.answer, testParams.answer)
 
-        self.assertEquals(response.status_code, 200)
+        self.assertEqual(response.status_code, 200)
         self.assertTrue(isinstance(response.context['form'], EssayQuestionCreateForm))
         self.assertTrue(response.context['formTitle'], 'Create Essay Question')
         self.assertTemplateUsed(response, 'core/essayQuestionTemplateView.html')

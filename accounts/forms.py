@@ -64,29 +64,29 @@ class RegistrationForm(UserCreationForm):
         email = self.cleaned_data.get('email')
 
         if User.objects.filter(email=email).exists():
-            raise ValidationError("An account already exists for this email address!")
+            raise ValidationError('An account already exists for this email address!')
 
         return email
 
     def clean_password2(self):
-        password1 = self.cleaned_data.get("password1")
-        password2 = self.cleaned_data.get("password2")
+        password1 = self.cleaned_data.get('password1')
+        password2 = self.cleaned_data.get('password2')
 
         if password1 and password2 and password1 != password2:
-            raise ValidationError("Your passwords do not match!")
+            raise ValidationError('Your passwords do not match!')
 
         if not generalOperations.isPasswordStrong(password1):
-            raise ValidationError("Your password is not strong enough.")
+            raise ValidationError('Your password is not strong enough.')
 
         return password1
 
     def save(self, commit=True):
         user = User()
-        user.username = self.cleaned_data.get("email")
-        user.email = self.cleaned_data.get("email")
-        user.set_password(self.cleaned_data["password1"])
-        user.first_name = self.cleaned_data.get("first_name")
-        user.last_name = self.cleaned_data.get("last_name")
+        user.username = self.cleaned_data.get('email')
+        user.email = self.cleaned_data.get('email')
+        user.set_password(self.cleaned_data.get('password1'))
+        user.first_name = self.cleaned_data.get('first_name')
+        user.last_name = self.cleaned_data.get('last_name')
         user.is_active = settings.DEBUG
 
         if commit:
@@ -130,7 +130,7 @@ class LoginForm(forms.ModelForm):
             login(self.request, user)
             return self.cleaned_data
 
-        raise ValidationError("Username or Password did not match!")
+        raise ValidationError('Username or Password did not match!')
 
 
 class PasswordResetForm(forms.Form):

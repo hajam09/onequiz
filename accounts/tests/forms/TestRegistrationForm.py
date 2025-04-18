@@ -17,7 +17,7 @@ class RegistrationFormTest(BaseTest):
         self.assertFalse(form.is_valid())
 
         for message in form.errors.as_data()['email'][0]:
-            self.assertEquals(message, 'An account already exists for this email address!')
+            self.assertEqual(message, 'An account already exists for this email address!')
 
     def testPasswordsNotEqual(self):
         testParams = self.TestParams('example@example.com', TEST_PASSWORD, 'TEST_PASSWORD')
@@ -25,7 +25,7 @@ class RegistrationFormTest(BaseTest):
         self.assertFalse(form.is_valid())
 
         for message in form.errors.as_data()['password2'][0]:
-            self.assertEquals(message, 'Your passwords do not match!')
+            self.assertEqual(message, 'Your passwords do not match!')
 
     def testPasswordDoesNotHaveAlphabets(self):
         testParams = self.TestParams('example@example.com', '1234567890', '1234567890')
@@ -33,7 +33,7 @@ class RegistrationFormTest(BaseTest):
         self.assertFalse(form.is_valid())
 
         for message in form.errors.as_data()['password2'][0]:
-            self.assertEquals(message, 'Your password is not strong enough.')
+            self.assertEqual(message, 'Your password is not strong enough.')
 
     def testPasswordDoesNotHaveCapitalLetters(self):
         testParams = self.TestParams('example@example.com', 'test_password', 'test_password')
@@ -41,7 +41,7 @@ class RegistrationFormTest(BaseTest):
         self.assertFalse(form.is_valid())
 
         for message in form.errors.as_data()['password2'][0]:
-            self.assertEquals(message, 'Your password is not strong enough.')
+            self.assertEqual(message, 'Your password is not strong enough.')
 
     def testPasswordDoesNotHaveNumbers(self):
         testParams = self.TestParams('example@example.com', 'TEST_PASSWORD', 'TEST_PASSWORD')
@@ -49,7 +49,7 @@ class RegistrationFormTest(BaseTest):
         self.assertFalse(form.is_valid())
 
         for message in form.errors.as_data()['password2'][0]:
-            self.assertEquals(message, 'Your password is not strong enough.')
+            self.assertEqual(message, 'Your password is not strong enough.')
 
     def testRegisterUserSuccessfully(self):
         testParams = self.TestParams('example@example.com', TEST_PASSWORD, TEST_PASSWORD)
@@ -59,8 +59,8 @@ class RegistrationFormTest(BaseTest):
 
         user = User.objects.get(email='example@example.com')
         self.assertTrue(user.check_password(TEST_PASSWORD))
-        self.assertEqual('firstName', user.first_name)
-        self.assertEqual('lastName', user.last_name)
+        self.assertEqual(user.first_name, 'firstName')
+        self.assertEqual(user.last_name, 'lastName')
 
     class TestParams:
         def __init__(self, email, password1, password2):

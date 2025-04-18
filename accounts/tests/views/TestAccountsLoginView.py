@@ -17,7 +17,7 @@ class AccountsLoginViewTest(BaseTestViews):
 
     def testLoginGet(self):
         response = self.get()
-        self.assertEquals(response.status_code, 200)
+        self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, 'accounts/login.html')
         self.assertTrue(isinstance(response.context['form'], LoginForm))
 
@@ -44,7 +44,7 @@ class AccountsLoginViewTest(BaseTestViews):
         sessionKey = self.getSessionKey()
 
         self.assertEqual(response.status_code, 200)
-        self.assertTemplateUsed(response, "accounts/login.html")
+        self.assertTemplateUsed(response, 'accounts/login.html')
         self.assertNotIn('_auth_user_id', self.client.session)
 
         self.assertEqual(cache.get(sessionKey), 1)

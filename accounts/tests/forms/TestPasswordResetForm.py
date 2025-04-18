@@ -13,16 +13,16 @@ class PasswordResetFormTest(BaseTest):
         form = PasswordResetForm(request=self.request, user=self.user, data=testParams.getData())
         self.assertFalse(form.is_valid())
 
-        for message in form.errors.as_data().get('__all__')[0]:
-            self.assertEquals(message, 'Your new password and confirm password does not match.')
+        for message in form.errors.as_data()['__all__'][0]:
+            self.assertEqual(message, 'Your new password and confirm password does not match.')
 
     def testNewPasswordNotStrongEnough(self):
         testParams = self.TestParams('123', '123')
         form = PasswordResetForm(request=self.request, user=self.user, data=testParams.getData())
         self.assertFalse(form.is_valid())
 
-        for message in form.errors.as_data().get('__all__')[0]:
-            self.assertEquals(message, 'Your new password is not strong enough.')
+        for message in form.errors.as_data()['__all__'][0]:
+            self.assertEqual(message, 'Your new password is not strong enough.')
 
     def testPasswordResetSuccessful(self):
         testParams = self.TestParams('RaNdOmPaSsWoRd56', 'RaNdOmPaSsWoRd56')
