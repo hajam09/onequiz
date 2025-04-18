@@ -1,4 +1,3 @@
-import json
 import operator
 from functools import reduce
 
@@ -20,7 +19,7 @@ from core.forms import (
     MultipleChoiceQuestionResponseForm,
 )
 from core.models import Quiz, Question, QuizAttempt, Result, Subject, Response
-from onequiz.operations import generalOperations, bulkOperations
+from onequiz.operations import generalOperations
 from onequiz.operations.generalOperations import QuizAttemptManualMarking2
 
 
@@ -176,68 +175,6 @@ def trueOrFalseQuestionCreateView(request, url):
         'quizUrl': url,
     }
     return render(request, 'core/trueOrFalseQuestionTemplateView.html', context)
-
-
-@login_required
-def bulkQuestionCreateView(request, url):
-    try:
-        quiz = Quiz.objects.get(url=url, creator=request.user)
-    except Quiz.DoesNotExist:
-        raise Http404
-
-    if request.method == 'POST':
-        bulk_questions = []
-        file = request.FILES.get('file')
-
-        if file.content_type == 'application/json':
-            for question in json.load(file):
-
-                content = question.get('content')
-                explanation = question.get('explanation')
-                mark = question.get('mark')
-
-                if Question.objects.filter(quizQuestions__id=quiz.id, content__icontains=content).exists():
-                    continue
-
-                if 'answer' in question:
-                    _question = bulkOperations.create_essay_question(
-                        request,
-                        content,
-                        explanation,
-                        mark,
-                        question.get('answer')
-                    )
-                elif 'options' in question:
-                    _question = bulkOperations.create_multiple_choice_question(
-                        request,
-                        content,
-                        explanation,
-                        mark,
-                        question.get('choice_order'),
-                        question.get('option_answers'),
-                        question.get('options')
-                    )
-                elif 'true_or_false' in question:
-                    _question = bulkOperations.create_true_or_false_question(
-                        request,
-                        content,
-                        explanation,
-                        mark,
-                        question.get('true_or_false'),
-                    )
-                else:
-                    raise Exception
-
-                if _question is None:
-                    break
-                bulk_questions.append(_question)
-        elif file.content_type == 'text/plain':
-            pass
-
-        Question.objects.bulk_create(bulk_questions, 20)
-        quiz.questions.add(*bulk_questions)
-        return redirect('core:bulk-question-create-view', url=url)
-    return render(request, 'core/bulkQuestionCreateTemplateView.html')
 
 
 @login_required
