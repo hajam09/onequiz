@@ -20,8 +20,8 @@
                             <label for='subjectList' class='h4'>Or search by subject</label>
                             <select class='form-control' id='subjectList' name='subjectList'>
                                 <option value='-1'>See all quizzes</option>
-                                {% for subject in subjects %}
-                                    <option value='{{ subject }}'>{{ subject }}</option>
+                                {% for key, value in subjects %}
+                                    <option value='{{ key }}'>{{ value }}</option>
                                 {% endfor %}
                             </select>
                         </div>

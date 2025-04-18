@@ -5,8 +5,7 @@ from django.core.management import BaseCommand
 
 from core.models import (
     Question,
-    Quiz,
-    Subject
+    Quiz
 )
 from onequiz.operations import bakerOperations
 
@@ -19,13 +18,10 @@ class Command(BaseCommand):
 
     def handle(self, *args, **kwargs):
         bakerOperations.createUsers()
-        bakerOperations.createSubjects()
-
         allUsers = list(User.objects.all())
-        allSubjects = list(Subject.objects.all())
 
         quizList = [
-            bakerOperations.createQuiz(creator=random.choice(allUsers), subject=random.choice(allSubjects), save=False)
+            bakerOperations.createQuiz(creator=random.choice(allUsers), save=False)
             for _ in range(Command.NUMBER_OF_QUIZ)
         ]
 

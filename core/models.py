@@ -28,21 +28,6 @@ class BaseModel(models.Model):
         abstract = True
 
 
-class Subject(BaseModel):
-    name = models.CharField(max_length=255)
-    description = models.TextField(blank=True, null=True)
-
-    def __str__(self):
-        return self.name
-
-    class Meta:
-        indexes = [
-            models.Index(fields=['name'], name='idx-subject-name')
-        ]
-        verbose_name = 'Subject'
-        verbose_name_plural = 'Subjects'
-
-
 class Question(BaseModel):
     class Type(models.TextChoices):
         ESSAY = 'ESSAY', _('Essay')
@@ -80,6 +65,7 @@ class Question(BaseModel):
 
     # fields specific to true or false
     trueOrFalse = models.CharField(max_length=8, blank=True, null=True, choices=TrueOrFalse.choices)
+
     # todo: refactor old usage of trueSelected
 
     class Meta:
@@ -148,6 +134,38 @@ class Response(BaseModel):
 
 
 class Quiz(BaseModel):
+    class Subject(models.TextChoices):
+        ART = 'Art', _('Art')
+        BIOLOGY = 'Biology', _('Biology')
+        BUSINESS = 'Business', _('Business')
+        CHEMISTRY = 'Chemistry', _('Chemistry')
+        COMPUTER_SCIENCE = 'Computer Science', _('Computer Science')
+        CURRENT_AFFAIRS = 'Current Affairs', _('Current Affairs')
+        ECONOMICS = 'Economics', _('Economics')
+        ENGLISH = 'English', _('English')
+        ENVIRONMENTAL_SCIENCE = 'Environmental Science', _('Environmental Science')
+        GENERAL_KNOWLEDGE = 'General Knowledge', _('General Knowledge')
+        GEOGRAPHY = 'Geography', _('Geography')
+        HISTORY = 'History', _('History')
+        LANGUAGES = 'Languages', _('Languages')
+        LITERATURE = 'Literature', _('Literature')
+        MATHEMATICS = 'Mathematics', _('Mathematics')
+        MOVIES = 'Movies', _('Movies')
+        MUSIC = 'Music', _('Music')
+        MYTHOLOGY = 'Mythology', _('Mythology')
+        OTHER = 'Other', _('Other')
+        PHILOSOPHY = 'Philosophy', _('Philosophy')
+        PHYSICS = 'Physics', _('Physics')
+        POLITICS = 'Politics', _('Politics')
+        POP_CULTURE = 'Pop Culture', _('Pop Culture')
+        PSYCHOLOGY = 'Psychology', _('Psychology')
+        RELIGION = 'Religion', _('Religion')
+        SCIENCE = 'Science', _('Science')
+        SPACE_ASTRONOMY = 'Space and Astronomy', _('Space and Astronomy')
+        SPORTS = 'Sports', _('Sports')
+        TECHNOLOGY = 'Technology', _('Technology')
+        TV_SHOWS = 'TV Shows', _('TV Shows')
+
     class Difficulty(models.TextChoices):
         EASY = 'EASY', _('Easy')
         MEDIUM = 'MEDIUM', _('Medium')
@@ -156,7 +174,7 @@ class Quiz(BaseModel):
     name = models.CharField(max_length=255)
     description = models.TextField(blank=True, null=True)
     url = models.CharField(max_length=10, unique=True, editable=False, default=generateModelUrl)
-    subject = models.ForeignKey(Subject, on_delete=models.SET_NULL, null=True, blank=True)
+    subject = models.CharField(max_length=64, choices=Subject.choices, default=Subject.OTHER)
     topic = models.CharField(max_length=255, blank=True, null=True)
     quizDuration = models.IntegerField()
     maxAttempt = models.PositiveIntegerField(default=1)

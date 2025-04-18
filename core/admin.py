@@ -6,11 +6,10 @@ from django.utils.translation import gettext_lazy as _
 
 from core.models import (
     Question,
-    Quiz,
     QuizAttempt,
+    Quiz,
     Response,
-    Result,
-    Subject
+    Result
 )
 
 
@@ -30,13 +29,10 @@ class QuizAttemptAdminForm(forms.ModelForm):
     )
 
     def __init__(self, *args, **kwargs):
-        super(QuizAttemptAdminForm, self).__init__(*args, **kwargs)
-        # self.fields['quiz'].choices = [
-        #     (i.id, f"{i.id} - {i.name} - {i.subject.name}") for i in Quiz.objects.all().select_related('subject')
-        # ]
+        super().__init__(*args, **kwargs)
 
     def save(self, commit=True):
-        quiz = super(QuizAttemptAdminForm, self).save(commit=False)
+        quiz = super().save(commit=False)
         quiz.save()
         self.save_m2m()
         return quiz
@@ -58,33 +54,42 @@ class QuizAdminForm(forms.ModelForm):
     )
 
     def __init__(self, *args, **kwargs):
-        super(QuizAdminForm, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
 
     def save(self, commit=True):
-        quiz = super(QuizAdminForm, self).save(commit=False)
+        quiz = super().save(commit=False)
         quiz.save()
         self.save_m2m()
         return quiz
 
 
+@admin.register(QuizAttempt)
 class QuizAttemptAdmin(admin.ModelAdmin):
     form = QuizAttemptAdminForm
 
 
+@admin.register(Question)
+class QuestionAdmin(admin.ModelAdmin):
+    pass
+
+
+@admin.register(Quiz)
 class QuizAdmin(admin.ModelAdmin):
     form = QuizAdminForm
 
 
-admin.site.register(Question)
-admin.site.register(Quiz, QuizAdmin)
-admin.site.register(QuizAttempt, QuizAttemptAdmin)
-admin.site.register(Result)
-admin.site.register(Subject)
-admin.site.register(Response)
+@admin.register(Response)
+class ResponseAdmin(admin.ModelAdmin):
+    pass
+
+
+@admin.register(Result)
+class ResultAdmin(admin.ModelAdmin):
+    pass
+
 
 auditlog.register(Question)
 auditlog.register(Quiz)
 auditlog.register(QuizAttempt)
 auditlog.register(Response)
 auditlog.register(Result)
-auditlog.register(Subject)
