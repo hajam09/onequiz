@@ -18,14 +18,14 @@ from core.forms import (
     QuizCreateForm, QuizUpdateForm, EssayQuestionResponseForm, TrueOrFalseQuestionResponseForm,
     MultipleChoiceQuestionResponseForm,
 )
-from core.models import Quiz, Question, QuizAttempt, Result, Subject, Response
+from core.models import Quiz, Question, QuizAttempt, Result, Response
 from onequiz.operations import generalOperations
 from onequiz.operations.generalOperations import QuizAttemptManualMarking2
 
 
 def indexView(request):
     context = {
-        'subjects': Subject.objects.all()
+        'subjects': Quiz.Subject.choices
     }
     return render(request, 'core/index.html', context)
 
@@ -75,7 +75,7 @@ def quizCreateView(request):
 
 def quizUpdateView(request, url):
     try:
-        quiz = Quiz.objects.select_related('subject').get(url=url)  # creator=request.user
+        quiz = Quiz.objects.get(url=url)  # creator=request.user
     except Quiz.DoesNotExist:
         raise Http404
 
@@ -597,4 +597,4 @@ class AttemptedQuizzesView(ListView):
     context_object_name = 'quizAttemptList'
 
     def get_queryset(self):
-        return QuizAttempt.objects.select_related('quiz__subject').filter(user=self.request.user)
+        return QuizAttempt.objects.filter(user=self.request.user)

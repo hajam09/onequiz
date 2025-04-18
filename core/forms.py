@@ -7,7 +7,7 @@ from string import (
 
 from django import forms
 
-from core.models import Quiz, Subject, Question
+from core.models import Quiz, Question
 
 
 class QuizForm(forms.Form):
@@ -31,7 +31,7 @@ class QuizForm(forms.Form):
     )
     subject = forms.MultipleChoiceField(
         label='Subject',
-        required=True,
+        choices=[(None, '-- Select a value --')] + Quiz.Subject.choices,
         widget=forms.Select(
             attrs={
                 'class': 'form-control',
@@ -145,18 +145,15 @@ class QuizForm(forms.Form):
         ),
     )
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, request, *args, **kwargs):
         kwargs.setdefault('label_suffix', '')
         super(QuizForm, self).__init__(*args, **kwargs)
-
-        SUBJECT_CHOICES = list(Subject.objects.values_list('id', 'name'))
-        SUBJECT_CHOICES.insert(0, ('', '-- Select a value --'))
-        self.base_fields['subject'].choices = SUBJECT_CHOICES
+        self.request = request
 
     def clean_name(self):
         name = self.cleaned_data.get('name')
 
-        if Quiz.objects.filter(name__iexact=name).exists():
+        if Quiz.objects.filter(name__iexact=name, creator=self.request.user).exists():
             raise forms.ValidationError(f'Quiz already exists with name: {name}')
 
         return name
@@ -172,8 +169,8 @@ class QuizForm(forms.Form):
     def clean_subject(self):
         subject = self.data.get('subject')
 
-        if not Subject.objects.filter(id=subject).exists():
-            raise forms.ValidationError(f'There\'s an error with the selected subject.')
+        if subject not in Quiz.Subject.values:
+            raise forms.ValidationError(f'Select a subject from the list provided.')
 
         return subject
 
@@ -204,11 +201,8 @@ class QuizForm(forms.Form):
     def clean_difficulty(self):
         difficulty = self.data.get('difficulty')
 
-        if not (
-                difficulty == Quiz.Difficulty.EASY or difficulty == Quiz.Difficulty.MEDIUM or difficulty == Quiz.Difficulty.HARD):
-            raise forms.ValidationError(
-                f'Quiz Difficulty should either be {Quiz.Difficulty.EASY.label} or {Quiz.Difficulty.MEDIUM.label} or {Quiz.Difficulty.HARD.label}'
-            )
+        if difficulty not in Quiz.Difficulty.values:
+            raise forms.ValidationError(f'Select a difficulty from the list provided.')
 
         return difficulty
 
@@ -262,7 +256,7 @@ class QuizForm(forms.Form):
 class QuizCreateForm(QuizForm):
 
     def __init__(self, request, *args, **kwargs):
-        super(QuizCreateForm, self).__init__(*args, **kwargs)
+        super(QuizCreateForm, self).__init__(request, *args, **kwargs)
         self.request = request
 
     def clean(self):
@@ -278,7 +272,7 @@ class QuizCreateForm(QuizForm):
         newQuiz = Quiz()
         newQuiz.name = self.cleaned_data.get('name')
         newQuiz.description = self.cleaned_data.get('description')
-        newQuiz.subject_id = self.data.get('subject')
+        newQuiz.subject = self.data.get('subject')
         newQuiz.topic = self.cleaned_data.get('topic')
         newQuiz.quizDuration = self.cleaned_data.get('quizDuration')
         newQuiz.maxAttempt = self.cleaned_data.get('maxAttempt')
@@ -298,7 +292,7 @@ class QuizCreateForm(QuizForm):
 class QuizUpdateForm(QuizForm):
 
     def __init__(self, request, quiz=None, *args, **kwargs):
-        super(QuizUpdateForm, self).__init__(*args, **kwargs)
+        super(QuizUpdateForm, self).__init__(request, *args, **kwargs)
         self.request = request
         self.quiz = quiz
 
@@ -307,7 +301,7 @@ class QuizUpdateForm(QuizForm):
 
         self.initial['name'] = quiz.name
         self.initial['description'] = quiz.description
-        self.initial['subject'] = quiz.subject.id
+        self.initial['subject'] = quiz.subject
         self.initial['topic'] = quiz.topic
         self.initial['quizDuration'] = quiz.quizDuration
         self.initial['maxAttempt'] = quiz.maxAttempt
@@ -357,8 +351,7 @@ class QuizUpdateForm(QuizForm):
     def update(self):
         self.quiz.name = self.cleaned_data.get('name')
         self.quiz.description = self.cleaned_data.get('description')
-        if str(self.quiz.subject_id) != self.data.get('subject'):
-            self.quiz.subject_id = self.data.get('subject')
+        self.quiz.subject = self.data.get('subject')
         self.quiz.topic = self.cleaned_data.get('topic')
         self.quiz.quizDuration = self.cleaned_data.get('quizDuration')
         self.quiz.maxAttempt = self.cleaned_data.get('maxAttempt')
@@ -461,17 +454,8 @@ class EssayQuestionCreateForm(QuestionForm):
         super(EssayQuestionCreateForm, self).__init__(*args, **kwargs)
 
     def clean(self):
-        figure = self.cleaned_data.get('figure')
-        content = self.cleaned_data.get('content')
-        mark = self.cleaned_data.get('mark')
+        self.cleaned_data = super().clean()
         answer = self.cleaned_data.get('answer')
-
-        if not figure and not content:
-            self.errors['figure'] = self.error_class([f'Cannot leave both figure and content empty.'])
-            self.errors['content'] = self.error_class([f'Cannot leave both figure and content empty.'])
-
-        if mark < 0:
-            self.errors['mark'] = self.error_class([f'Mark cannot be a negative number.'])
 
         if not answer:
             self.errors['answer'] = self.error_class([f'Answer cannot be left empty.'])
@@ -519,21 +503,12 @@ class MultipleChoiceQuestionCreateForm(QuestionForm):
         super(MultipleChoiceQuestionCreateForm, self).__init__(*args, **kwargs)
 
     def clean(self):
-        figure = self.cleaned_data.get('figure')
-        content = self.cleaned_data.get('content')
-        mark = self.cleaned_data.get('mark')
+        self.cleaned_data = super().clean()
         choiceOrder = self.data.get('choiceOrder')
         choiceType = self.data.get('choiceType')
 
         del self.errors['choiceOrder']
         del self.errors['choiceType']
-
-        if not figure and not content:
-            self.errors['figure'] = self.error_class([f'Cannot leave both figure and content empty.'])
-            self.errors['content'] = self.error_class([f'Cannot leave both figure and content empty.'])
-
-        if mark < 0:
-            self.errors['mark'] = self.error_class([f'Mark cannot be a negative number.'])
 
         if choiceOrder is None:
             self.errors['choiceOrder'] = self.error_class(['Choice Order is empty.'])
@@ -619,18 +594,7 @@ class TrueOrFalseQuestionCreateForm(QuestionForm):
         super(TrueOrFalseQuestionCreateForm, self).__init__(*args, **kwargs)
 
     def clean(self):
-        figure = self.cleaned_data.get('figure')
-        content = self.cleaned_data.get('content')
-        mark = self.cleaned_data.get('mark')
-
-        if not figure and not content:
-            self.errors['figure'] = self.error_class([f'Cannot leave both figure and content empty.'])
-            self.errors['content'] = self.error_class([f'Cannot leave both figure and content empty.'])
-
-        if mark < 0:
-            self.errors['mark'] = self.error_class([f'Mark cannot be a negative number.'])
-
-        return self.cleaned_data
+        return super().clean()
 
     def save(self):
         question = Question.objects.create(
@@ -671,17 +635,8 @@ class EssayQuestionUpdateForm(QuestionForm):
         self.initial['answer'] = self.question.answer
 
     def clean(self):
-        figure = self.cleaned_data.get('figure')
-        content = self.cleaned_data.get('content')
-        mark = self.cleaned_data.get('mark')
+        self.cleaned_data = super().clean()
         answer = self.cleaned_data.get('answer')
-
-        if not figure and not content:
-            self.errors['figure'] = self.error_class([f'Cannot leave both figure and content empty.'])
-            self.errors['content'] = self.error_class([f'Cannot leave both figure and content empty.'])
-
-        if mark < 0:
-            self.errors['mark'] = self.error_class([f'Mark cannot be a negative number.'])
 
         if not answer:
             self.errors['answer'] = self.error_class([f'Answer cannot be left empty.'])
@@ -729,17 +684,7 @@ class TrueOrFalseQuestionUpdateForm(QuestionForm):
         self.initial['trueOrFalse'] = self.question.trueOrFalse
 
     def clean(self):
-        figure = self.cleaned_data.get('figure')
-        content = self.cleaned_data.get('content')
-        mark = self.cleaned_data.get('mark')
-
-        if not figure and not content:
-            self.errors['figure'] = self.error_class([f'Cannot leave both figure and content empty.'])
-            self.errors['content'] = self.error_class([f'Cannot leave both figure and content empty.'])
-
-        if mark < 0:
-            self.errors['mark'] = self.error_class([f'Mark cannot be a negative number.'])
-        return self.cleaned_data
+        return super().clean()
 
     def update(self):
         self.question.figure = self.cleaned_data.get('figure')
@@ -807,21 +752,11 @@ class MultipleChoiceQuestionUpdateForm(QuestionForm):
         self.initial['choiceType'] = self.question.choiceType
 
     def clean(self):
-        figure = self.cleaned_data.get('figure')
-        content = self.cleaned_data.get('content')
-        mark = self.cleaned_data.get('mark')
         choiceOrder = self.data.get('choiceOrder')
         choiceType = self.data.get('choiceType')
 
         del self.errors['choiceOrder']
         del self.errors['choiceType']
-
-        if not figure and not content:
-            self.errors['figure'] = self.error_class([f'Cannot leave both figure and content empty.'])
-            self.errors['content'] = self.error_class([f'Cannot leave both figure and content empty.'])
-
-        if mark < 0:
-            self.errors['mark'] = self.error_class([f'Mark cannot be a negative number.'])
 
         if choiceOrder is None:
             self.errors['choiceOrder'] = self.error_class(['Choice Order is empty.'])

@@ -1,6 +1,13 @@
+from django.contrib.auth.models import User
 from django.core.management import BaseCommand
 
-from core.models import *
+from core.models import (
+    Question,
+    QuizAttempt,
+    Quiz,
+    Response,
+    Result
+)
 
 BOOLEAN = [True, False]
 
@@ -10,7 +17,6 @@ class Command(BaseCommand):
 
     def handle(self, *args, **kwargs):
         User.objects.exclude(is_superuser=True).delete()
-        Subject.objects.all().delete()
         Question.objects.all().delete()
         Response.objects.all().delete()
         Quiz.objects.all().delete()

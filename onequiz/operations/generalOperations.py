@@ -45,15 +45,14 @@ def deleteImage(imageField):
 def performComplexQuizSearch(query, filterList=None):
     filterList = filterList or []
     attributesToSearch = [
-        'name', 'description', 'url', 'topic',
-        'subject__name', 'subject__description',
+        'name', 'description', 'url', 'topic', 'subject'
     ]
 
     filterList.append(reduce(operator.or_, [Q(**{'deleteFl': False})]))
     if query and query.strip():
         filterList.append(reduce(operator.or_, [Q(**{f'{v}__icontains': query}) for v in attributesToSearch]))
 
-    return Quiz.objects.filter(reduce(operator.and_, filterList)).select_related('subject').distinct()
+    return Quiz.objects.filter(reduce(operator.and_, filterList)).distinct()
 
 
 class QuestionAndResponse:
