@@ -98,6 +98,7 @@ class Question(BaseModel):
 
 
 class Response(BaseModel):
+    url = models.CharField(max_length=10, unique=True, editable=True, default=generateModelUrl)
     question = models.ForeignKey(Question, on_delete=models.CASCADE)
     isCorrect = models.BooleanField(blank=True, null=True, default=None)
     mark = models.DecimalField(blank=True, null=True, default=None, max_digits=4, decimal_places=2)

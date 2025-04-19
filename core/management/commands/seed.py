@@ -9,8 +9,6 @@ from core.models import (
 )
 from onequiz.operations import bakerOperations
 
-BOOLEAN = [True, False]
-
 
 class Command(BaseCommand):
     help = 'Create Baker Model'

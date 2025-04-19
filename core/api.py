@@ -2,6 +2,7 @@ import json
 from http import HTTPStatus
 
 from django.contrib import messages
+from django.core.cache import cache
 from django.db import transaction
 from django.http import JsonResponse
 from django.urls import reverse
@@ -163,11 +164,17 @@ class QuizAttemptObjectApiEventVersion3Component(APIView):
                 user=user,
                 status=QuizAttempt.Status.IN_PROGRESS
             )
+            questions = Question.objects.filter(quizQuestions__id=quizId)
             responseList = [
                 Response(question=question)
-                for question in Question.objects.filter(quizQuestions__id=quizId)
+                for question in questions
             ]
-            quizAttempt.responses.add(*Response.objects.bulk_create(responseList))
+            Response.objects.bulk_create(responseList)
+            quizAttempt.responses.add(*responseList)
+
+            if quiz.inRandomOrder:
+                questions = questions.order_by('?')
+            cache.set(f'quiz-attempt-v3-{quizAttempt.url}', questions, quizAttempt.quiz.quizDuration * 60 + 30)
 
         response = {
             'success': True,
