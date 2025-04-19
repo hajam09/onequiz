@@ -334,8 +334,8 @@ class QuizUpdateForm(QuizForm):
     def clean_name(self):
         name = self.cleaned_data.get('name')
 
-        if not name:
-            raise forms.ValidationError(f'Quiz name field is empty.')
+        if Quiz.objects.filter(name__iexact=name, creator=self.request.user).exclude(id=self.quiz.id).exists():
+            raise forms.ValidationError(f'Quiz already exists with name: {name}')
 
         return name
 
@@ -853,7 +853,7 @@ class BaseResponseForm(forms.Form):
 
 class EssayQuestionResponseForm(BaseResponseForm):
     answer = forms.CharField(
-        label='Your Answer',
+        label='<h5>Your Answer</h5>',
         required=False,
         widget=forms.Textarea(
             attrs={
@@ -870,6 +870,7 @@ class EssayQuestionResponseForm(BaseResponseForm):
     def showSystemAnswerWhileMarking(self, response):
         if not self.allowEdit:
             self.fields['systemAnswer'] = forms.CharField(
+                label='<h5>System Answer</h5>',
                 initial=response.question.answer,
                 required=False,
                 widget=forms.Textarea(
@@ -885,7 +886,7 @@ class EssayQuestionResponseForm(BaseResponseForm):
 class TrueOrFalseQuestionResponseForm(BaseResponseForm):
     def setInitialValues(self, response):
         field = forms.ChoiceField(
-            label='Is the answer True or False?',
+            label='Is the answer True or False?' if self.allowEdit else 'Your Answer',
             required=False,
             choices=Question.TrueOrFalse.choices,
             initial=response.trueOrFalse,
@@ -906,7 +907,7 @@ class TrueOrFalseQuestionResponseForm(BaseResponseForm):
         if not self.allowEdit:
             randomString = ''.join(random.choice(ascii_uppercase + digits) for _ in range(3))
             self.fields[f'systemAnswer_{randomString}'] = forms.ChoiceField(
-                label='Is the answer True or False?',
+                label='System Answer',
                 required=False,
                 choices=Question.TrueOrFalse.choices,
                 initial=response.question.trueOrFalse,
@@ -921,7 +922,6 @@ class TrueOrFalseQuestionResponseForm(BaseResponseForm):
 
 class MultipleChoiceQuestionResponseForm(BaseResponseForm):
     def setInitialValues(self, response):
-        label = 'Select the correct answer(s).'
         style = {'style': 'height: 34px; width:34px'}
 
         if response.question.choiceType == Question.ChoiceType.SINGLE:
@@ -933,7 +933,7 @@ class MultipleChoiceQuestionResponseForm(BaseResponseForm):
             fieldName = 'options'
 
         self.fields[fieldName] = forms.MultipleChoiceField(
-            label=label,
+            label='Select the correct answer(s).' if self.allowEdit else 'Your Answer',
             choices=[(choice['id'], choice['content']) for choice in response.choices.get('choices')],
             initial=[choice['id'] for choice in response.choices.get('choices') if choice['isChecked']],
             widget=widget
@@ -947,6 +947,7 @@ class MultipleChoiceQuestionResponseForm(BaseResponseForm):
             else:
                 widget = forms.CheckboxSelectMultiple(attrs=style)
             self.fields['systemAnswer'] = forms.MultipleChoiceField(
+                label='System Answer',
                 choices=[(choice['id'], choice['content']) for choice in response.question.choices.get('choices')],
                 initial=[choice['id'] for choice in response.question.choices.get('choices') if choice['isChecked']],
                 widget=widget
