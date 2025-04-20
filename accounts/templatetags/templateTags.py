@@ -173,6 +173,7 @@ def renderFormFields(field):
                     </div>
                     <div class="col">
                         <label class="form-label" style="padding-top: 5px">{field.label}</label>
+                        <small><b>{field.help_text}</b></small>
                     </div>
                 </div>'''
     elif isinstance(field.field.widget, CheckboxSelectMultiple) or isinstance(field.field.widget, RadioSelect):
@@ -200,19 +201,19 @@ def renderScoreComponent(user, quizAttempt, form):
     canMark = quizAttempt.getPermissionMode(user) == QuizAttempt.Mode.MARK
     isMarked = quizAttempt.getPermissionMode(user) == QuizAttempt.Mode.VIEW and quizAttempt.status == QuizAttempt.Status.MARKED
 
-    if form.data.get('response').question.questionType == Question.Type.ESSAY:
-        name = f"awarded-mark-for-essay-{form.data.get('response').id}"
-    elif form.data.get('response').question.questionType == Question.Type.TRUE_OR_FALSE:
-        name = f"awarded-mark-for-true-or-false-{form.data.get('response').id}"
-    elif form.data.get('response').question.questionType == Question.Type.MULTIPLE_CHOICE:
-        name = f"awarded-mark-for-mcq-{form.data.get('response').id}"
+    if form.response.question.questionType == Question.Type.ESSAY:
+        name = f"awarded-mark-for-essay-{form.response.id}"
+    elif form.response.question.questionType == Question.Type.TRUE_OR_FALSE:
+        name = f"awarded-mark-for-true-or-false-{form.response.id}"
+    elif form.response.question.questionType == Question.Type.MULTIPLE_CHOICE:
+        name = f"awarded-mark-for-mcq-{form.response.id}"
     else:
-        raise Exception(f"Unsupported response type: {form.data.get('response').question}")
+        raise Exception(f"Unsupported response type: {form.response.question}")
 
     if form.data.get('markResponseAlert') == 'border border-success':
-        awardedMark = int(form.data.get('response').mark)
+        awardedMark = int(form.response.mark)
     elif form.data.get('markResponseAlert') == 'border border-secondary':
-        awardedMark = '' if form.data.get('response').mark is None else int(form.data.get('response').mark)
+        awardedMark = '' if form.response.mark is None else int(form.response.mark)
     else:
         awardedMark = ''
 
@@ -226,13 +227,13 @@ def renderScoreComponent(user, quizAttempt, form):
                             <div class="col-auto">
                                 <input type="number" class="form-control" value="{awardedMark}" name="{name}"
                                 {"disabled" if quizAttempt.user == user else ""}
-                                min="0" max="{form.data.get('response').question.mark}"
+                                min="0" max="{form.response.question.mark}"
                                 style="width: 40px; padding-left: 10px;padding-right: 10px;">
                             </div>
                             <b style="font-size: 26px;">/</b>
                             <div class="col-auto">
                                 <input disabled type="number" class="form-control"
-                                value="{form.data.get('response').question.mark}"
+                                value="{form.response.question.mark}"
                                 style="width: 40px; padding-left: 10px; padding-right: 10px;">
                             </div>
                         </div>

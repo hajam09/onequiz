@@ -14,18 +14,22 @@ BOOLEAN = [True, False]
 
 def createUsers(limit=20, maxLimit=20, save=True):
     currentCount = User.objects.count()
-    remaining = maxLimit - currentCount
+    remaining = max(0, maxLimit - currentCount)
+    toCreate = min(limit, remaining)
+
+    if toCreate <= 0:
+        return User.objects.none()
 
     if limit == 0 or currentCount > maxLimit:
         return User.objects.all()[:limit]
 
     BULK_USERS = []
     uniqueEmails = []
-    for _ in range(remaining):
+    for _ in range(toCreate):
         fake = Faker()
         firstName = fake.unique.first_name()
         lastName = fake.unique.last_name()
-        email = firstName.lower() + '.' + lastName.lower() + random.choice(EMAIL_DOMAINS) + random.choice(DOMAINS)
+        email = f'{firstName.lower()}.{lastName.lower()}{random.choice(EMAIL_DOMAINS)}{random.choice(DOMAINS)}'
         user = User(username=email, email=email, first_name=firstName, last_name=lastName)
         user.set_password(settings.TEST_PASSWORD)
         BULK_USERS.append(user)
@@ -43,16 +47,7 @@ def createUser(save=True):
     return userList.first() if save else userList[0]
 
 
-def createSubjects(numberOfSubjects=5):
-    faker = Faker()
-    BULK_SUBJECT_LIST = [
-        Subject(name=faker.pystr_format(), description=faker.paragraph()) for _ in range(numberOfSubjects)
-    ]
-
-    Subject.objects.bulk_create(BULK_SUBJECT_LIST)
-
-
-def createQuiz(creator=None, subject=None, save=True):
+def createQuiz(creator=None, save=True):
     faker = Faker()
 
     newQuiz = Quiz()
@@ -80,9 +75,9 @@ def createQuiz(creator=None, subject=None, save=True):
     return newQuiz
 
 
-def createRandomQuestions(numberOfQuestions=None, save=True):
+def createRandomQuestions(quiz, numberOfQuestions=None, save=True):
     if numberOfQuestions is None:
-        numberOfQuestions = random.randint(5, 50)
+        numberOfQuestions = random.randint(5, 10)
 
     BULK_QUESTIONS = []
 
@@ -90,18 +85,19 @@ def createRandomQuestions(numberOfQuestions=None, save=True):
         questionType = random.choice([Question.Type.ESSAY, Question.Type.TRUE_OR_FALSE, Question.Type.MULTIPLE_CHOICE])
 
         if questionType == Question.Type.ESSAY:
-            BULK_QUESTIONS.append(createEssayQuestion(False))
+            BULK_QUESTIONS.append(createEssayQuestion(quiz, False))
         elif questionType == Question.Type.TRUE_OR_FALSE:
-            BULK_QUESTIONS.append(createTrueOrFalseQuestion(False))
+            BULK_QUESTIONS.append(createTrueOrFalseQuestion(quiz, False))
         elif questionType == Question.Type.MULTIPLE_CHOICE:
-            BULK_QUESTIONS.append(createMultipleChoiceQuestionAndAnswers(False))
+            BULK_QUESTIONS.append(createMultipleChoiceQuestionAndAnswers(quiz, False))
 
     return Question.objects.bulk_create(BULK_QUESTIONS) if save else BULK_QUESTIONS
 
 
-def createEssayQuestion(save=True):
+def createEssayQuestion(quiz, save=True):
     faker = Faker()
     question = Question(
+        quiz=quiz,
         figure=None,
         content=faker.paragraph(),
         explanation=faker.paragraph(),
@@ -115,9 +111,10 @@ def createEssayQuestion(save=True):
     return question
 
 
-def createTrueOrFalseQuestion(save=True):
+def createTrueOrFalseQuestion(quiz, save=True):
     faker = Faker()
     question = Question(
+        quiz=quiz,
         figure=None,
         content=faker.paragraph(),
         explanation=faker.paragraph(),
@@ -131,12 +128,12 @@ def createTrueOrFalseQuestion(save=True):
     return question
 
 
-def createMultipleChoiceQuestionAndAnswers(save=True):
+def createMultipleChoiceQuestionAndAnswers(quiz, save=True):
     faker = Faker()
     choiceType = random.choice([Question.ChoiceType.SINGLE, Question.ChoiceType.MULTIPLE])
     choices = [
         {
-            'id': uuid.uuid4().hex,
+            'id': uuid.uuid4().hex[:8],
             'content': faker.paragraph(),
             'isChecked': False if choiceType == Question.ChoiceType.SINGLE else random.choice(BOOLEAN)
         } for _ in range(random.randint(2, 10))
@@ -146,6 +143,7 @@ def createMultipleChoiceQuestionAndAnswers(save=True):
         random.choice(choices)['isChecked'] = True
 
     question = Question(
+        quiz=quiz,
         figure=None,
         content=faker.paragraph(),
         explanation=faker.paragraph(),

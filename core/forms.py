@@ -144,6 +144,16 @@ class QuizForm(forms.Form):
             }
         ),
     )
+    enableAutoMarking = forms.BooleanField(
+        label='Enabled auto marking?',
+        required=False,
+        widget=forms.CheckboxInput(
+            attrs={
+                'class': 'form-control',
+            }
+        ),
+        help_text='Note: Auto-marking won\'t apply for quiz with essay questions!'
+    )
 
     def __init__(self, request, *args, **kwargs):
         kwargs.setdefault('label_suffix', '')
@@ -243,14 +253,17 @@ class QuizForm(forms.Form):
     def clean_isDraft(self):
         return self.data.get('isDraft') == 'on'
 
+    def clean_enableAutoMarking(self):
+        return self.data.get('enableAutoMarking') == 'on'
+
     def clean(self):
-        raise NotImplementedError("Please implement clean() method")
+        raise NotImplementedError('Please implement clean() method')
 
     def save(self):
-        raise NotImplementedError("Please implement save() method")
+        raise NotImplementedError('Please implement save() method')
 
     def update(self):
-        raise NotImplementedError("Please implement update() method")
+        raise NotImplementedError('Please implement update() method')
 
 
 class QuizCreateForm(QuizForm):
@@ -284,6 +297,7 @@ class QuizCreateForm(QuizForm):
         newQuiz.answerAtEnd = self.cleaned_data.get('answerAtEnd')
         newQuiz.isExamPaper = self.cleaned_data.get('isExamPaper')
         newQuiz.isDraft = self.cleaned_data.get('isDraft')
+        newQuiz.enableAutoMarking = self.cleaned_data.get('enableAutoMarking')
         newQuiz.creator_id = self.request.user.id
         newQuiz.save()
         return newQuiz
@@ -313,6 +327,7 @@ class QuizUpdateForm(QuizForm):
         self.initial['answerAtEnd'] = quiz.answerAtEnd
         self.initial['isExamPaper'] = quiz.isExamPaper
         self.initial['isDraft'] = quiz.isDraft
+        self.initial['enableAutoMarking'] = quiz.enableAutoMarking
 
         if quiz.creator_id != request.user.id:
             self.fields['name'].widget.attrs['disabled'] = True
@@ -330,6 +345,7 @@ class QuizUpdateForm(QuizForm):
             del self.fields['answerAtEnd']
             del self.fields['isExamPaper']
             del self.fields['isDraft']
+            del self.fields['enableAutoMarking']
 
     def clean_name(self):
         name = self.cleaned_data.get('name')
@@ -363,6 +379,7 @@ class QuizUpdateForm(QuizForm):
         self.quiz.answerAtEnd = self.cleaned_data.get('answerAtEnd')
         self.quiz.isExamPaper = self.cleaned_data.get('isExamPaper')
         self.quiz.isDraft = self.cleaned_data.get('isDraft')
+        self.quiz.enableAutoMarking = self.cleaned_data.get('enableAutoMarking')
         self.quiz.save()
         return self.quiz
 
@@ -431,10 +448,10 @@ class QuestionForm(forms.Form):
         return self.cleaned_data
 
     def save(self):
-        raise NotImplementedError("Please implement save() method")
+        raise NotImplementedError('Please implement save() method')
 
     def update(self):
-        raise NotImplementedError("Please implement update() method")
+        raise NotImplementedError('Please implement update() method')
 
 
 class EssayQuestionCreateForm(QuestionForm):
@@ -449,8 +466,9 @@ class EssayQuestionCreateForm(QuestionForm):
         )
     )
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, quiz, *args, **kwargs):
         kwargs.setdefault('label_suffix', '')
+        self.quiz = quiz
         super(EssayQuestionCreateForm, self).__init__(*args, **kwargs)
 
     def clean(self):
@@ -464,6 +482,7 @@ class EssayQuestionCreateForm(QuestionForm):
 
     def save(self):
         question = Question.objects.create(
+            quiz=self.quiz,
             figure=self.cleaned_data.get('figure'),
             content=self.cleaned_data.get('content'),
             explanation=self.cleaned_data.get('explanation'),
@@ -498,8 +517,9 @@ class MultipleChoiceQuestionCreateForm(QuestionForm):
         ),
     )
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, quiz, *args, **kwargs):
         kwargs.setdefault('label_suffix', '')
+        self.quiz = quiz
         super(MultipleChoiceQuestionCreateForm, self).__init__(*args, **kwargs)
 
     def clean(self):
@@ -551,7 +571,7 @@ class MultipleChoiceQuestionCreateForm(QuestionForm):
         answerOptionsList = self.data.getlist('answerOptions')
         choices = [
             {
-                'id': uuid.uuid4().hex,
+                'id': uuid.uuid4().hex[:8],
                 'content': content,
                 'isChecked': (
                     self.data.get('answerChecked') == f'value-{i + 1}'
@@ -563,6 +583,7 @@ class MultipleChoiceQuestionCreateForm(QuestionForm):
         ]
 
         question = Question.objects.create(
+            quiz=self.quiz,
             figure=self.cleaned_data.get('figure'),
             content=self.cleaned_data.get('content'),
             explanation=self.cleaned_data.get('explanation'),
@@ -589,8 +610,9 @@ class TrueOrFalseQuestionCreateForm(QuestionForm):
         )
     )
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, quiz, *args, **kwargs):
         kwargs.setdefault('label_suffix', '')
+        self.quiz = quiz
         super(TrueOrFalseQuestionCreateForm, self).__init__(*args, **kwargs)
 
     def clean(self):
@@ -598,6 +620,7 @@ class TrueOrFalseQuestionCreateForm(QuestionForm):
 
     def save(self):
         question = Question.objects.create(
+            quiz=self.quiz,
             figure=self.cleaned_data.get('figure'),
             content=self.cleaned_data.get('content'),
             explanation=self.cleaned_data.get('explanation'),
@@ -805,7 +828,7 @@ class MultipleChoiceQuestionUpdateForm(QuestionForm):
         answerOptionsList = self.data.getlist('answerOptions')
         choices = [
             {
-                'id': uuid.uuid4().hex,
+                'id': uuid.uuid4().hex[:8],
                 'content': content,
                 'isChecked': (
                     self.data.get('answerChecked') == f'value-{i + 1}'
@@ -825,7 +848,7 @@ class BaseResponseForm(forms.Form):
     def __init__(self, response, allowEdit=True, validateMark=False, *args, **kwargs):
         kwargs.setdefault('label_suffix', '')
         super(BaseResponseForm, self).__init__(*args, **kwargs)
-        self.data['response'] = response
+        self.response = response
         self.allowEdit = allowEdit
         self.setInitialValues(response)
         self.showSystemAnswerWhileMarking(response)
@@ -841,10 +864,10 @@ class BaseResponseForm(forms.Form):
             self.data['markResponseAlert'] = 'border border-secondary'
 
     def setInitialValues(self, response):
-        raise NotImplementedError("Please implement setInitialValues() method")
+        raise NotImplementedError('Please implement setInitialValues() method')
 
     def showSystemAnswerWhileMarking(self, response):
-        raise NotImplementedError("Please implement showSystemAnswerWhileMarking() method")
+        raise NotImplementedError('Please implement showSystemAnswerWhileMarking() method')
 
     def disableFields(self):
         for field in self.fields.values():
