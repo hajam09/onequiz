@@ -12,7 +12,6 @@
 #     def setUp(self, path=None) -> None:
 #         self.basePath = path
 #         super(MultipleChoiceQuestionCreateFormTest, self).setUp('')
-#         # TODO: Search for 'Answer Order is empty.' and remove its usage.
 #
 #     def testFieldsAndType(self):
 #         form = MultipleChoiceQuestionCreateForm()

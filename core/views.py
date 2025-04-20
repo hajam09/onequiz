@@ -1,15 +1,14 @@
 import operator
+import random
 from functools import reduce
 
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.core.cache import cache
 from django.core.paginator import Paginator, PageNotAnInteger, EmptyPage
-from django.db.models import OuterRef, Subquery, Value
 from django.db.models import Q
-from django.db.models.functions import Coalesce
 from django.http import Http404, HttpResponseForbidden
-from django.shortcuts import get_object_or_404, render, redirect, reverse
+from django.shortcuts import get_object_or_404, render, redirect
 from django.views.generic import ListView
 
 from core.forms import (
@@ -20,7 +19,7 @@ from core.forms import (
 )
 from core.models import Quiz, Question, QuizAttempt, Result, Response
 from onequiz.operations import generalOperations
-from onequiz.operations.generalOperations import QuizAttemptManualMarking2
+from onequiz.operations.generalOperations import QuizAttemptManualMarking, QuizAttemptAutomaticMarking
 
 
 def indexView(request):
@@ -74,10 +73,7 @@ def quizCreateView(request):
 
 
 def quizUpdateView(request, url):
-    try:
-        quiz = Quiz.objects.get(url=url)  # creator=request.user
-    except Quiz.DoesNotExist:
-        raise Http404
+    quiz = get_object_or_404(Quiz, url=url)  # creator=request.user
 
     if request.method == 'POST':
         form = QuizUpdateForm(request, quiz, request.POST, request.FILES)
@@ -101,19 +97,15 @@ def quizUpdateView(request, url):
 
 @login_required
 def essayQuestionCreateView(request, url):
-    try:
-        quiz = Quiz.objects.get(url=url, creator=request.user)
-    except Quiz.DoesNotExist:
-        raise Http404
+    quiz = get_object_or_404(Quiz, url=url, creator=request.user)
 
     if request.method == 'POST':
-        form = EssayQuestionCreateForm(request.POST, request.FILES)
+        form = EssayQuestionCreateForm(quiz, request.POST, request.FILES)
         if form.is_valid():
-            question = form.save()
-            quiz.questions.add(question)
+            form.save()
             return redirect('core:essay-question-create-view', url=url)
     else:
-        form = EssayQuestionCreateForm()
+        form = EssayQuestionCreateForm(quiz)
 
     formTitle = 'Create Essay Question'
 
@@ -127,19 +119,15 @@ def essayQuestionCreateView(request, url):
 
 @login_required
 def multipleChoiceQuestionCreateView(request, url):
-    try:
-        quiz = Quiz.objects.get(url=url, creator=request.user)
-    except Quiz.DoesNotExist:
-        raise Http404
+    quiz = get_object_or_404(Quiz, url=url, creator=request.user)
 
     if request.method == 'POST':
-        form = MultipleChoiceQuestionCreateForm(request.POST, request.FILES)
+        form = MultipleChoiceQuestionCreateForm(quiz, request.POST, request.FILES)
         if form.is_valid():
-            question = form.save()
-            quiz.questions.add(question)
+            form.save()
             return redirect('core:multiple-choice-question-create-view', url=url)
     else:
-        form = MultipleChoiceQuestionCreateForm()
+        form = MultipleChoiceQuestionCreateForm(quiz)
 
     formTitle = 'Create Multiple Choice Question'
 
@@ -153,19 +141,15 @@ def multipleChoiceQuestionCreateView(request, url):
 
 @login_required
 def trueOrFalseQuestionCreateView(request, url):
-    try:
-        quiz = Quiz.objects.get(url=url, creator=request.user)
-    except Quiz.DoesNotExist:
-        raise Http404
+    quiz = get_object_or_404(Quiz, url=url, creator=request.user)
 
     if request.method == 'POST':
-        form = TrueOrFalseQuestionCreateForm(request.POST, request.FILES)
+        form = TrueOrFalseQuestionCreateForm(quiz, request.POST, request.FILES)
         if form.is_valid():
-            question = form.save()
-            quiz.questions.add(question)
+            form.save()
             return redirect('core:true-or-false-question-create-view', url=url)
     else:
-        form = TrueOrFalseQuestionCreateForm()
+        form = TrueOrFalseQuestionCreateForm(quiz)
 
     formTitle = 'Create True or False Question'
 
@@ -179,12 +163,7 @@ def trueOrFalseQuestionCreateView(request, url):
 
 @login_required
 def questionUpdateView(request, quizUrl, questionUrl):
-    try:
-        question = Question.objects.get(
-            url=questionUrl, quizQuestions__url=quizUrl, quizQuestions__creator=request.user
-        )
-    except Question.DoesNotExist:
-        raise Http404
+    question = get_object_or_404(Question, url=questionUrl, quiz__url=quizUrl, quiz__creator=request.user)
 
     form = None
     template = None
@@ -262,10 +241,7 @@ def userCreatedQuizzesView(request):
 
 @login_required
 def quizAttemptViewVersion1(request, url):
-    try:
-        quizAttempt = QuizAttempt.objects.select_related('user', 'quiz__creator').get(url=url)
-    except QuizAttempt.DoesNotExist:
-        raise Http404
+    quizAttempt = get_object_or_404(QuizAttempt.objects.select_related('user'), url=url)
 
     if quizAttempt.hasQuizEnded() and quizAttempt.status in quizAttempt.getEditStatues():
         quizAttempt.status = QuizAttempt.Status.SUBMITTED
@@ -274,179 +250,74 @@ def quizAttemptViewVersion1(request, url):
     if not quizAttempt.hasViewPermission(request.user):
         return HttpResponseForbidden('Forbidden')
 
+    if quizAttempt.getPermissionMode(request.user) == QuizAttempt.Mode.MARK:
+        # Quiz creator wants to mark this quiz. Temporarily redirect to quizAttemptSubmissionPreview and mark there.
+        return redirect('core:quiz-attempt-submission-preview', url=url)
+
+    responseUrls = cache.get(f'quiz-attempt-v1-{url}')
+    if responseUrls is None:
+        responseUrls = list(quizAttempt.responses.values_list('url', flat=True))
+        if quizAttempt.quiz.inRandomOrder:
+            random.shuffle(responseUrls)
+        cache.set(
+            f'quiz-attempt-v1-{quizAttempt.url}',
+            responseUrls,
+            quizAttempt.quiz.quizDuration * 60 + 30
+        )
+
+    responseUrl = request.GET.get('r')
+    if responseUrl not in responseUrls:
+        return redirect(f'/v1/quiz-attempt/{url}/?r={responseUrls[0]}')
+
+    responseObject = quizAttempt.responses.filter(url=responseUrl).first()
+
+    if request.method == 'POST' and 'submitResponse' in request.POST:
+        if not quizAttempt.hasQuizEnded():
+            if responseObject.question.questionType == Question.Type.ESSAY:
+                responseObject.answer = request.POST.get('answer')
+            elif responseObject.question.questionType == Question.Type.TRUE_OR_FALSE:
+                responseObject.trueOrFalse = request.POST.get('trueOrFalse')
+            elif responseObject.question.questionType == Question.Type.MULTIPLE_CHOICE:
+                optionsKey = next((key for key in request.POST if key.startswith('option')), None)
+                checkedOptionsIds = set(request.POST.getlist(optionsKey))
+                for choice in responseObject.choices.get('choices'):
+                    choice['isChecked'] = choice['id'] in checkedOptionsIds
+            responseObject.save()
+
+        responseIndex = responseUrls.index(responseUrl)
+        if request.POST.get('submitResponse') == 'next':
+            isLastElement = responseIndex == len(responseUrls) - 1
+            if isLastElement:
+                return redirect('core:quiz-attempt-submission-preview', url=url)
+            return redirect(f'/v1/quiz-attempt/{url}/?r={responseUrls[responseIndex + 1]}')
+        elif request.POST.get('submitResponse') == 'previous' and responseIndex != 0:
+            return redirect(f'/v1/quiz-attempt/{url}/?r={responseUrls[responseIndex - 1]}')
+        else:
+            raise Exception('Invalid POST action')
+
+    hasQuizEnded = not quizAttempt.hasQuizEnded()
+
+    if responseObject.question.questionType == Question.Type.ESSAY:
+        form = EssayQuestionResponseForm(response=responseObject, allowEdit=hasQuizEnded, validateMark=False)
+    elif responseObject.question.questionType == Question.Type.TRUE_OR_FALSE:
+        form = TrueOrFalseQuestionResponseForm(response=responseObject, allowEdit=hasQuizEnded, validateMark=False)
+    elif responseObject.question.questionType == Question.Type.MULTIPLE_CHOICE:
+        form = MultipleChoiceQuestionResponseForm(response=responseObject, allowEdit=hasQuizEnded, validateMark=False)
+    else:
+        raise Exception('Invalid question type')
+
     context = {
         'quizAttempt': quizAttempt,
-        'mode': quizAttempt.getPermissionMode(request.user),
+        'responseUrls': responseUrls,
+        'form': form,
+        'has_previous': responseUrls.index(responseUrl) != 0,
+        'progress': {
+            'current': responseUrls.index(responseUrl) + 1,
+            'total': len(responseUrls),
+            'percentage': round(((responseUrls.index(responseUrl) + 1) / len(responseUrls)) * 100, 0)
+        }
     }
     return render(request, 'core/quizAttemptViewVersion1.html', context)
-
-
-@login_required
-def quizAttemptViewVersion2(request, url):
-    quizAttempt = get_object_or_404(QuizAttempt.objects.select_related('user'), url=url)
-
-    if quizAttempt.hasQuizEnded() and quizAttempt.status in quizAttempt.getEditStatues():
-        quizAttempt.status = QuizAttempt.Status.SUBMITTED
-        quizAttempt.save(update_fields=['status'])
-
-    if not quizAttempt.hasViewPermission(request.user):
-        return HttpResponseForbidden('Forbidden')
-
-    if quizAttempt.getPermissionMode(request.user) == QuizAttempt.Mode.MARK:
-        # Quiz creator wants to mark this quiz. Temporarily redirect to quizAttemptSubmissionPreview and mark there.
-        return redirect('core:quiz-attempt-submission-preview', url=url)
-
-    ref = request.GET.get('ref', 'next')
-    questionIndex = request.GET.get('q', 1)
-
-    questions = cache.get(f'quiz-attempt-v2-{url}')
-    if questions is None:
-        questions = Question.objects.filter(quizQuestions__id=quizAttempt.quiz_id)
-        if quizAttempt.quiz.inRandomOrder:
-            questions = questions.order_by('?')
-        cache.set(f'quiz-attempt-v2-{url}', questions, quizAttempt.quiz.quizDuration * 60 + 30)
-    paginator = Paginator(questions, 1)
-
-    if request.method == 'POST' and quizAttempt.status != QuizAttempt.Status.SUBMITTED:
-        # When there is a POST request, it can mean the user wants to view the next question or the previous question.
-        # Determine the index shift based on the navigation direction
-        indexShift = -1 if ref == 'next' else 1
-        respondedQuestionIndex = int(questionIndex) + indexShift
-        respondedQuestionObject = paginator.page(respondedQuestionIndex).object_list[0]
-        responseObject = Response.objects.get(quizAttemptResponses__in=[quizAttempt], question=respondedQuestionObject)
-
-        if respondedQuestionObject.questionType == Question.Type.ESSAY:
-            responseObject.answer = request.POST.get('answer')
-        elif respondedQuestionObject.questionType == Question.Type.TRUE_OR_FALSE:
-            responseObject.trueOrFalse = request.POST.get('trueOrFalse')
-        elif respondedQuestionObject.questionType == Question.Type.MULTIPLE_CHOICE:
-            optionsKey = next((key for key in request.POST if key.startswith('option')), None)
-            checkedOptionsIds = set(request.POST.getlist(optionsKey))
-            for choice in responseObject.choices.get('choices'):
-                choice['isChecked'] = choice['id'] in checkedOptionsIds
-
-        responseObject.save()
-
-    try:
-        questionPaginator = paginator.page(questionIndex)
-    except PageNotAnInteger:
-        questionPaginator = paginator.page(1)
-    except EmptyPage:
-        if int(questionIndex) > paginator.num_pages:
-            return redirect('core:quiz-attempt-submission-preview', url=url)
-        questionPaginator = paginator.page(paginator.num_pages)
-
-    currentQuestion = questionPaginator.object_list[0]
-    responseObject, created = Response.objects.select_related('question').get_or_create(
-        quizAttemptResponses__in=[quizAttempt], question=currentQuestion
-    )
-    quizAttempt.responses.add(responseObject.id)
-
-    hasQuizEnded = not quizAttempt.hasQuizEnded()
-    if currentQuestion.questionType == Question.Type.ESSAY:
-        form = EssayQuestionResponseForm(response=responseObject, allowEdit=hasQuizEnded, validateMark=False)
-    elif currentQuestion.questionType == Question.Type.TRUE_OR_FALSE:
-        form = TrueOrFalseQuestionResponseForm(response=responseObject, allowEdit=hasQuizEnded, validateMark=False)
-    elif currentQuestion.questionType == Question.Type.MULTIPLE_CHOICE:
-        form = MultipleChoiceQuestionResponseForm(response=responseObject, allowEdit=hasQuizEnded, validateMark=False)
-    else:
-        raise Exception('Invalid question type')
-
-    numberOfQuestions = questionPaginator.paginator.page_range.stop - questionPaginator.paginator.page_range.start
-    context = {
-        'quizAttempt': quizAttempt,
-        'questionPaginator': questionPaginator,
-        'currentQuestion': currentQuestion,
-        'form': form,
-        'progress': round((questionPaginator.number / numberOfQuestions) * 100, 0)
-    }
-    return render(request, 'core/quizAttemptViewVersion2.html', context)
-
-
-@login_required
-def quizAttemptViewVersion3(request, url):
-    quizAttempt = get_object_or_404(QuizAttempt.objects.select_related('user'), url=url)
-
-    if quizAttempt.hasQuizEnded() and quizAttempt.status in quizAttempt.getEditStatues():
-        quizAttempt.status = QuizAttempt.Status.SUBMITTED
-        quizAttempt.save(update_fields=['status'])
-
-    if not quizAttempt.hasViewPermission(request.user):
-        return HttpResponseForbidden('Forbidden')
-
-    if quizAttempt.getPermissionMode(request.user) == QuizAttempt.Mode.MARK:
-        # Quiz creator wants to mark this quiz. Temporarily redirect to quizAttemptSubmissionPreview and mark there.
-        return redirect('core:quiz-attempt-submission-preview', url=url)
-
-    questions = cache.get(f'quiz-attempt-v3-{url}')
-    if questions is None:
-        questions = Question.objects.filter(quizQuestions__id=quizAttempt.quiz_id)
-        if quizAttempt.quiz.inRandomOrder:
-            questions = questions.order_by('?')
-        cache.set(f'quiz-attempt-v3-{url}', questions, quizAttempt.quiz.quizDuration * 60 + 30)
-    paginator = Paginator(questions, 1)
-
-    questionIndex = request.GET.get('q', 1)
-
-    if request.method == 'POST' and quizAttempt.status != QuizAttempt.Status.SUBMITTED:
-        # When there is a POST request, it can mean the user wants to view the next question or the previous question.
-        # Determine the index shift based on the navigation direction
-        if request.POST.get('ref') == 'next':
-            indexShift = -1
-        elif request.POST.get('ref') == 'prev':
-            indexShift = 1
-        else:
-            raise Exception('IndexShift not provided in the POST request to determine question index.')
-
-        respondedQuestionIndex = int(questionIndex) + indexShift
-        respondedQuestionObject = paginator.page(respondedQuestionIndex).object_list[0]
-        responseObject = Response.objects.get(quizAttemptResponses__in=[quizAttempt], question=respondedQuestionObject)
-
-        if respondedQuestionObject.questionType == Question.Type.ESSAY:
-            responseObject.answer = request.POST.get('answer')
-        elif respondedQuestionObject.questionType == Question.Type.TRUE_OR_FALSE:
-            responseObject.trueOrFalse = request.POST.get('trueOrFalse')
-        elif respondedQuestionObject.questionType == Question.Type.MULTIPLE_CHOICE:
-            optionsKey = next((key for key in request.POST if key.startswith('option')), None)
-            checkedOptionsIds = set(request.POST.getlist(optionsKey))
-            for choice in responseObject.choices.get('choices'):
-                choice['isChecked'] = choice['id'] in checkedOptionsIds
-
-        responseObject.save()
-        return redirect(reverse('core:quiz-attempt-view-v3', kwargs={'url': url}) + f'?q={questionIndex}')
-
-    try:
-        questionPaginator = paginator.page(questionIndex)
-    except PageNotAnInteger:
-        questionPaginator = paginator.page(1)
-    except EmptyPage:
-        if int(questionIndex) > paginator.num_pages:
-            return redirect('core:quiz-attempt-submission-preview', url=url)
-        questionPaginator = paginator.page(paginator.num_pages)
-
-    currentQuestion = questionPaginator.object_list[0]
-    responseObject = Response.objects.select_related('question').get(
-        quizAttemptResponses__in=[quizAttempt], question=currentQuestion
-    )
-    hasQuizEnded = not quizAttempt.hasQuizEnded()
-    if currentQuestion.questionType == Question.Type.ESSAY:
-        form = EssayQuestionResponseForm(response=responseObject, allowEdit=hasQuizEnded, validateMark=False)
-    elif currentQuestion.questionType == Question.Type.TRUE_OR_FALSE:
-        form = TrueOrFalseQuestionResponseForm(response=responseObject, allowEdit=hasQuizEnded, validateMark=False)
-    elif currentQuestion.questionType == Question.Type.MULTIPLE_CHOICE:
-        form = MultipleChoiceQuestionResponseForm(response=responseObject, allowEdit=hasQuizEnded, validateMark=False)
-    else:
-        raise Exception('Invalid question type')
-
-    numberOfQuestions = questionPaginator.paginator.page_range.stop - questionPaginator.paginator.page_range.start
-    context = {
-        'quizAttempt': quizAttempt,
-        'questionPaginator': questionPaginator,
-        'currentQuestion': currentQuestion,
-        'form': form,
-        'progress': round((questionPaginator.number / numberOfQuestions) * 100, 0)
-    }
-    return render(request, 'core/quizAttemptViewVersion3.html', context)
 
 
 @login_required
@@ -461,47 +332,41 @@ def quizAttemptSubmissionPreview(request, url):
         return HttpResponseForbidden('Forbidden')
 
     isQuizParticipant = quizAttempt.user == request.user
-    # handleQuizAttemptUserActions
     # - > User views all their response.
     # - > User submits their quiz attempt.
     if isQuizParticipant and request.method == 'POST' and 'submitQuiz' in request.POST:
         quizAttempt.status = QuizAttempt.Status.SUBMITTED
+        cache.delete(f'quiz-attempt-v1-{url}')
+
+        if quizAttempt.quiz.enableAutoMarking:
+            quizAttemptAutomaticMarking = QuizAttemptAutomaticMarking(
+                quizAttempt, quizAttempt.responses.select_related('question').all()
+            )
+            marked = quizAttemptAutomaticMarking.mark()
+            if marked:
+                quizAttempt.status = QuizAttempt.Status.MARKED
+                messages.success(
+                    request,
+                    'This quiz attempt has been auto marked successfully.'
+                )
+            else:
+                messages.success(
+                    request,
+                    'This quiz attempt will be marked manually by the author.'
+                )
+        else:
+            messages.success(
+                request,
+                'Your quiz attempt will be marked manually by the author.'
+            )
+
         quizAttempt.save(update_fields=['status'])
-        cache.delete(f'quiz-attempt-v3-{url}')
-        messages.success(
-            request,
-            'Your attempt has been submitted successfully, please check later for results.'
-        )
         return redirect('core:quiz-attempt-submission-preview', url=url)
-
-    # handleQuizCreatorActions
-    # - > User views all the response.
-    # - > User marks all the response.
-
-    # Ensure all responses exist
-    questions = Question.objects.filter(quizQuestions__id=quizAttempt.quiz_id)
-    responsesSubquery = Response.objects.filter(
-        quizAttemptResponses=quizAttempt, question_id=OuterRef('pk')
-    ).values('id')[:1]
-    questionsWithResponses = questions.annotate(response_id=Coalesce(Subquery(responsesSubquery), Value(None)))
-
-    bulkResponses = [
-        Response(question=question)
-        for question in questionsWithResponses if question.response_id is None
-    ]
-
-    if bulkResponses:
-        bulkResponseCreate = Response.objects.bulk_create(bulkResponses)
-        quizAttempt.responses.add(*bulkResponseCreate)
-
-    responses = Response.objects.filter(
-        quizAttemptResponses__in=[quizAttempt]
-    ).select_related('question').order_by('question__id')
 
     responseForms = []
     responseBorders = []
+    responses = quizAttempt.responses.select_related('question').all()
     for response in responses:
-        form = None
         isQuizCreator = quizAttempt.quiz.creator == request.user
         confirmMark = request.method == 'POST' and 'submitQuiz' in request.POST and isQuizCreator
 
@@ -524,7 +389,6 @@ def quizAttemptSubmissionPreview(request, url):
             raise Exception(f'Unknown question type: {response.question.questionType} for response ID: {response.id}')
 
         responseForms.append(form)
-
         if confirmMark:
             responseBorders.append(form.data.get('markResponseAlert'))
 
@@ -538,8 +402,8 @@ def quizAttemptSubmissionPreview(request, url):
         quizAttempt.status = QuizAttempt.Status.MARKED
         quizAttempt.save(update_fields=['status'])
 
-        quizAttemptManualMarking2 = QuizAttemptManualMarking2(quizAttempt, responses)
-        quizAttemptManualMarking2.mark()
+        quizAttemptManualMarking = QuizAttemptManualMarking(quizAttempt, responses)
+        quizAttemptManualMarking.mark()
 
         messages.success(
             request,

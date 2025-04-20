@@ -2,12 +2,7 @@ from django.contrib.auth.decorators import login_required
 from django.urls import path
 
 from core.api import (
-    QuestionResponseUpdateApiEventVersion1Component,
-    QuizAttemptObjectApiEventVersion1Component,
-    QuizAttemptObjectApiEventVersion2Component,
-    QuizAttemptObjectApiEventVersion3Component,
-    QuizAttemptQuestionsApiEventVersion1Component,
-    QuizMarkingOccurrenceApiEventVersion1Component
+    QuizAttemptCommenceApiVersion1
 )
 from core.views import (
     indexView,
@@ -20,8 +15,6 @@ from core.views import (
     questionUpdateView,
     userCreatedQuizzesView,
     quizAttemptViewVersion1,
-    quizAttemptViewVersion2,
-    quizAttemptViewVersion3,
     quizAttemptSubmissionPreview,
     quizAttemptResultView,
     quizAttemptsForQuizView,
@@ -41,9 +34,7 @@ urlpatterns = [
     path('quiz/<slug:quizUrl>/question/<slug:questionUrl>/update/', questionUpdateView, name='question-update-view'),
     path('my-quizzes/', userCreatedQuizzesView, name='user-created-quizzes-view'),
     path('v1/quiz-attempt/<slug:url>/', quizAttemptViewVersion1, name='quiz-attempt-view-v1'),
-    path('v2/quiz-attempt/<slug:url>/', quizAttemptViewVersion2, name='quiz-attempt-view-v2'),
-    path('v3/quiz-attempt/<slug:url>/', quizAttemptViewVersion3, name='quiz-attempt-view-v3'),
-    path('v2/quiz-attempt/<slug:url>/preview/', quizAttemptSubmissionPreview, name='quiz-attempt-submission-preview'),
+    path('quiz-attempt/<slug:url>/preview/', quizAttemptSubmissionPreview, name='quiz-attempt-submission-preview'),
     path('quiz-attempt/<slug:url>/result/', quizAttemptResultView, name='quiz-attempt-result-view'),
     path('quiz/<slug:url>/attempts/', quizAttemptsForQuizView, name='quiz-attempts-for-quiz-view'),
     path('my-attempted-quizzes/', login_required(AttemptedQuizzesView.as_view()), name='attempted-quizzes-view'),
@@ -51,33 +42,8 @@ urlpatterns = [
 
 urlpatterns += [
     path(
-        'api/v1/questionResponseUpdateApiEventVersion1Component/',
-        QuestionResponseUpdateApiEventVersion1Component.as_view(),
-        name='questionResponseUpdateApiEventVersion1Component'
+        'api/v1/quizAttemptCommenceApiVersion1/',
+        QuizAttemptCommenceApiVersion1.as_view(),
+        name='quizAttemptCommenceApiVersion1'
     ),
-    path(
-        'api/v1/quizAttemptObjectApiEventVersion1Component/',
-        QuizAttemptObjectApiEventVersion1Component.as_view(),
-        name='quizAttemptObjectApiEventVersion1Component'
-    ),
-    path(
-        'api/v2/quizAttemptObjectApiEventVersion2Component/',
-        QuizAttemptObjectApiEventVersion2Component.as_view(),
-        name='quizAttemptObjectApiEventVersion2Component'
-    ),
-    path(
-        'api/v3/quizAttemptObjectApiEventVersion3Component/',
-        QuizAttemptObjectApiEventVersion3Component.as_view(),
-        name='quizAttemptObjectApiEventVersion3Component'
-    ),
-    path(
-        'api/v1/quizAttemptQuestionsApiEventVersion1Component/<int:id>/',
-        QuizAttemptQuestionsApiEventVersion1Component.as_view(),
-        name='quizAttemptQuestionsApiEventVersion1Component'
-    ),
-    path(
-        'api/v1/quizMarkingOccurrenceApiEventVersion1Component/<int:id>/',
-        QuizMarkingOccurrenceApiEventVersion1Component.as_view(),
-        name='quizMarkingOccurrenceApiEventVersion1Component'
-    )
 ]

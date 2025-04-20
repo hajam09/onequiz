@@ -12,7 +12,7 @@ from onequiz.operations import bakerOperations
 
 class Command(BaseCommand):
     help = 'Create Baker Model'
-    NUMBER_OF_QUIZ = 300
+    NUMBER_OF_QUIZ = 100
 
     def handle(self, *args, **kwargs):
         bakerOperations.createUsers()
@@ -23,14 +23,11 @@ class Command(BaseCommand):
             for _ in range(Command.NUMBER_OF_QUIZ)
         ]
 
-        questionList = [
-            bakerOperations.createRandomQuestions(save=False)
-            for _ in range(Command.NUMBER_OF_QUIZ)
+        questionsList = [
+            question
+            for quiz in quizList
+            for question in bakerOperations.createRandomQuestions(quiz=quiz, save=False)
         ]
 
-        questionAsFlat = [item for sublist in questionList for item in sublist]
-        Question.objects.bulk_create(questionAsFlat, batch_size=Command.NUMBER_OF_QUIZ)
-
-        quizzes = Quiz.objects.bulk_create(quizList)
-        for quiz, questions in zip(quizzes, questionList):
-            quiz.questions.add(*questions)
+        Quiz.objects.bulk_create(quizList)
+        Question.objects.bulk_create(questionsList)
