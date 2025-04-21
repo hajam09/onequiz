@@ -447,7 +447,12 @@ def quizAttemptResultView(request, url):
 
 
 def quizAttemptsForQuizView(request, url):
-    quizAttemptList = QuizAttempt.objects.select_related('user').filter(quiz__url=url)
+    quiz = get_object_or_404(Quiz.objects.select_related('creator'), url=url)
+
+    if quiz.creator != request.user:
+        return HttpResponseForbidden('You do not have permission to view this quiz\'s attempts.')
+    quizAttemptList = QuizAttempt.objects.select_related('user').filter(quiz=quiz)
+
     context = {
         'quizAttemptList': quizAttemptList,
         'url': url,

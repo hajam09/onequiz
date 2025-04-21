@@ -17,7 +17,7 @@ from core.models import (
 
 class QuizAttemptCommenceApiVersion1(APIView):
     def post(self, request, *args, **kwargs):
-        quizId = self.request.GET.get('quizId')
+        quizId = self.request.data.get('quizId')
         user = self.request.user
 
         existingInProgressAttempt = QuizAttempt.objects.filter(

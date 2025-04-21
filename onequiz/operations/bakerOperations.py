@@ -57,7 +57,7 @@ def createQuiz(creator=None, save=True):
     newQuiz.topic = faker.pystr_format()
     newQuiz.quizDuration = faker.random_number(digits=2)
     newQuiz.maxAttempt = faker.random_number(digits=1)
-    newQuiz.difficulty = random.choice([Quiz.Difficulty.EASY, Quiz.Difficulty.MEDIUM, Quiz.Difficulty.HARD])
+    newQuiz.difficulty = random.choice(Quiz.Difficulty.values)
     newQuiz.passMark = faker.random_number(digits=2)
     newQuiz.successText = faker.paragraph()
     newQuiz.failText = faker.paragraph()

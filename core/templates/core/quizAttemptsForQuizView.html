@@ -3,16 +3,18 @@
 {% block content %}
     <br>
     <div class="container">
-        <div class="row">
-            <div class="col">
-                <a type="button" class="btn btn-outline-dark btn-sm btn-block"
-                   href="{% url 'core:quiz-update-view' url=url %}">Quiz Detail</a>
+        {% if quiz.creator_id == user.id %}
+            <div class="row">
+                <div class="col">
+                    <a type="button" class="btn btn-outline-dark btn-sm btn-block"
+                       href="{% url 'core:quiz-update-view' url=quiz.url %}">Quiz Detail</a>
+                </div>
+                <div class="col">
+                    <a type="button" class="btn btn-outline-dark btn-sm btn-block"
+                       href="{% url 'core:quiz-attempts-for-quiz-view' url=quiz.url %}">Quiz Attempts</a>
+                </div>
             </div>
-            <div class="col">
-                <a type="button" class="btn btn-outline-dark btn-sm btn-block"
-                   href="{% url 'core:quiz-attempts-for-quiz-view' url=url %}">Quiz Attempts</a>
-            </div>
-        </div>
+        {% endif %}
         <br>
         <div id="idCardWideComponent">
             <div class="table-responsive-xl table-sm">
