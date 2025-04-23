@@ -129,13 +129,14 @@
         }
 
         function beginQuizAttempt(quizId) {
-            const requestPath = "{% url 'core:quizAttemptCommenceApiVersion1' %}?quizId=" + quizId;
+            const requestPath = "{% url 'core:quizAttemptCommenceApiVersion1' %}";
             fetch(requestPath, {
                 method: 'POST',
                 headers: {
                     'Content-type': 'application/json',
                     'X-CSRFToken': getCookie('csrftoken'),
-                }
+                },
+                body: JSON.stringify({ 'quizId': quizId })
             }).then((response) => response.json())
                 .then((json) => {
                     if (json.success) {

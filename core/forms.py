@@ -29,7 +29,7 @@ class QuizForm(forms.Form):
             }
         )
     )
-    subject = forms.MultipleChoiceField(
+    subject = forms.ChoiceField(
         label='Subject',
         choices=[(None, '-- Select a value --')] + Quiz.Subject.choices,
         widget=forms.Select(
@@ -70,7 +70,7 @@ class QuizForm(forms.Form):
             }
         ),
     )
-    difficulty = forms.MultipleChoiceField(
+    difficulty = forms.ChoiceField(
         label='Quiz Difficulty',
         choices=[(None, '-- Select a value --')] + Quiz.Difficulty.choices,
         widget=forms.Select(
@@ -177,7 +177,7 @@ class QuizForm(forms.Form):
         return description
 
     def clean_subject(self):
-        subject = self.data.get('subject')
+        subject = self.cleaned_data.get('subject')
 
         if subject not in Quiz.Subject.values:
             raise forms.ValidationError(f'Select a subject from the list provided.')
@@ -193,7 +193,7 @@ class QuizForm(forms.Form):
         return topic
 
     def clean_quizDuration(self):
-        quizDuration = int(self.data.get('quizDuration'))
+        quizDuration = int(self.cleaned_data.get('quizDuration'))
 
         if quizDuration < 0:
             raise forms.ValidationError(f'Quiz Durations should be greater than 0.')
@@ -201,7 +201,7 @@ class QuizForm(forms.Form):
         return quizDuration
 
     def clean_maxAttempt(self):
-        maxAttempt = int(self.data.get('maxAttempt'))
+        maxAttempt = int(self.cleaned_data.get('maxAttempt', 1))
 
         if maxAttempt < 0:
             raise forms.ValidationError(f'Quiz Max Attempt should be greater than 0.')
@@ -209,7 +209,7 @@ class QuizForm(forms.Form):
         return maxAttempt
 
     def clean_difficulty(self):
-        difficulty = self.data.get('difficulty')
+        difficulty = self.cleaned_data.get('difficulty')
 
         if difficulty not in Quiz.Difficulty.values:
             raise forms.ValidationError(f'Select a difficulty from the list provided.')
@@ -241,20 +241,20 @@ class QuizForm(forms.Form):
         return failText
 
     def clean_inRandomOrder(self):
-        return self.data.get('inRandomOrder') == 'on'
+        return self.cleaned_data.get('inRandomOrder')
 
     def clean_answerAtEnd(self):
-        return self.data.get('answerAtEnd') == 'on'
+        return self.cleaned_data.get('answerAtEnd')
 
     def clean_isExamPaper(self):
         maxAttempt = self.clean_maxAttempt()
         return maxAttempt is not None and int(maxAttempt) == 1 or self.data.get('isExamPaper') == 'on'
 
     def clean_isDraft(self):
-        return self.data.get('isDraft') == 'on'
+        return self.cleaned_data.get('isDraft')
 
     def clean_enableAutoMarking(self):
-        return self.data.get('enableAutoMarking') == 'on'
+        return self.cleaned_data.get('enableAutoMarking')
 
     def clean(self):
         raise NotImplementedError('Please implement clean() method')
@@ -273,23 +273,17 @@ class QuizCreateForm(QuizForm):
         self.request = request
 
     def clean(self):
-        del self.errors['subject']
-        del self.errors['difficulty']
-
-        self.clean_subject()
-        self.clean_difficulty()
-
         return self.cleaned_data
 
     def save(self):
         newQuiz = Quiz()
         newQuiz.name = self.cleaned_data.get('name')
         newQuiz.description = self.cleaned_data.get('description')
-        newQuiz.subject = self.data.get('subject')
+        newQuiz.subject = self.cleaned_data.get('subject')
         newQuiz.topic = self.cleaned_data.get('topic')
         newQuiz.quizDuration = self.cleaned_data.get('quizDuration')
         newQuiz.maxAttempt = self.cleaned_data.get('maxAttempt')
-        newQuiz.difficulty = self.data.get('difficulty')
+        newQuiz.difficulty = self.cleaned_data.get('difficulty')
         newQuiz.passMark = self.cleaned_data.get('passMark')
         newQuiz.successText = self.cleaned_data.get('successText')
         newQuiz.failText = self.cleaned_data.get('failText')
@@ -356,22 +350,16 @@ class QuizUpdateForm(QuizForm):
         return name
 
     def clean(self):
-        del self.errors['subject']
-        del self.errors['difficulty']
-
-        self.clean_subject()
-        self.clean_difficulty()
-
         return self.cleaned_data
 
     def update(self):
         self.quiz.name = self.cleaned_data.get('name')
         self.quiz.description = self.cleaned_data.get('description')
-        self.quiz.subject = self.data.get('subject')
+        self.quiz.subject = self.cleaned_data.get('subject')
         self.quiz.topic = self.cleaned_data.get('topic')
         self.quiz.quizDuration = self.cleaned_data.get('quizDuration')
         self.quiz.maxAttempt = self.cleaned_data.get('maxAttempt')
-        self.quiz.difficulty = self.data.get('difficulty')
+        self.quiz.difficulty = self.cleaned_data.get('difficulty')
         self.quiz.passMark = self.cleaned_data.get('passMark')
         self.quiz.successText = self.cleaned_data.get('successText')
         self.quiz.failText = self.cleaned_data.get('failText')

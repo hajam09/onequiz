@@ -21,7 +21,7 @@ class AccountsPasswordResetViewTest(BaseTestViews):
 
         response = self.get(path=path)
         self.assertEqual(response.status_code, 200)
-        self.assertTrue(isinstance(response.context['form'], PasswordResetForm))
+        self.assertIsInstance(response.context['form'], PasswordResetForm)
         self.assertTemplateUsed(response, 'accounts/activateFailed.html')
 
     def testUserDoesNotExistCaught(self):
@@ -31,7 +31,7 @@ class AccountsPasswordResetViewTest(BaseTestViews):
 
         response = self.get(path=path)
         self.assertEqual(response.status_code, 200)
-        self.assertTrue(isinstance(response.context['form'], PasswordResetForm))
+        self.assertIsInstance(response.context['form'], PasswordResetForm)
         self.assertTemplateUsed(response, 'accounts/activateFailed.html')
 
     def testIncorrectToken(self):
@@ -42,7 +42,7 @@ class AccountsPasswordResetViewTest(BaseTestViews):
 
         response = self.get(path=path)
         self.assertEqual(response.status_code, 200)
-        self.assertTrue(isinstance(response.context['form'], PasswordResetForm))
+        self.assertIsInstance(response.context['form'], PasswordResetForm)
         self.assertTemplateUsed(response, 'accounts/activateFailed.html')
 
     def testGetRequestWhenEncodedIdAndTokenIsValid(self):

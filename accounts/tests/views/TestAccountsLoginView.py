@@ -19,7 +19,7 @@ class AccountsLoginViewTest(BaseTestViews):
         response = self.get()
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, 'accounts/login.html')
-        self.assertTrue(isinstance(response.context['form'], LoginForm))
+        self.assertIsInstance(response.context['form'], LoginForm)
 
     @patch('accounts.views.LoginForm.is_valid')
     def testLoginAuthenticateValidUser(self, mockLoginForm):

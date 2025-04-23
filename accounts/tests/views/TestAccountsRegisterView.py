@@ -19,7 +19,7 @@ class AccountsRegisterViewTest(BaseTestViews):
         response = self.get()
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, 'accounts/registration.html')
-        self.assertTrue(isinstance(response.context['form'], RegistrationForm))
+        self.assertIsInstance(response.context['form'], RegistrationForm)
 
     @patch('accounts.views.RegistrationForm.is_valid')
     @patch('accounts.views.RegistrationForm.save')
