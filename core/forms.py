@@ -157,7 +157,7 @@ class QuizForm(forms.Form):
 
     def __init__(self, request, *args, **kwargs):
         kwargs.setdefault('label_suffix', '')
-        super(QuizForm, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         self.request = request
 
     def clean_name(self):
@@ -419,7 +419,7 @@ class QuestionForm(forms.Form):
 
     def __init__(self, *args, **kwargs):
         kwargs.setdefault('label_suffix', '')
-        super(QuestionForm, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
 
     def clean(self):
         figure = self.cleaned_data.get('figure')
@@ -457,16 +457,19 @@ class EssayQuestionCreateForm(QuestionForm):
     def __init__(self, quiz, *args, **kwargs):
         kwargs.setdefault('label_suffix', '')
         self.quiz = quiz
-        super(EssayQuestionCreateForm, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
 
-    def clean(self):
-        self.cleaned_data = super().clean()
+    def clean_answer(self):
         answer = self.cleaned_data.get('answer')
 
         if not answer:
-            self.errors['answer'] = self.error_class([f'Answer cannot be left empty.'])
+            raise forms.ValidationError(f'Answer should not be empty.')
 
-        return self.cleaned_data
+        return answer
+
+    def clean(self):
+        return super().clean()
+
 
     def save(self):
         question = Question.objects.create(
@@ -508,7 +511,7 @@ class MultipleChoiceQuestionCreateForm(QuestionForm):
     def __init__(self, quiz, *args, **kwargs):
         kwargs.setdefault('label_suffix', '')
         self.quiz = quiz
-        super(MultipleChoiceQuestionCreateForm, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
 
     def clean(self):
         self.cleaned_data = super().clean()
@@ -601,7 +604,7 @@ class TrueOrFalseQuestionCreateForm(QuestionForm):
     def __init__(self, quiz, *args, **kwargs):
         kwargs.setdefault('label_suffix', '')
         self.quiz = quiz
-        super(TrueOrFalseQuestionCreateForm, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
 
     def clean(self):
         return super().clean()
@@ -633,7 +636,7 @@ class EssayQuestionUpdateForm(QuestionForm):
 
     def __init__(self, question=None, *args, **kwargs):
         kwargs.setdefault('label_suffix', '')
-        super(EssayQuestionUpdateForm, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         self.question = question
 
         if self.question is None or self.question.questionType != Question.Type.ESSAY:
@@ -645,14 +648,16 @@ class EssayQuestionUpdateForm(QuestionForm):
         self.initial['mark'] = self.question.mark
         self.initial['answer'] = self.question.answer
 
-    def clean(self):
-        self.cleaned_data = super().clean()
+    def clean_answer(self):
         answer = self.cleaned_data.get('answer')
 
         if not answer:
-            self.errors['answer'] = self.error_class([f'Answer cannot be left empty.'])
+            raise forms.ValidationError(f'Answer should not be empty.')
 
-        return self.cleaned_data
+        return answer
+
+    def clean(self):
+        return super().clean()
 
     def update(self):
         self.question.figure = self.cleaned_data.get('figure')
@@ -682,7 +687,7 @@ class TrueOrFalseQuestionUpdateForm(QuestionForm):
 
     def __init__(self, question=None, *args, **kwargs):
         kwargs.setdefault('label_suffix', '')
-        super(TrueOrFalseQuestionUpdateForm, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         self.question = question
 
         if self.question is None or self.question.questionType != Question.Type.TRUE_OR_FALSE:
@@ -710,12 +715,7 @@ class TrueOrFalseQuestionUpdateForm(QuestionForm):
 class MultipleChoiceQuestionUpdateForm(QuestionForm):
     choiceOrder = forms.MultipleChoiceField(
         label='Choice Order',
-        choices=[
-            (None, '-- Select a value --'),
-            (Question.ChoiceOrder.SEQUENTIAL, Question.ChoiceOrder.SEQUENTIAL.label),
-            (Question.ChoiceOrder.RANDOM, Question.ChoiceOrder.RANDOM.label),
-            (Question.ChoiceOrder.NONE, Question.ChoiceOrder.NONE.label),
-        ],
+        choices=[(None, '-- Select a value --')] + Question.ChoiceOrder.choices,
         widget=forms.Select(
             attrs={
                 'class': 'form-control',
@@ -726,11 +726,7 @@ class MultipleChoiceQuestionUpdateForm(QuestionForm):
     )
     choiceType = forms.MultipleChoiceField(
         label='Choice Type',
-        choices=[
-            (None, '-- Select a value --'),
-            (Question.ChoiceType.SINGLE, Question.ChoiceType.SINGLE.label),
-            (Question.ChoiceType.MULTIPLE, Question.ChoiceType.MULTIPLE.label),
-        ],
+        choices=[(None, '-- Select a value --')] + Question.ChoiceType.choices,
         widget=forms.Select(
             attrs={
                 'class': 'form-control',
@@ -742,7 +738,7 @@ class MultipleChoiceQuestionUpdateForm(QuestionForm):
 
     def __init__(self, question=None, *args, **kwargs):
         kwargs.setdefault('label_suffix', '')
-        super(MultipleChoiceQuestionUpdateForm, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         self.question = question
 
         if self.question is None or self.question.questionType != Question.Type.MULTIPLE_CHOICE:
@@ -835,7 +831,7 @@ class BaseResponseForm(forms.Form):
 
     def __init__(self, response, allowEdit=True, validateMark=False, *args, **kwargs):
         kwargs.setdefault('label_suffix', '')
-        super(BaseResponseForm, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         self.response = response
         self.allowEdit = allowEdit
         self.setInitialValues(response)
