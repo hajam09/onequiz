@@ -470,7 +470,6 @@ class EssayQuestionCreateForm(QuestionForm):
     def clean(self):
         return super().clean()
 
-
     def save(self):
         question = Question.objects.create(
             quiz=self.quiz,
@@ -485,7 +484,7 @@ class EssayQuestionCreateForm(QuestionForm):
 
 
 class MultipleChoiceQuestionCreateForm(QuestionForm):
-    choiceOrder = forms.MultipleChoiceField(
+    choiceOrder = forms.ChoiceField(
         label='Choice Order',
         choices=[(None, '-- Select a value --')] + Question.ChoiceOrder.choices,
         widget=forms.Select(
@@ -496,7 +495,7 @@ class MultipleChoiceQuestionCreateForm(QuestionForm):
             }
         ),
     )
-    choiceType = forms.MultipleChoiceField(
+    choiceType = forms.ChoiceField(
         label='Choice Type',
         choices=[(None, '-- Select a value --')] + Question.ChoiceType.choices,
         widget=forms.Select(
@@ -507,72 +506,44 @@ class MultipleChoiceQuestionCreateForm(QuestionForm):
             }
         ),
     )
+    choices = forms.JSONField(
+        required=False,
+        widget=forms.HiddenInput
+    )
 
     def __init__(self, quiz, *args, **kwargs):
         kwargs.setdefault('label_suffix', '')
         self.quiz = quiz
         super().__init__(*args, **kwargs)
 
+    def clean_choiceOrder(self):
+        choiceOrder = self.cleaned_data.get('choiceOrder')
+
+        if choiceOrder not in Question.ChoiceOrder.values:
+            raise forms.ValidationError(f'Select a choice order from the list provided.')
+
+        return choiceOrder
+
+    def clean_choiceType(self):
+        choiceType = self.cleaned_data.get('choiceType')
+
+        if choiceType not in Question.ChoiceType.values:
+            raise forms.ValidationError(f'Select a choice type from the list provided.')
+
+        return choiceType
+
+    def clean_choices(self):
+        choices = self.cleaned_data.get('choices')
+        for choice in choices:
+            if not choice.get('id'):
+                choice['id'] = uuid.uuid4().hex[:8]
+        self.initial['choices'] = choices
+        return choices
+
     def clean(self):
-        self.cleaned_data = super().clean()
-        choiceOrder = self.data.get('choiceOrder')
-        choiceType = self.data.get('choiceType')
-
-        del self.errors['choiceOrder']
-        del self.errors['choiceType']
-
-        if choiceOrder is None:
-            self.errors['choiceOrder'] = self.error_class(['Choice Order is empty.'])
-
-        if choiceType is None:
-            self.errors['choiceType'] = self.error_class(['Choice type is empty.'])
-
-        if self.data.get('choiceType') in [Question.ChoiceType.SINGLE, Question.ChoiceType.MULTIPLE]:
-            answerOptionsList = self.data.getlist('answerOptions')
-            isRadioOptionSelected = self.data.get('choiceType') == Question.ChoiceType.SINGLE
-
-            answerOptions = []
-            isAnswerOptionsValid = True
-
-            for index, enteredValue in enumerate(answerOptionsList, start=1):
-                isChecked = (
-                    self.data.get('answerChecked') == f'value-{index}'
-                    if isRadioOptionSelected
-                    else self.data.get(f'answerChecked-{index}') is not None
-                )
-
-                answerOptions.append((index, enteredValue, isChecked))
-                if not enteredValue:
-                    isAnswerOptionsValid = False
-
-            self.initial['initialAnswerOptions'] = answerOptions
-            if not isAnswerOptionsValid:
-                self.errors['initialAnswerOptions'] = self.error_class(
-                    ['One of your answer options is empty or invalid. Please try again.']
-                )
-        else:
-            self.errors['choiceType'] = self.error_class(
-                ['Invalid option selected. Please select Single or Multiple only.']
-            )
-
-        return self.cleaned_data
+        return super().clean()
 
     def save(self):
-        isRadioOptionSelected = self.data.get('choiceType') == Question.ChoiceType.SINGLE
-        answerOptionsList = self.data.getlist('answerOptions')
-        choices = [
-            {
-                'id': uuid.uuid4().hex[:8],
-                'content': content,
-                'isChecked': (
-                    self.data.get('answerChecked') == f'value-{i + 1}'
-                    if isRadioOptionSelected
-                    else self.data.get(f'answerChecked-{i + 1}') is not None
-                )
-            }
-            for i, content in enumerate(answerOptionsList)
-        ]
-
         question = Question.objects.create(
             quiz=self.quiz,
             figure=self.cleaned_data.get('figure'),
@@ -580,9 +551,9 @@ class MultipleChoiceQuestionCreateForm(QuestionForm):
             explanation=self.cleaned_data.get('explanation'),
             mark=self.cleaned_data.get('mark'),
             questionType=Question.Type.MULTIPLE_CHOICE,
-            choiceOrder=self.data.get('choiceOrder'),
-            choiceType=self.data.get('choiceType'),
-            choices={'choices': choices}
+            choiceOrder=self.cleaned_data.get('choiceOrder'),
+            choiceType=self.cleaned_data.get('choiceType'),
+            choices={'choices': self.cleaned_data.get('choices', [])}
         )
         return question
 
@@ -665,7 +636,6 @@ class EssayQuestionUpdateForm(QuestionForm):
         self.question.explanation = self.cleaned_data.get('explanation')
         self.question.mark = self.cleaned_data.get('mark')
         self.question.answer = self.cleaned_data.get('answer')
-
         self.question.save()
         return self.question
 
@@ -713,7 +683,7 @@ class TrueOrFalseQuestionUpdateForm(QuestionForm):
 
 
 class MultipleChoiceQuestionUpdateForm(QuestionForm):
-    choiceOrder = forms.MultipleChoiceField(
+    choiceOrder = forms.ChoiceField(
         label='Choice Order',
         choices=[(None, '-- Select a value --')] + Question.ChoiceOrder.choices,
         widget=forms.Select(
@@ -724,7 +694,7 @@ class MultipleChoiceQuestionUpdateForm(QuestionForm):
             }
         ),
     )
-    choiceType = forms.MultipleChoiceField(
+    choiceType = forms.ChoiceField(
         label='Choice Type',
         choices=[(None, '-- Select a value --')] + Question.ChoiceType.choices,
         widget=forms.Select(
@@ -735,6 +705,10 @@ class MultipleChoiceQuestionUpdateForm(QuestionForm):
             }
         ),
     )
+    choices = forms.JSONField(
+        required=True,
+        widget=forms.HiddenInput
+    )
 
     def __init__(self, question=None, *args, **kwargs):
         kwargs.setdefault('label_suffix', '')
@@ -744,85 +718,49 @@ class MultipleChoiceQuestionUpdateForm(QuestionForm):
         if self.question is None or self.question.questionType != Question.Type.MULTIPLE_CHOICE:
             raise Exception('Question object is none, or is not compatible with MultipleChoiceQuestionUpdateForm.')
 
-        # orderNo, enteredAnswer, isChecked
-        ANSWER_OPTIONS = [
-            (i, x['content'], x['isChecked']) for i, x in enumerate(self.question.choices['choices'], 1)
-        ]
-
-        self.initial['initialAnswerOptions'] = ANSWER_OPTIONS
-
         self.initial['figure'] = self.question.figure
         self.initial['content'] = self.question.content
         self.initial['explanation'] = self.question.explanation
         self.initial['mark'] = self.question.mark
         self.initial['choiceOrder'] = self.question.choiceOrder
         self.initial['choiceType'] = self.question.choiceType
+        self.initial['choices'] = self.question.choices.get('choices')
+
+    def clean_choiceOrder(self):
+        choiceOrder = self.cleaned_data.get('choiceOrder')
+
+        if choiceOrder not in Question.ChoiceOrder.values:
+            raise forms.ValidationError(f'Select a choice order from the list provided.')
+
+        return choiceOrder
+
+    def clean_choiceType(self):
+        choiceType = self.cleaned_data.get('choiceType')
+
+        if choiceType not in Question.ChoiceType.values:
+            raise forms.ValidationError(f'Select a choice type from the list provided.')
+
+        return choiceType
+
+    def clean_choices(self):
+        choices = self.cleaned_data.get('choices')
+        for choice in choices:
+            if not choice.get('id'):
+                choice['id'] = uuid.uuid4().hex[:8]
+        self.initial['choices'] = choices
+        return choices
 
     def clean(self):
-        choiceOrder = self.data.get('choiceOrder')
-        choiceType = self.data.get('choiceType')
-
-        del self.errors['choiceOrder']
-        del self.errors['choiceType']
-
-        if choiceOrder is None:
-            self.errors['choiceOrder'] = self.error_class(['Choice Order is empty.'])
-
-        if choiceType is None:
-            self.errors['choiceType'] = self.error_class(['Choice type is empty.'])
-
-        if self.data.get('choiceType') in [Question.ChoiceType.SINGLE, Question.ChoiceType.MULTIPLE]:
-            answerOptionsList = self.data.getlist('answerOptions')
-            isRadioOptionSelected = self.data.get('choiceType') == Question.ChoiceType.SINGLE
-
-            answerOptions = []
-            isAnswerOptionsValid = True
-
-            for index, enteredValue in enumerate(answerOptionsList, start=1):
-                isChecked = (
-                    self.data.get('answerChecked') == f'value-{index}'
-                    if isRadioOptionSelected
-                    else self.data.get(f'answerChecked-{index}') is not None
-                )
-
-                answerOptions.append((index, enteredValue, isChecked))
-                if not enteredValue:
-                    isAnswerOptionsValid = False
-
-            self.initial['initialAnswerOptions'] = answerOptions
-            if not isAnswerOptionsValid:
-                self.errors['initialAnswerOptions'] = self.error_class(
-                    ['One of your answer options is empty or invalid. Please try again.']
-                )
-        else:
-            self.errors['choiceType'] = self.error_class(
-                ['Invalid option selected. Please select Single or Multiple only.']
-            )
-        return self.cleaned_data
+        return super().clean()
 
     def update(self):
         self.question.figure = self.cleaned_data.get('figure')
         self.question.content = self.cleaned_data.get('content')
         self.question.explanation = self.cleaned_data.get('explanation')
         self.question.mark = self.cleaned_data.get('mark')
-        self.question.choiceOrder = self.data.get('choiceOrder')
-        self.question.choiceType = self.data.get('choiceType')
-
-        isRadioOptionSelected = self.data.get('choiceType') == Question.ChoiceType.SINGLE
-        answerOptionsList = self.data.getlist('answerOptions')
-        choices = [
-            {
-                'id': uuid.uuid4().hex[:8],
-                'content': content,
-                'isChecked': (
-                    self.data.get('answerChecked') == f'value-{i + 1}'
-                    if isRadioOptionSelected
-                    else self.data.get(f'answerChecked-{i + 1}') is not None
-                )
-            }
-            for i, content in enumerate(answerOptionsList)
-        ]
-        self.question.choices = {'choices': choices}
+        self.question.choiceOrder = self.cleaned_data.get('choiceOrder')
+        self.question.choiceType = self.cleaned_data.get('choiceType')
+        self.question.choices = {'choices': self.cleaned_data.get('choices', [])}
         self.question.save()
         return self.question
 

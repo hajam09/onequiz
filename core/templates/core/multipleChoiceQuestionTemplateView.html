@@ -3,7 +3,7 @@
 {% load templateTags %}
 {% block content %}
     <div class='container mt-5' id='idCardWideComponent'>
-        <form method='post' enctype='multipart/form-data'>
+        <form method="post" enctype='multipart/form-data' onsubmit='return updateChoicesBeforeSubmit();'>
             {% csrf_token %}
             <legend>
                 <h2 class='heading-h2'>{{ formTitle }}</h2>
@@ -18,7 +18,6 @@
             {% endfor %}
 
             <div id='choice-selection-component'></div>
-            <div id='fieldErrorList' hidden></div>
 
             <div class='row'>
                 <div class='col'>
@@ -36,6 +35,26 @@
     <div class='mt-5'></div>
     <script type='text/babel'>
 
+        function updateChoicesBeforeSubmit() {
+            const choiceElements = document.querySelectorAll('#choice-selection-component input[type="radio"], #choice-selection-component input[type="checkbox"]');
+            const contentElements = document.querySelectorAll('#choice-selection-component input[type="text"]');
+            const updatedChoices = [];
+
+            choiceElements.forEach((input, index) => {
+                const contentInput = contentElements[index];
+                const isChecked = input.checked;
+                updatedChoices.push({
+                    id: input.getAttribute('identifier') !== 'undefined' ? input.getAttribute('identifier') : null,
+                    content: contentInput.value.trim(),
+                    isChecked: isChecked
+                });
+            });
+
+            const hiddenChoicesInput = document.getElementById('id_choices');
+            hiddenChoicesInput.value = JSON.stringify(updatedChoices);
+            return true;
+        }
+
         window.addEventListener('load', function () {
             if ($('#id_choiceOrder').has('option').length === 0 || $('#id_choiceType').has('option').length === 0) {
                 location.reload();
@@ -43,7 +62,7 @@
 
             const id_choiceType = document.getElementById('id_choiceType');
             renderChoicesComponent(id_choiceType.value);
-        })
+        });
 
         document.getElementById('id_choiceType').addEventListener('change', (event) => {
             renderChoicesComponent(event.target.value);
@@ -52,25 +71,25 @@
         function renderChoicesComponent(value) {
             if (value === 'SINGLE') {
                 ReactDOM.render(
-                    <SingleAnswerSelectionComponent/>, document.getElementById('choice-selection-component')
+                    <SingleAnswerSelectionComponent/>,
+                    document.getElementById('choice-selection-component')
                 );
             } else if (value === 'MULTIPLE') {
                 ReactDOM.render(
-                    <MultipleAnswerSelectionComponent/>, document.getElementById('choice-selection-component')
+                    <MultipleAnswerSelectionComponent/>,
+                    document.getElementById('choice-selection-component')
                 );
             } else {
                 ReactDOM.render(
-                    null, document.getElementById('choice-selection-component')
+                    null,
+                    document.getElementById('choice-selection-component')
                 );
             }
         }
 
         class BaseInputComponent extends React.Component {
-            // answerOptions -> choice
-            // enteredAnswer -> choiceValue
-            // answerChecked -> cb_Choice / rb_Choice
             render() {
-                const {counter, isChecked, enteredAnswer} = this.props;
+                const {counter, isChecked, content} = this.props;
                 const style1 = {paddingLeft: '0px'};
                 const inputSize = {height: '34px', width: '34px'};
 
@@ -86,6 +105,7 @@
                                     defaultChecked={isChecked}
                                     required={this.getInputType() === 'radio'}
                                     value={this.getValue()}
+                                    identifier={this.getIdentifier()}
                                 />
                                 <div className='mt-2'></div>
                             </div>
@@ -94,8 +114,7 @@
                             <input
                                 type='text'
                                 className='form-control col'
-                                name='answerOptions'
-                                defaultValue={enteredAnswer}
+                                defaultValue={content}
                                 required={true} pattern='.*\S+.*'
                             />
                         </div>
@@ -104,15 +123,19 @@
             }
 
             getInputType() {
-                throw new Error('NotImplementedException')
+                throw new Error('NotImplementedException');
             }
 
             getInputName() {
-                throw new Error('NotImplementedException')
+                throw new Error('NotImplementedException');
             }
 
             getValue() {
-                throw new Error('NotImplementedException')
+                throw new Error('NotImplementedException');
+            }
+
+            getIdentifier() {
+                throw new Error('NotImplementedException');
             }
         }
 
@@ -122,11 +145,15 @@
             }
 
             getInputName() {
-                return `answerChecked-${this.props.counter}`;
+                return `${this.props.identifier}`;
             }
 
             getValue() {
-                return `value-${this.props.counter}`;
+                return `checkbox`;
+            }
+
+            getIdentifier() {
+                return `${this.props.identifier}`;
             }
         }
 
@@ -136,41 +163,48 @@
             }
 
             getInputName() {
-                return 'answerChecked';
+                return `radio`;
             }
 
             getValue() {
-                return `value-${this.props.counter}`;
+                return `${this.props.content}`;
+            }
+
+            getIdentifier() {
+                return `${this.props.identifier}`;
             }
         }
-
-        //
 
         class BaseChoiceComponent extends React.Component {
             constructor(props) {
                 super(props);
+                const initialOptionsValues = this.getInitialChoices();
+
                 let choices = [];
-                const initialOptionsValues = getInitialAnswersAndChecked();
-
                 const id_choiceType = document.getElementById('id_choiceType');
-                const value = id_choiceType.value;
 
-                if (value === 'SINGLE') {
+                if (id_choiceType.value === 'SINGLE') {
                     for (const item of initialOptionsValues) {
                         choices.push(
-                            <RadioComponent key={item.identifier}
-                                            counter={choices.length + 1}
-                                            enteredAnswer={item.enteredAnswer}
-                                            isChecked={item.isChecked}/>
+                            <RadioComponent
+                                key={item.identifier}
+                                identifier={item.identifier}
+                                counter={choices.length + 1}
+                                content={item.content}
+                                isChecked={item.isChecked}
+                            />
                         );
                     }
-                } else if (value === 'MULTIPLE') {
+                } else if (id_choiceType.value === 'MULTIPLE') {
                     for (const item of initialOptionsValues) {
                         choices.push(
-                            <CheckboxComponent key={item.identifier}
-                                               counter={choices.length + 1}
-                                               enteredAnswer={item.enteredAnswer}
-                                               isChecked={item.isChecked}/>
+                            <CheckboxComponent
+                                key={item.identifier}
+                                identifier={item.identifier}
+                                counter={choices.length + 1}
+                                content={item.content}
+                                isChecked={item.isChecked}
+                            />
                         );
                     }
                 }
@@ -181,10 +215,29 @@
                 };
             }
 
-            componentDidMount = () => {
-                while (this.state.choices.length < 2) {
-                    this.addChoice();
+            getInitialChoices() {
+                let initialChoices = [];
+                {% for item in form.initial.choices %}
+                    initialChoices.push({
+                        identifier: '{{ item.id }}',
+                        content: '{{ item.content }}',
+                        isChecked: '{{ item.isChecked }}' === 'True',
+                    });
+                {% endfor %}
+                return initialChoices;
+            }
+
+            componentDidMount() {
+                // Ensure there are at least 2 choices after mount
+                this.addChoicesIfNeeded();
+            }
+
+            addChoicesIfNeeded() {
+                let choices = [...this.state.choices];
+                while (choices.length < 2) {
+                    choices.push(this.createChoiceComponent(choices.length + 1));
                 }
+                this.setState({choices, showRemoveButton: choices.length > 2});
             }
 
             updateListState = (newChoices) => {
@@ -195,15 +248,12 @@
             }
 
             addChoice = () => {
-                let tempList = this.state.choices;
-                tempList.push(this.createChoiceComponent(tempList.length + 1));
-                this.updateListState(tempList);
+                this.updateListState([...this.state.choices, this.createChoiceComponent(this.state.choices.length + 1)]);
             }
 
             removeChoice = () => {
-                let tempList = this.state.choices;
-                tempList.pop();
-                this.updateListState(tempList);
+                const newChoices = this.state.choices.slice(0, -1);  // Removing last choice
+                this.updateListState(newChoices);
             }
 
             // This will be overridden by derived components to specify which component to add
@@ -237,7 +287,7 @@
                     <RadioComponent
                         key={counter}
                         counter={counter}
-                        enteredAnswer={''}
+                        content={''}
                         isChecked={false}
                     />
                 );
@@ -250,225 +300,14 @@
                     <CheckboxComponent
                         key={counter}
                         counter={counter}
-                        enteredAnswer={''}
+                        content={''}
                         isChecked={false}
                     />
                 );
             }
         }
-
-        //////////////////////////////////////////////////////////////
-
-        class BaseChoiceComponent1 extends React.Component {
-            constructor(props) {
-                super(props);
-                const choices = [];
-                this.state = {
-                    choices: choices,
-                    showRemoveButton: choices.length > 2,
-                }
-            }
-
-            updateListState(list) {
-                this.setState({
-                    choices: list,
-                    showRemoveButton: list.length > 2,
-                })
-            }
-
-            componentDidMount = () => {
-                while (this.state.choices.length < 2) {
-                    this.addChoice();
-                }
-            }
-
-            addChoice = () => {
-            }
-
-            removeChoice = () => {
-            }
-
-
-            render() {
-                const style1 = {marginRight: '5px'};
-                return (
-                    <div>
-                        <span className='form-label'>Enter answers in each field and select the correct answers.</span>
-                        {
-                            this.state.choices.map((component) => component)
-                        }
-                        <button type='button' className='btn btn-outline-primary btn-sm float-right'
-                                onClick={this.addChoice}>Add
-                        </button>
-                        {
-                            this.state.showRemoveButton ?
-                                <button type='button' className='btn btn-outline-danger btn-sm float-right'
-                                        style={style1}
-                                        onClick={this.removeChoice}>Remove</button> : <span></span>
-                        }
-                        <br></br>
-                        <br></br>
-                    </div>
-                )
-            }
-        }
-
-        class SingleAnswerSelectionComponent1 extends BaseChoiceComponent {
-            constructor(props) {
-                super(props);
-            }
-
-            addChoice = () => {
-                let tempList = this.state.choices;
-                tempList.push(<RadioComponent key={tempList.length + 1} counter={tempList.length + 1}
-                                              enteredAnswer={''} isChecked={false}/>);
-                this.updateListState(tempList);
-            }
-
-            removeChoice = () => {
-                let tempList = this.state.choices;
-                tempList.pop();
-                this.updateListState(tempList);
-            }
-
-            render() {
-                return (
-                    super.render()
-                )
-            }
-        }
-
-        class MultipleAnswerSelectionComponent1 extends BaseChoiceComponent {
-            constructor(props) {
-                super(props);
-            }
-
-            addChoice = () => {
-                let tempList = this.state.choices;
-                tempList.push(<CheckboxComponent key={tempList.length + 1} counter={tempList.length + 1}
-                                                 enteredAnswer={''} isChecked={false}/>);
-                this.updateListState(tempList);
-            }
-
-            removeChoice = () => {
-                let tempList = this.state.choices;
-                tempList.pop();
-                this.updateListState(tempList);
-            }
-
-            render() {
-                return (
-                    super.render()
-                )
-            }
-        }
-
-
-        function showAnswerListError() {
-            let fieldErrorListElement = $('#fieldErrorList');
-            fieldErrorListElement.append('{{ form.errors }}');
-
-            if (fieldErrorListElement.children().length === 0)
-                return;
-
-            let asElement = document.getElementById('fieldErrorList').firstElementChild.innerHTML;
-            fieldErrorListElement.empty();
-            fieldErrorListElement.append(asElement);
-
-            $('#fieldErrorList').children('li').each(function () {
-
-                if (this.innerText.includes('initialAnswerOptions')) {
-                    let answerError = this.innerText.split('initialAnswerOptions')[1];
-
-                    $('#answerOptionErrorMessage').html(
-                        `<p class='text-center' style='color: red;'><small>${answerError}</small></p>`
-                    )
-                }
-            });
-        }
-
-        function getInitialAnswersAndChecked() {
-            let initialAnswerOptions = []
-            {% for item in form.initial.initialAnswerOptions %}
-                initialAnswerOptions.push({
-                    orderNo: '{{ item.0 }}',
-                    enteredAnswer: '{{ item.1 }}',
-                    isChecked: '{{ item.2 }}' === 'True',
-                });
-            {% endfor %}
-            return initialAnswerOptions;
-        }
-
-        class AnswerChoiceComponent extends React.Component {
-            constructor(props) {
-                super(props);
-                let initialAnswerAndCheckBox = getInitialAnswersAndChecked();
-                let choiceComponentListTemp = [];
-                for (const item of initialAnswerAndCheckBox) {
-                    choiceComponentListTemp.push(<ChoiceComponent key={item.orderNo}
-                                                                  counter={item.orderNo}
-                                                                  enteredAnswer={item.enteredAnswer}
-                                                                  isChecked={item.isChecked}/>);
-                }
-                this.state = {
-                    choiceComponentList: choiceComponentListTemp,
-                    showRemoveButton: initialAnswerAndCheckBox.length > 2,
-                }
-            }
-
-            updateListState(list) {
-                this.setState({
-                    choiceComponentList: list,
-                    showRemoveButton: list.length > 2,
-                })
-            }
-
-            componentDidMount = () => {
-                showAnswerListError();
-            }
-
-
-            increaseRow = () => {
-                let tempList = this.state.choiceComponentList;
-                tempList.push(<ChoiceComponent key={tempList.length + 1} counter={tempList.length + 1}
-                                               enteredAnswer={''} isChecked={false}/>);
-                this.updateListState(tempList);
-            }
-
-            decreaseRow = () => {
-                let tempList = this.state.choiceComponentList;
-                tempList.pop();
-                this.updateListState(tempList);
-            }
-
-            render() {
-                const style1 = {marginRight: '5px'}
-                return (
-                    <div>
-                        <span className='form-label'>Enter answers in each field and select the correct answers.</span>
-                        {
-                            this.state.choiceComponentList.map((component) => component)
-                        }
-                        <br></br>
-                        <button type='button' className='btn btn-outline-primary btn-sm float-right'
-                                onClick={this.increaseRow}>Add
-                        </button>
-                        {
-                            this.state.showRemoveButton ?
-                                <button type='button' className='btn btn-outline-danger btn-sm float-right'
-                                        style={style1}
-                                        onClick={this.decreaseRow}>Remove</button> : <span></span>
-                        }
-                        <div id='answerOptionErrorMessage'></div>
-                        <br></br>
-                        <br></br>
-                    </div>
-                )
-            }
-        }
-
-
     </script>
+
     <script src='https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js'
             integrity='sha512-8Q6Y9XnTbOE+JNvjBQwJ2H8S+UV4uA6hiRykhdtIyDYZ2TprdNmWOUaKdGzOhyr4dCyk287OejbPvwl7lrfqrQ=='
             crossorigin='anonymous' referrerpolicy='no-referrer'></script>

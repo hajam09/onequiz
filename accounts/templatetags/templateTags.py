@@ -4,6 +4,7 @@ from django.forms.widgets import (
     CheckboxInput,
     CheckboxSelectMultiple,
     ClearableFileInput,
+    HiddenInput,
     NumberInput,
     RadioSelect,
     Select,
@@ -191,6 +192,9 @@ def renderFormFields(field):
                     <input type="text" class="form-control col" disabled="" value="{widget.data.get('label')}">
                 </div>
             </div>'''
+    elif isinstance(field.field.widget, HiddenInput):
+        label = ''
+        body = str(field)
     else:
         raise Exception(f'Unsupported field type: {field.field.widget.__class__}')
     return mark_safe(label + body)
