@@ -1,6 +1,10 @@
 import copy
 import datetime
-import uuid
+import random
+from string import (
+    ascii_letters,
+    digits
+)
 
 from django.contrib.auth.models import User
 from django.core.validators import MinValueValidator, MaxValueValidator
@@ -13,7 +17,7 @@ PERCENTAGE_VALIDATOR = [MinValueValidator(0), MaxValueValidator(100)]
 
 
 def generateModelUrl():
-    return f'{uuid.uuid4().hex[:8]}'
+    return ''.join(random.choice(ascii_letters + digits) for _ in range(8))
 
 
 class BaseModel(models.Model):

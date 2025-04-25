@@ -1,5 +1,10 @@
 import operator
+import random
 from functools import reduce
+from string import (
+    ascii_letters,
+    digits
+)
 
 from django.db.models import (
     F,
@@ -34,6 +39,10 @@ def isPasswordStrong(password):
         return False
 
     return True
+
+
+def generateRandomString(length):
+    return ''.join(random.choice(ascii_letters + digits) for _ in range(length))
 
 
 def performComplexQuizSearch(query, filterList=None):

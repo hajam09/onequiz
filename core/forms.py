@@ -1,13 +1,7 @@
-import random
-import uuid
-from string import (
-    ascii_uppercase,
-    digits
-)
-
 from django import forms
 
 from core.models import Quiz, Question
+from onequiz.operations import generalOperations
 
 
 class QuizForm(forms.Form):
@@ -172,7 +166,7 @@ class QuizForm(forms.Form):
         description = self.cleaned_data.get('description')
 
         if not description:
-            raise forms.ValidationError(f'Description should not be empty.')
+            raise forms.ValidationError('Description should not be empty.')
 
         return description
 
@@ -180,7 +174,7 @@ class QuizForm(forms.Form):
         subject = self.cleaned_data.get('subject')
 
         if subject not in Quiz.Subject.values:
-            raise forms.ValidationError(f'Select a subject from the list provided.')
+            raise forms.ValidationError('Select a subject from the list provided.')
 
         return subject
 
@@ -188,7 +182,7 @@ class QuizForm(forms.Form):
         topic = self.cleaned_data.get('topic')
 
         if not topic:
-            raise forms.ValidationError(f'Topic should not be empty.')
+            raise forms.ValidationError('Topic should not be empty.')
 
         return topic
 
@@ -196,7 +190,7 @@ class QuizForm(forms.Form):
         quizDuration = int(self.cleaned_data.get('quizDuration'))
 
         if quizDuration < 0:
-            raise forms.ValidationError(f'Quiz Durations should be greater than 0.')
+            raise forms.ValidationError('Quiz Durations should be greater than 0.')
 
         return quizDuration
 
@@ -204,7 +198,7 @@ class QuizForm(forms.Form):
         maxAttempt = int(self.cleaned_data.get('maxAttempt', 1))
 
         if maxAttempt < 0:
-            raise forms.ValidationError(f'Quiz Max Attempt should be greater than 0.')
+            raise forms.ValidationError('Quiz Max Attempt should be greater than 0.')
 
         return maxAttempt
 
@@ -212,7 +206,7 @@ class QuizForm(forms.Form):
         difficulty = self.cleaned_data.get('difficulty')
 
         if difficulty not in Quiz.Difficulty.values:
-            raise forms.ValidationError(f'Select a difficulty from the list provided.')
+            raise forms.ValidationError('Select a difficulty from the list provided.')
 
         return difficulty
 
@@ -220,7 +214,7 @@ class QuizForm(forms.Form):
         passMark = self.cleaned_data.get('passMark')
 
         if passMark < 0 or passMark > 100:
-            raise forms.ValidationError(f'Pass mark should be between 0 and 100.')
+            raise forms.ValidationError('Pass mark should be between 0 and 100.')
 
         return passMark
 
@@ -228,7 +222,7 @@ class QuizForm(forms.Form):
         successText = self.cleaned_data.get('successText')
 
         if not successText:
-            raise forms.ValidationError(f'Text to display when passed should not be empty.')
+            raise forms.ValidationError('Text to display when passed should not be empty.')
 
         return successText
 
@@ -236,7 +230,7 @@ class QuizForm(forms.Form):
         failText = self.cleaned_data.get('failText')
 
         if not failText:
-            raise forms.ValidationError(f'Text to display when failed should not be empty.')
+            raise forms.ValidationError('Text to display when failed should not be empty.')
 
         return failText
 
@@ -427,11 +421,11 @@ class QuestionForm(forms.Form):
         mark = self.cleaned_data.get('mark')
 
         if not figure and not content:
-            self.errors['figure'] = self.error_class([f'Cannot leave both figure and content empty.'])
-            self.errors['content'] = self.error_class([f'Cannot leave both figure and content empty.'])
+            self.errors['figure'] = self.error_class(['Cannot leave both figure and content empty.'])
+            self.errors['content'] = self.error_class(['Cannot leave both figure and content empty.'])
 
         if mark < 0:
-            self.errors['mark'] = self.error_class([f'Mark cannot be a negative number.'])
+            self.errors['mark'] = self.error_class(['Mark cannot be a negative number.'])
 
         return self.cleaned_data
 
@@ -463,7 +457,7 @@ class EssayQuestionCreateForm(QuestionForm):
         answer = self.cleaned_data.get('answer')
 
         if not answer:
-            raise forms.ValidationError(f'Answer should not be empty.')
+            raise forms.ValidationError('Answer should not be empty.')
 
         return answer
 
@@ -520,7 +514,7 @@ class MultipleChoiceQuestionCreateForm(QuestionForm):
         choiceOrder = self.cleaned_data.get('choiceOrder')
 
         if choiceOrder not in Question.ChoiceOrder.values:
-            raise forms.ValidationError(f'Select a choice order from the list provided.')
+            raise forms.ValidationError('Select a choice order from the list provided.')
 
         return choiceOrder
 
@@ -528,7 +522,7 @@ class MultipleChoiceQuestionCreateForm(QuestionForm):
         choiceType = self.cleaned_data.get('choiceType')
 
         if choiceType not in Question.ChoiceType.values:
-            raise forms.ValidationError(f'Select a choice type from the list provided.')
+            raise forms.ValidationError('Select a choice type from the list provided.')
 
         return choiceType
 
@@ -536,7 +530,7 @@ class MultipleChoiceQuestionCreateForm(QuestionForm):
         choices = self.cleaned_data.get('choices')
         for choice in choices:
             if not choice.get('id'):
-                choice['id'] = uuid.uuid4().hex[:8]
+                choice['id'] = generalOperations.generateRandomString(8)
         self.initial['choices'] = choices
         return choices
 
@@ -623,7 +617,7 @@ class EssayQuestionUpdateForm(QuestionForm):
         answer = self.cleaned_data.get('answer')
 
         if not answer:
-            raise forms.ValidationError(f'Answer should not be empty.')
+            raise forms.ValidationError('Answer should not be empty.')
 
         return answer
 
@@ -730,7 +724,7 @@ class MultipleChoiceQuestionUpdateForm(QuestionForm):
         choiceOrder = self.cleaned_data.get('choiceOrder')
 
         if choiceOrder not in Question.ChoiceOrder.values:
-            raise forms.ValidationError(f'Select a choice order from the list provided.')
+            raise forms.ValidationError('Select a choice order from the list provided.')
 
         return choiceOrder
 
@@ -738,7 +732,7 @@ class MultipleChoiceQuestionUpdateForm(QuestionForm):
         choiceType = self.cleaned_data.get('choiceType')
 
         if choiceType not in Question.ChoiceType.values:
-            raise forms.ValidationError(f'Select a choice type from the list provided.')
+            raise forms.ValidationError('Select a choice type from the list provided.')
 
         return choiceType
 
@@ -746,7 +740,7 @@ class MultipleChoiceQuestionUpdateForm(QuestionForm):
         choices = self.cleaned_data.get('choices')
         for choice in choices:
             if not choice.get('id'):
-                choice['id'] = uuid.uuid4().hex[:8]
+                choice['id'] = generalOperations.generateRandomString(8)
         self.initial['choices'] = choices
         return choices
 
@@ -773,8 +767,9 @@ class BaseResponseForm(forms.Form):
         self.response = response
         self.allowEdit = allowEdit
         self.setInitialValues(response)
-        self.showSystemAnswerWhileMarking(response)
+
         if not self.allowEdit:
+            self.showSystemAnswerWhileMarking(response)
             self.disableFields()
 
         if validateMark:
@@ -813,19 +808,18 @@ class EssayQuestionResponseForm(BaseResponseForm):
         self.fields['answer'].initial = response.answer
 
     def showSystemAnswerWhileMarking(self, response):
-        if not self.allowEdit:
-            self.fields['systemAnswer'] = forms.CharField(
-                label='<h5>System Answer</h5>',
-                initial=response.question.answer,
-                required=False,
-                widget=forms.Textarea(
-                    attrs={
-                        'class': 'form-control col',
-                        'style': 'border-radius: 0',
-                        'rows': 5,
-                    }
-                )
+        self.fields['systemAnswer'] = forms.CharField(
+            label='<h5>System Answer</h5>',
+            initial=response.question.answer,
+            required=False,
+            widget=forms.Textarea(
+                attrs={
+                    'class': 'form-control col',
+                    'style': 'border-radius: 0',
+                    'rows': 5,
+                }
             )
+        )
 
 
 class TrueOrFalseQuestionResponseForm(BaseResponseForm):
@@ -843,26 +837,25 @@ class TrueOrFalseQuestionResponseForm(BaseResponseForm):
             )
         )
         if not self.allowEdit:
-            randomString = ''.join(random.choice(ascii_uppercase + digits) for _ in range(3))
+            randomString = generalOperations.generateRandomString(3)
             self.fields[f'trueOrFalse_{randomString}'] = field
         else:
             self.fields['trueOrFalse'] = field
 
     def showSystemAnswerWhileMarking(self, response):
-        if not self.allowEdit:
-            randomString = ''.join(random.choice(ascii_uppercase + digits) for _ in range(3))
-            self.fields[f'systemAnswer_{randomString}'] = forms.ChoiceField(
-                label='System Answer',
-                required=False,
-                choices=Question.TrueOrFalse.choices,
-                initial=response.question.trueOrFalse,
-                widget=forms.RadioSelect(
-                    attrs={
-                        'class': 'form-check-input',
-                        'style': 'height: 34px; width: 34px',
-                    }
-                )
+        randomString = generalOperations.generateRandomString(3)
+        self.fields[f'systemAnswer_{randomString}'] = forms.ChoiceField(
+            label='System Answer',
+            required=False,
+            choices=Question.TrueOrFalse.choices,
+            initial=response.question.trueOrFalse,
+            widget=forms.RadioSelect(
+                attrs={
+                    'class': 'form-check-input',
+                    'style': 'height: 34px; width: 34px',
+                }
             )
+        )
 
 
 class MultipleChoiceQuestionResponseForm(BaseResponseForm):
@@ -871,8 +864,7 @@ class MultipleChoiceQuestionResponseForm(BaseResponseForm):
 
         if response.question.choiceType == Question.ChoiceType.SINGLE:
             widget = forms.RadioSelect(attrs=style)
-            randomString = ''.join(random.choice(ascii_uppercase + digits) for _ in range(3))
-            fieldName = f'options_{randomString}'
+            fieldName = f'options_{generalOperations.generateRandomString(3)}'
         else:
             widget = forms.CheckboxSelectMultiple(attrs=style)
             fieldName = 'options'
@@ -885,15 +877,14 @@ class MultipleChoiceQuestionResponseForm(BaseResponseForm):
         )
 
     def showSystemAnswerWhileMarking(self, response):
-        if not self.allowEdit:
-            style = {'style': 'height: 34px; width:34px'}
-            if response.question.choiceType == Question.ChoiceType.SINGLE:
-                widget = forms.RadioSelect(attrs=style)
-            else:
-                widget = forms.CheckboxSelectMultiple(attrs=style)
-            self.fields['systemAnswer'] = forms.MultipleChoiceField(
-                label='System Answer',
-                choices=[(choice['id'], choice['content']) for choice in response.question.choices.get('choices')],
-                initial=[choice['id'] for choice in response.question.choices.get('choices') if choice['isChecked']],
-                widget=widget
-            )
+        style = {'style': 'height: 34px; width:34px'}
+        if response.question.choiceType == Question.ChoiceType.SINGLE:
+            widget = forms.RadioSelect(attrs=style)
+        else:
+            widget = forms.CheckboxSelectMultiple(attrs=style)
+        self.fields[f'systemAnswer_{generalOperations.generateRandomString(3)}'] = forms.MultipleChoiceField(
+            label='System Answer',
+            choices=[(choice['id'], choice['content']) for choice in response.question.choices.get('choices')],
+            initial=[choice['id'] for choice in response.question.choices.get('choices') if choice['isChecked']],
+            widget=widget
+        )
