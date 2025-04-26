@@ -1,65 +1,78 @@
-{% extends "accounts/base.html" %}
+{% extends 'accounts/base.html' %}
 {% load static %}
 {% block content %}
     <br>
-    <div class="container">
+    <div class='container'>
         {% if quiz.creator_id == user.id %}
-            <div class="row">
-                <div class="col">
-                    <a type="button" class="btn btn-outline-dark btn-sm btn-block"
-                       href="{% url 'core:quiz-update-view' url=quiz.url %}">Quiz Detail</a>
+            <div class='row'>
+                <div class='col'>
+                    <a type='button' class='btn btn-outline-dark btn-sm btn-block'
+                       href='{% url 'core:quiz-update-view' url=quiz.url %}'>Quiz Detail</a>
                 </div>
-                <div class="col">
-                    <a type="button" class="btn btn-outline-dark btn-sm btn-block"
-                       href="{% url 'core:quiz-attempts-for-quiz-view' url=quiz.url %}">Quiz Attempts</a>
+                <div class='col'>
+                    <a type='button' class='btn btn-outline-dark btn-sm btn-block'
+                       href='{% url 'core:quiz-attempts-for-quiz-view' url=quiz.url %}'>Quiz Attempts</a>
                 </div>
             </div>
         {% endif %}
         <br>
-        <div id="idCardWideComponent">
-            <div class="table-responsive-xl table-sm">
-                <table class="table">
-                    <thead class="thead-dark">
+        <div id='idCardWideComponent'>
+            <div class='table-responsive-xl table-sm'>
+                <table class='table'>
+                    <thead class='thead-dark'>
                     <tr>
-                        <th scope="col">Attempted by</th>
-                        <th scope="col">Date and Time</th>
-                        <th scope="col">Status</th>
-                        <th scope="col">Actions</th>
+                        <th scope='col'>Attempted by</th>
+                        <th scope='col'>Date and Time</th>
+                        <th scope='col'>Status</th>
+                        <th scope='col'>Score (if marked)</th>
+                        <th scope='col'>Actions</th>
                     </tr>
                     </thead>
                     <tbody>
                     {% for quizAttempt in quizAttemptList %}
                         <tr>
-                            <th scope="row">{{ quizAttempt.user.get_full_name }}</th>
+                            <th scope='row'>{{ quizAttempt.user.get_full_name }}</th>
                             <td>{{ quizAttempt.createdDttm }}</td>
                             <td>{{ quizAttempt.get_status_display }}</td>
                             <td>
+                                {% if quizAttempt.status == 'MARKED' and quizAttempt.quizAttemptResults %}
+                                    {% with result=quizAttempt.quizAttemptResults.last %}
+                                        {{ result.score }}% /
+                                        {% if result.score >= quizAttempt.quiz.passMark %}
+                                            <span class='badge badge-success'>PASS</span>
+                                        {% else %}
+                                            <span class='badge badge-danger'>FAIL</span>
+                                        {% endif %}
+                                    {% endwith %}
+                                {% endif %}
+                            </td>
+                            <td>
                                 {% if quizAttempt.status == 'MARKED' %}
-                                    <a type="button" href="{{ quizAttempt.getAttemptUrl }}"
-                                       class="btn btn-primary btn-sm"
-                                       data-toggle="tooltip" data-placement="top" title="View this attempt">
-                                        <i class="fa fa-eye"></i>
+                                    <a type='button' href='{{ quizAttempt.getAttemptUrl }}'
+                                       class='btn btn-primary btn-sm'
+                                       data-toggle='tooltip' data-placement='top' title='View this attempt'>
+                                        <i class='fa fa-eye'></i>
                                     </a>
-                                    <a type="button" href="{{ quizAttempt.getAttemptResultUrl }}"
-                                       class="btn btn-warning btn-sm"
-                                       data-toggle="tooltip" data-placement="top" title="View result">
-                                        <i class="fa fa-area-chart"></i>
+                                    <a type='button' href='{{ quizAttempt.getAttemptResultUrl }}'
+                                       class='btn btn-warning btn-sm'
+                                       data-toggle='tooltip' data-placement='top' title='View result'>
+                                        <i class='fa fa-area-chart'></i>
                                     </a>
                                 {% elif quizAttempt.status == 'SUBMITTED' %}
-                                    <a type="button" href="{{ quizAttempt.getAttemptUrl }}"
-                                       class="btn btn-warning btn-sm"
-                                       data-toggle="tooltip" data-placement="top" title="Mark this attempt">
-                                        <i class="fa fa-check"></i>
+                                    <a type='button' href='{{ quizAttempt.getAttemptUrl }}'
+                                       class='btn btn-warning btn-sm'
+                                       data-toggle='tooltip' data-placement='top' title='Mark this attempt'>
+                                        <i class='fa fa-check'></i>
                                     </a>
                                 {% endif %}
-                                <a type="button" class="btn btn-info btn-sm" data-toggle="tooltip" data-placement="top"
-                                   title="Flag this attempt">
-                                    <i class="far fa-flag"></i>
+                                <a type='button' class='btn btn-info btn-sm' data-toggle='tooltip' data-placement='top'
+                                   title='Flag this attempt'>
+                                    <i class='far fa-flag'></i>
                                 </a>
-                                <a type="button" class="btn btn-danger btn-sm" data-toggle="tooltip"
-                                   data-placement="top"
-                                   title="Delete this attempt">
-                                    <i class="fas fa-trash"></i>
+                                <a type='button' class='btn btn-danger btn-sm' data-toggle='tooltip'
+                                   data-placement='top'
+                                   title='Delete this attempt'>
+                                    <i class='fas fa-trash'></i>
                                 </a>
                             </td>
                         </tr>

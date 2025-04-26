@@ -1,6 +1,7 @@
 import copy
 import datetime
 import random
+import uuid
 from string import (
     ascii_letters,
     digits
@@ -17,7 +18,7 @@ PERCENTAGE_VALIDATOR = [MinValueValidator(0), MaxValueValidator(100)]
 
 
 def generateModelUrl():
-    return ''.join(random.choice(ascii_letters + digits) for _ in range(8))
+    return uuid.uuid4().hex[:8]
 
 
 class BaseModel(models.Model):
@@ -98,7 +99,7 @@ class Quiz(BaseModel):
         ]
 
     def __str__(self):
-        return f'{self.id} - {self.name}'
+        return f'{self.id} - {self.name} - {self.url}'
 
     def getQuestions(self, shuffleQuestions=False):
         questionList = self.questions.all()
@@ -157,6 +158,9 @@ class Question(BaseModel):
         verbose_name = 'Question'
         verbose_name_plural = 'Questions'
 
+    def __str__(self):
+        return f'{self.id} - {self.url} - {self.questionType}'
+
     def orderAnswers(self, queryset):
         if self.questionType == self.Type.NONE:
             raise ValueError('Question type cannot be NONE')
@@ -205,6 +209,9 @@ class QuizAttempt(BaseModel):
         ]
         verbose_name = 'Quiz Attempt'
         verbose_name_plural = 'Quiz Attempts'
+
+    def __str__(self):
+        return f'{self.id} - {self.url}'
 
     def getAttemptUrl(self):
         return reverse('core:quiz-attempt-view-v1', kwargs={'url': self.url})
@@ -283,6 +290,9 @@ class Response(BaseModel):
         verbose_name = 'Response'
         verbose_name_plural = 'Responses'
 
+    def __str__(self):
+        return f'{self.id} - {self.question.questionType} - {self.url}'
+
     class ModelManager(models.Manager):
         def bulk_create(self, objs, batch_size=None, ignore_conflicts=False):
             for obj in objs:
@@ -294,7 +304,7 @@ class Response(BaseModel):
 
 
 class Result(BaseModel):
-    quizAttempt = models.ForeignKey(QuizAttempt, on_delete=models.CASCADE)
+    quizAttempt = models.ForeignKey(QuizAttempt, on_delete=models.CASCADE, related_name='quizAttemptResults')
     timeSpent = models.BigIntegerField()
     numberOfCorrectAnswers = models.PositiveSmallIntegerField()
     numberOfPartialAnswers = models.PositiveSmallIntegerField()

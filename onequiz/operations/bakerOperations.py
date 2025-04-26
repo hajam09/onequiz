@@ -1,11 +1,11 @@
 import random
-import uuid
 
 from django.conf import settings
 from django.contrib.auth.models import User
 from faker import Faker
 
 from core.models import Quiz, Question
+from onequiz.operations import generalOperations
 
 EMAIL_DOMAINS = ["@yahoo", "@gmail", "@outlook", "@hotmail"]
 DOMAINS = [".co.uk", ".com", ".co.in", ".net", ".us"]
@@ -82,7 +82,7 @@ def createRandomQuestions(quiz, numberOfQuestions=None, save=True):
     BULK_QUESTIONS = []
 
     for _ in range(numberOfQuestions):
-        questionType = random.choice([Question.Type.ESSAY, Question.Type.TRUE_OR_FALSE, Question.Type.MULTIPLE_CHOICE])
+        questionType = random.choice(Question.Type.values)
 
         if questionType == Question.Type.ESSAY:
             BULK_QUESTIONS.append(createEssayQuestion(quiz, False))
@@ -120,7 +120,7 @@ def createTrueOrFalseQuestion(quiz, save=True):
         explanation=faker.paragraph(),
         mark=faker.random_number(digits=2),
         questionType=Question.Type.TRUE_OR_FALSE,
-        trueOrFalse=random.choice([Question.TrueOrFalse.TRUE, Question.TrueOrFalse.FALSE])
+        trueOrFalse=random.choice(Question.TrueOrFalse.values)
     )
 
     if save:
@@ -130,10 +130,10 @@ def createTrueOrFalseQuestion(quiz, save=True):
 
 def createMultipleChoiceQuestionAndAnswers(quiz, save=True):
     faker = Faker()
-    choiceType = random.choice([Question.ChoiceType.SINGLE, Question.ChoiceType.MULTIPLE])
+    choiceType = random.choice(Question.ChoiceType.values)
     choices = [
         {
-            'id': uuid.uuid4().hex[:8],
+            'id': generalOperations.generateRandomString(8),
             'content': faker.paragraph(),
             'isChecked': False if choiceType == Question.ChoiceType.SINGLE else random.choice(BOOLEAN)
         } for _ in range(random.randint(2, 10))
@@ -149,7 +149,7 @@ def createMultipleChoiceQuestionAndAnswers(quiz, save=True):
         explanation=faker.paragraph(),
         mark=faker.random_number(digits=2),
         questionType=Question.Type.MULTIPLE_CHOICE,
-        choiceOrder=random.choice([Question.ChoiceOrder.SEQUENTIAL, Question.ChoiceOrder.RANDOM, Question.ChoiceOrder.NONE]),
+        choiceOrder=random.choice(Question.ChoiceOrder.values),
         choiceType=choiceType,
         choices={'choices': choices}
     )

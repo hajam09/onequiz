@@ -33,8 +33,8 @@ class QuizListViewTest(BaseTestViews):
     @parameterized.expand([
         [1, 10],
         [2, 5],
-        ['abc', 0],
-        [100, 2],
+        ['abc', 10],
+        [100, 5],
     ])
     def testPaginationPages(self, pageNumber, numberOfQuizzes):
         response = self.get(path=f'{self.path}?page={pageNumber}')

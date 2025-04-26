@@ -1,5 +1,6 @@
 import operator
 import random
+import uuid
 from functools import reduce
 from string import (
     ascii_letters,
@@ -42,6 +43,8 @@ def isPasswordStrong(password):
 
 
 def generateRandomString(length):
+    if length >= 6:
+        return uuid.uuid4().hex[:length]
     return ''.join(random.choice(ascii_letters + digits) for _ in range(length))
 
 

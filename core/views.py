@@ -451,7 +451,10 @@ def quizAttemptsForQuizView(request, url):
 
     if quiz.creator != request.user:
         return HttpResponseForbidden('You do not have permission to view this quiz\'s attempts.')
-    quizAttemptList = QuizAttempt.objects.select_related('user').filter(quiz=quiz)
+
+    quizAttemptList = QuizAttempt.objects.filter(
+        quiz=quiz
+    ).select_related('user', 'quiz').prefetch_related('quizAttemptResults')
 
     context = {
         'quizAttemptList': quizAttemptList,

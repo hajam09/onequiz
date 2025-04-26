@@ -860,7 +860,7 @@ class TrueOrFalseQuestionResponseForm(BaseResponseForm):
 
 class MultipleChoiceQuestionResponseForm(BaseResponseForm):
     def setInitialValues(self, response):
-        style = {'style': 'height: 34px; width:34px'}
+        style = {'style': 'height: 34px; width: 34px'}
 
         if response.question.choiceType == Question.ChoiceType.SINGLE:
             widget = forms.RadioSelect(attrs=style)
@@ -877,7 +877,8 @@ class MultipleChoiceQuestionResponseForm(BaseResponseForm):
         )
 
     def showSystemAnswerWhileMarking(self, response):
-        style = {'style': 'height: 34px; width:34px'}
+        style = {'style': 'height: 34px; width: 34px'}
+
         if response.question.choiceType == Question.ChoiceType.SINGLE:
             widget = forms.RadioSelect(attrs=style)
         else:

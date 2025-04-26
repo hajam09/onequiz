@@ -181,7 +181,7 @@ class QuizUpdateFormTest(BaseTest):
             self.topic = faker.pystr_format()
             self.quizDuration = faker.random_number(digits=2)
             self.maxAttempt = faker.random_number(digits=1)
-            self.difficulty = random.choice([Quiz.Difficulty.EASY, Quiz.Difficulty.MEDIUM, Quiz.Difficulty.HARD])
+            self.difficulty = random.choice(Quiz.Difficulty.values)
             self.passMark = faker.random_number(digits=2)
             self.successText = faker.paragraph()
             self.failText = faker.paragraph()
