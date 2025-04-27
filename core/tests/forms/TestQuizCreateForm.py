@@ -110,7 +110,7 @@ class QuizCreateFormTest(BaseTest):
         self.assertFalse(form.is_valid())
         self.assertTrue(form.has_error('subject'))
         self.assertEqual(form.errors.get('subject')[0],
-                         f'Select a valid choice. INVALID is not one of the available choices.')
+                         'Select a valid choice. INVALID is not one of the available choices.')
 
     def testQuizDurationIsNegative(self):
         testParams = self.TestParams()
@@ -119,7 +119,7 @@ class QuizCreateFormTest(BaseTest):
 
         self.assertFalse(form.is_valid())
         self.assertTrue(form.has_error('quizDuration'))
-        self.assertEqual(form.errors.get('quizDuration')[0], f'Quiz Durations should be greater than 0.')
+        self.assertEqual(form.errors.get('quizDuration')[0], 'Quiz Durations should be greater than 0.')
 
     def testQuizMaxAttemptIsNegative(self):
         testParams = self.TestParams()
@@ -128,7 +128,7 @@ class QuizCreateFormTest(BaseTest):
 
         self.assertFalse(form.is_valid())
         self.assertTrue(form.has_error('maxAttempt'))
-        self.assertEqual(form.errors.get('maxAttempt')[0], f'Quiz Max Attempt should be greater than 0.')
+        self.assertEqual(form.errors.get('maxAttempt')[0], 'Quiz Max Attempt should be greater than 0.')
 
     def testQuizDifficultyIsIncorrect(self):
         testParams = self.TestParams()
@@ -137,8 +137,7 @@ class QuizCreateFormTest(BaseTest):
 
         self.assertFalse(form.is_valid())
         self.assertTrue(form.has_error('difficulty'))
-        self.assertEqual(form.errors.get('difficulty')[0],
-                         f'Select a valid choice. NONE is not one of the available choices.')
+        self.assertEqual(form.errors.get('difficulty')[0], 'Select a valid choice. NONE is not one of the available choices.')
 
     def testQuizPassMarkIsLessThanZero(self):
         testParams = self.TestParams()
@@ -147,7 +146,7 @@ class QuizCreateFormTest(BaseTest):
 
         self.assertFalse(form.is_valid())
         self.assertTrue(form.has_error('passMark'))
-        self.assertEqual(form.errors.get('passMark')[0], f'Pass mark should be between 0 and 100.')
+        self.assertEqual(form.errors.get('passMark')[0], 'Pass mark should be between 0 and 100.')
 
     def testQuizPassMarkIsGreaterThanHundred(self):
         testParams = self.TestParams()
@@ -156,7 +155,7 @@ class QuizCreateFormTest(BaseTest):
 
         self.assertFalse(form.is_valid())
         self.assertTrue(form.has_error('passMark'))
-        self.assertEqual(form.errors.get('passMark')[0], f'Pass mark should be between 0 and 100.')
+        self.assertEqual(form.errors.get('passMark')[0], 'Pass mark should be between 0 and 100.')
 
     def testQuizSuccessTextIsEmpty(self):
         testParams = self.TestParams()
@@ -165,7 +164,7 @@ class QuizCreateFormTest(BaseTest):
 
         self.assertFalse(form.is_valid())
         self.assertTrue(form.has_error('successText'))
-        self.assertEqual(form.errors.get('successText')[0], f'This field is required.')
+        self.assertEqual(form.errors.get('successText')[0], 'This field is required.')
 
     def testQuizFailTextIsEmpty(self):
         testParams = self.TestParams()
@@ -174,7 +173,7 @@ class QuizCreateFormTest(BaseTest):
 
         self.assertFalse(form.is_valid())
         self.assertTrue(form.has_error('failText'))
-        self.assertEqual(form.errors.get('failText')[0], f'This field is required.')
+        self.assertEqual(form.errors.get('failText')[0], 'This field is required.')
 
     def testQuizObjectCreatedCaseOne(self):
         testParams = self.TestParams()

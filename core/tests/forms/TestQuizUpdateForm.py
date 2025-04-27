@@ -138,6 +138,28 @@ class QuizUpdateFormTest(BaseTest):
         self.assertTrue(form.has_error('name'))
         self.assertEqual(form.errors.get('name')[0], 'This field is required.')
 
+    def testUpdateQuizSubjectWithInvalidOption(self):
+        testParams = self.TestParams()
+        testParams.subject = 'INVALID'
+        form = QuizUpdateForm(request=self.request, quiz=self.quiz, data=testParams.getData())
+        self.assertFalse(form.is_valid())
+        self.assertEqual(len(form.errors), 1)
+
+        self.assertTrue(form.has_error('subject'))
+        self.assertEqual(form.errors.get('subject')[0],
+                         'Select a valid choice. INVALID is not one of the available choices.')
+
+    def testUpdateQuizDifficultyWithInvalidOption(self):
+        testParams = self.TestParams()
+        testParams.difficulty = 'INVALID'
+        form = QuizUpdateForm(request=self.request, quiz=self.quiz, data=testParams.getData())
+        self.assertFalse(form.is_valid())
+        self.assertEqual(len(form.errors), 1)
+
+        self.assertTrue(form.has_error('difficulty'))
+        self.assertEqual(form.errors.get('difficulty')[0],
+                         'Select a valid choice. INVALID is not one of the available choices.')
+
     def testQuizUpdatedSuccessfully(self):
         testParams = self.TestParams()
         testParams.name = 'New Quiz Name'
