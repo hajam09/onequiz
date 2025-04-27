@@ -38,7 +38,7 @@ class QuizAttemptCommenceApiVersion1(APIView):
             user=user
         ).count()
 
-        quiz = Quiz.objects.get(id=quizId)
+        quiz = Quiz.objects.get(id=quizId, isDraft=False)
         if totalAttempts >= quiz.maxAttempt:
             response = {
                 'success': False,

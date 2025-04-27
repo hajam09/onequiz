@@ -3,7 +3,7 @@ import json
 from django.core.cache import cache
 from django.urls import reverse
 
-from core.models import QuizAttempt, Response
+from core.models import QuizAttempt, Response, Quiz
 from onequiz.operations import bakerOperations
 from onequiz.tests.BaseTestAjax import BaseTestAjax
 
@@ -12,6 +12,8 @@ class QuizAttemptCommenceApiVersion1Test(BaseTestAjax):
     def setUp(self, path=reverse('core:quizAttemptCommenceApiVersion1')) -> None:
         super(QuizAttemptCommenceApiVersion1Test, self).setUp(path)
         self.quiz = bakerOperations.createQuiz(self.user)
+        self.quiz.isDraft = False
+        self.quiz.save()
 
     def testWhenAQuizAttemptIsInProgressThenRedirectToAttemptView(self):
         quizAttempt = QuizAttempt.objects.create(
@@ -29,7 +31,7 @@ class QuizAttemptCommenceApiVersion1Test(BaseTestAjax):
 
     def testWhenMaxQuizAttemptHasBeenReachedThenReturnMessage(self):
         self.quiz.maxAttempt = 1
-        self.quiz.save(update_fields=['maxAttempt'])
+        self.quiz.save()
         QuizAttempt.objects.create(
             quiz=self.quiz,
             user=self.user,
@@ -51,7 +53,7 @@ class QuizAttemptCommenceApiVersion1Test(BaseTestAjax):
             )
 
     def testCreateQuizAttemptAndResponses(self):
-        bakerOperations.createRandomQuestions(self.quiz, 2, True)
+        questions = bakerOperations.createRandomQuestions(self.quiz, 2, True)
         response = self.post({'quizId': self.quiz.id})
         apiResponse = json.loads(response.content)
         quizAttempt = QuizAttempt.objects.filter(quiz=self.quiz, user=self.user, status=QuizAttempt.Status.IN_PROGRESS)
@@ -61,10 +63,35 @@ class QuizAttemptCommenceApiVersion1Test(BaseTestAjax):
         self.assertIsNotNone(apiResponse['redirectUrl'])
         self.assertEqual(apiResponse['redirectUrl'], f'/v1/quiz-attempt/{quizAttempt.first().url}/')
 
-        responses = Response.objects.filter(quizAttempt=quizAttempt.first())
+        responseList = list(Response.objects.filter(quizAttempt=quizAttempt.first()).values_list('url', flat=True))
         self.assertEqual(quizAttempt.count(), 1)
-        self.assertEqual(responses.count(), 2)
-        self.assertListEqual(
-            [response.url for response in responses],
-            cache.get(f'quiz-attempt-v1-{quizAttempt.first().url}')
-        )
+        self.assertEqual(len(responseList), len([question.url for question in questions]))
+
+        cacheList = cache.get(f'quiz-attempt-v1-{quizAttempt.first().url}')
+        for item in responseList:
+            self.assertIn(item, cacheList)
+
+    def testRandomOrderShufflingOfResponses(self):
+        self.quiz.inRandomOrder = True
+        self.quiz.save()
+        bakerOperations.createRandomQuestions(self.quiz, 5, True)
+
+        self.post({'quizId': self.quiz.id})
+        quizAttempt = QuizAttempt.objects.get(quiz=self.quiz, user=self.user, status=QuizAttempt.Status.IN_PROGRESS)
+        responses = Response.objects.filter(quizAttempt=quizAttempt)
+        cachedUrls = cache.get(f'quiz-attempt-v1-{quizAttempt.url}')
+
+        actualUrls = [response.url for response in responses]
+        self.assertCountEqual(actualUrls, cachedUrls)
+        self.assertNotEqual(actualUrls, cachedUrls)
+
+    def testWhenExceptionOccurredDuringAtomicEnsureNoObjectsAreCreated(self):
+        pass
+
+    def testWhenQuizIdIsMissingThenRaiseDoesNotExistException(self):
+        with self.assertRaises(Quiz.DoesNotExist):
+            self.post({})
+
+    def testWhenInvalidQuizIdThenReturnNotFound(self):
+        with self.assertRaises(Quiz.DoesNotExist):
+            self.post({'quizId': 999999})

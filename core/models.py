@@ -1,11 +1,6 @@
 import copy
 import datetime
-import random
 import uuid
-from string import (
-    ascii_letters,
-    digits
-)
 
 from django.contrib.auth.models import User
 from django.core.validators import MinValueValidator, MaxValueValidator
@@ -98,9 +93,6 @@ class Quiz(BaseModel):
             models.Index(fields=['topic'], name='idx-quiz-topic')
         ]
 
-    def __str__(self):
-        return f'{self.id} - {self.name} - {self.url}'
-
     def getQuestions(self, shuffleQuestions=False):
         questionList = self.questions.all()
         if shuffleQuestions:
@@ -158,9 +150,6 @@ class Question(BaseModel):
         verbose_name = 'Question'
         verbose_name_plural = 'Questions'
 
-    def __str__(self):
-        return f'{self.id} - {self.url} - {self.questionType}'
-
     def orderAnswers(self, queryset):
         if self.questionType == self.Type.NONE:
             raise ValueError('Question type cannot be NONE')
@@ -209,9 +198,6 @@ class QuizAttempt(BaseModel):
         ]
         verbose_name = 'Quiz Attempt'
         verbose_name_plural = 'Quiz Attempts'
-
-    def __str__(self):
-        return f'{self.id} - {self.url}'
 
     def getAttemptUrl(self):
         return reverse('core:quiz-attempt-view-v1', kwargs={'url': self.url})
@@ -266,7 +252,7 @@ class Response(BaseModel):
     url = models.CharField(max_length=10, unique=True, editable=False, default=generateModelUrl)
     question = models.ForeignKey(Question, on_delete=models.CASCADE)
     quizAttempt = models.ForeignKey(QuizAttempt, on_delete=models.CASCADE, related_name='responses')
-    isCorrect = models.BooleanField(blank=True, null=True, default=None)
+    isCorrect = models.BooleanField(blank=True, null=True, default=None)  # todo: check if this is being used
     mark = models.DecimalField(blank=True, null=True, default=None, max_digits=4, decimal_places=2)
 
     # fields specific to essay
@@ -289,9 +275,6 @@ class Response(BaseModel):
         ]
         verbose_name = 'Response'
         verbose_name_plural = 'Responses'
-
-    def __str__(self):
-        return f'{self.id} - {self.question.questionType} - {self.url}'
 
     class ModelManager(models.Manager):
         def bulk_create(self, objs, batch_size=None, ignore_conflicts=False):
