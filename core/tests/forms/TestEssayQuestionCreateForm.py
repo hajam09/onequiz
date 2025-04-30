@@ -17,25 +17,25 @@ class EssayQuestionCreateFormTest(BaseTest):
         form = EssayQuestionCreateForm(self.quiz)
         self.assertEqual(len(form.fields), 5)
 
-        self.assertTrue(isinstance(form.fields.get('figure'), forms.ImageField))
+        self.assertIsInstance(form.fields.get('figure'), forms.ImageField)
         self.assertEqual(form.fields.get('figure').label, 'Figure (Optional)')
-        self.assertTrue(isinstance(form.fields.get('figure').widget, forms.ClearableFileInput))
+        self.assertIsInstance(form.fields.get('figure').widget, forms.ClearableFileInput)
 
-        self.assertTrue(isinstance(form.fields.get('content'), forms.CharField))
+        self.assertIsInstance(form.fields.get('content'), forms.CharField)
         self.assertEqual(form.fields.get('content').label, 'Content (Optional)')
-        self.assertTrue(isinstance(form.fields.get('content').widget, forms.Textarea))
+        self.assertIsInstance(form.fields.get('content').widget, forms.Textarea)
 
-        self.assertTrue(isinstance(form.fields.get('explanation'), forms.CharField))
+        self.assertIsInstance(form.fields.get('explanation'), forms.CharField)
         self.assertEqual(form.fields.get('explanation').label, 'Explanation (Optional)')
-        self.assertTrue(isinstance(form.fields.get('explanation').widget, forms.Textarea))
+        self.assertIsInstance(form.fields.get('explanation').widget, forms.Textarea)
 
-        self.assertTrue(isinstance(form.fields.get('mark'), forms.IntegerField))
+        self.assertIsInstance(form.fields.get('mark'), forms.IntegerField)
         self.assertEqual(form.fields.get('mark').label, 'Mark')
-        self.assertTrue(isinstance(form.fields.get('mark').widget, forms.NumberInput))
+        self.assertIsInstance(form.fields.get('mark').widget, forms.NumberInput)
 
-        self.assertTrue(isinstance(form.fields.get('answer'), forms.CharField))
+        self.assertIsInstance(form.fields.get('answer'), forms.CharField)
         self.assertEqual(form.fields.get('answer').label, 'Answer')
-        self.assertTrue(isinstance(form.fields.get('answer').widget, forms.Textarea))
+        self.assertIsInstance(form.fields.get('answer').widget, forms.Textarea)
 
     def testFigureAndContentIsEmpty(self):
         testParams = self.TestParams(
@@ -45,8 +45,6 @@ class EssayQuestionCreateFormTest(BaseTest):
         form = EssayQuestionCreateForm(self.quiz, data=testParams.getData())
         self.assertFalse(form.is_valid())
         self.assertEqual(2, len(form.errors))
-        self.assertTrue(form.has_error('figure'))
-        self.assertTrue(form.has_error('content'))
         self.assertEqual('Cannot leave both figure and content empty.', form.errors.get('figure')[0])
         self.assertEqual('Cannot leave both figure and content empty.', form.errors.get('content')[0])
 
@@ -59,7 +57,6 @@ class EssayQuestionCreateFormTest(BaseTest):
         form = EssayQuestionCreateForm(self.quiz, data=testParams.getData())
         self.assertFalse(form.is_valid())
         self.assertEqual(1, len(form.errors))
-        self.assertTrue(form.has_error('mark'))
         self.assertEqual('Mark cannot be a negative number.', form.errors.get('mark')[0])
 
     def testAnswerFieldIsEmpty(self):
@@ -70,7 +67,6 @@ class EssayQuestionCreateFormTest(BaseTest):
         form = EssayQuestionCreateForm(self.quiz, data=testParams.getData())
         self.assertFalse(form.is_valid())
         self.assertEqual(1, len(form.errors))
-        self.assertTrue(form.has_error('answer'))
         self.assertEqual('This field is required.', form.errors.get('answer')[0])
 
     def testEssayQuestionObjectCreated(self):
@@ -85,6 +81,7 @@ class EssayQuestionCreateFormTest(BaseTest):
         self.assertTrue(form.is_valid())
 
         newEssayQuestion = form.save()
+        self.assertEqual(self.quiz, newEssayQuestion.quiz)
         # self.assertIsNone(newEssayQuestion.question.figure)
         self.assertEqual(testParams.content, newEssayQuestion.content)
         self.assertEqual(testParams.explanation, newEssayQuestion.explanation)
@@ -93,7 +90,6 @@ class EssayQuestionCreateFormTest(BaseTest):
         self.assertEqual(testParams.answer, newEssayQuestion.answer)
 
     class TestParams:
-
         def __init__(self, figure=None, content=None, explanation=None, mark=None, answer=None):
             self.figure = figure
             self.content = content

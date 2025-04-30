@@ -46,7 +46,6 @@ class AccountsPasswordForgottenTest(BaseTestViews):
         mockSendEmailToResetPassword.assert_not_called()
 
     class TestParams:
-
         def __init__(self, email):
             self.email = email
 

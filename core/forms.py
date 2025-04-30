@@ -741,6 +741,9 @@ class MultipleChoiceQuestionUpdateForm(QuestionForm):
         for choice in choices:
             if not choice.get('id'):
                 choice['id'] = generalOperations.generateRandomString(8)
+
+            if not choice.get('content'):
+                raise forms.ValidationError('One of the choice value is empty.')
         self.initial['choices'] = choices
         return choices
 

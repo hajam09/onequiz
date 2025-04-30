@@ -60,7 +60,6 @@ class QuizCreateQuizViewTest(BaseTestViews):
         self.assertTemplateUsed(response, 'core/quizTemplateView.html')
 
     class TestParams:
-
         def __init__(self):
             faker = Faker()
             CHECKBOX = ['on', '']

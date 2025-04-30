@@ -64,7 +64,6 @@ class QuizCreateEssayQuestionViewTest(BaseTestViews):
         self.assertTemplateUsed(response, 'core/essayQuestionTemplateView.html')
 
     class TestParams:
-
         def __init__(self, figure=None, content=None, explanation=None, mark=None, answer=None):
             self.figure = figure
             self.content = content

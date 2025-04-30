@@ -69,7 +69,6 @@ class AccountsLoginViewTest(BaseTestViews):
         cache.set(self.getSessionKey(), None)
 
     class TestParams:
-
         def __init__(self, email, password):
             self.email = email
             self.password = password

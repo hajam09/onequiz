@@ -34,7 +34,6 @@ class LoginFormTest(BaseTest):
             self.assertEqual(message, 'Username or Password did not match!')
 
     class TestParams:
-
         def __init__(self, email, password):
             self.email = email
             self.password = password
