@@ -64,14 +64,14 @@ class MultipleChoiceQuestionUpdateFormTest(BaseTest):
         self.assertEqual(form.initial['mark'], self.multipleChoiceQuestion.mark)
         self.assertEqual(form.initial['choiceOrder'], self.multipleChoiceQuestion.choiceOrder)
         self.assertEqual(form.initial['choiceType'], self.multipleChoiceQuestion.choiceType)
-        self.assertListEqual(form.initial['choices'], self.multipleChoiceQuestion.choices.get('choices'))
+        self.assertListEqual(form.initial['choices'], self.multipleChoiceQuestion.choices)
 
     def testFigureAndContentIsEmpty(self):
         testParams = self.TestParams(
             explanation='test explanation',
             choiceOrder=Question.ChoiceOrder.SEQUENTIAL,
             choiceType=Question.ChoiceType.SINGLE,
-            choices=self.multipleChoiceQuestion.choices.get('choices')
+            choices=self.multipleChoiceQuestion.choices
         )
         form = MultipleChoiceQuestionUpdateForm(self.multipleChoiceQuestion, data=testParams.getData())
         self.assertFalse(form.is_valid())
@@ -85,7 +85,7 @@ class MultipleChoiceQuestionUpdateFormTest(BaseTest):
             mark=-1,
             choiceOrder=Question.ChoiceOrder.SEQUENTIAL,
             choiceType=Question.ChoiceType.SINGLE,
-            choices=self.multipleChoiceQuestion.choices.get('choices')
+            choices=self.multipleChoiceQuestion.choices
         )
         form = MultipleChoiceQuestionUpdateForm(self.multipleChoiceQuestion, data=testParams.getData())
         self.assertFalse(form.is_valid())
@@ -98,7 +98,7 @@ class MultipleChoiceQuestionUpdateFormTest(BaseTest):
             explanation='test explanation',
             choiceOrder='INVALID',
             choiceType='INVALID',
-            choices=self.multipleChoiceQuestion.choices.get('choices')
+            choices=self.multipleChoiceQuestion.choices
         )
         form = MultipleChoiceQuestionUpdateForm(self.multipleChoiceQuestion, data=testParams.getData())
         self.assertFalse(form.is_valid())
@@ -115,7 +115,7 @@ class MultipleChoiceQuestionUpdateFormTest(BaseTest):
             mark=-1,
             choiceOrder=Question.ChoiceOrder.SEQUENTIAL,
             choiceType=Question.ChoiceType.SINGLE,
-            choices=self.multipleChoiceQuestion.choices.get('choices')
+            choices=self.multipleChoiceQuestion.choices
         )
         form = MultipleChoiceQuestionUpdateForm(self.multipleChoiceQuestion, data=testParams.getData())
         self.assertFalse(form.is_valid())
@@ -125,7 +125,7 @@ class MultipleChoiceQuestionUpdateFormTest(BaseTest):
         self.assertListEqual(testParams.choices, form.data.get('choices'))
 
     def testOneOfChoicesOptionsIsEmpty(self):
-        choices = self.multipleChoiceQuestion.choices.get('choices')
+        choices = self.multipleChoiceQuestion.choices
         choices[0]['content'] = ''
         testParams = self.TestParams(
             content='test content',
@@ -140,7 +140,7 @@ class MultipleChoiceQuestionUpdateFormTest(BaseTest):
         self.assertEqual('One of the choice value is empty.', form.errors.get('choices')[0])
 
     def testAddNewAnswerOptionsToExistingList(self):
-        choices = self.multipleChoiceQuestion.choices.get('choices')
+        choices = self.multipleChoiceQuestion.choices
         choices.append(
             {
                 'content': 'New choice',
@@ -186,7 +186,7 @@ class MultipleChoiceQuestionUpdateFormTest(BaseTest):
         self.assertEqual(95, multipleChoiceQuestion.mark)
         self.assertEqual(Question.ChoiceOrder.RANDOM, multipleChoiceQuestion.choiceOrder)
         self.assertEqual(Question.ChoiceType.MULTIPLE, multipleChoiceQuestion.choiceType)
-        self.assertListEqual(testParams.choices, multipleChoiceQuestion.choices.get('choices'))
+        self.assertListEqual(testParams.choices, multipleChoiceQuestion.choices)
 
     class TestParams:
         def __init__(self, figure=None, content=None, explanation=None, mark=80, choiceOrder=None, choiceType=None,

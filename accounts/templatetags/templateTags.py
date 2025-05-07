@@ -31,7 +31,7 @@ def navigationPanel(request):
             [
                 linkItem('Create a Quiz', reverse('core:quiz-create-view'), None),
                 linkItem('Account', '', None, [
-                    linkItem('History', reverse('core:attempted-quizzes-view'), Icon('', 'fas fa-book-open', '15')),
+                    linkItem('My Attempts', reverse('core:attempted-quizzes-view'), Icon('', 'fas fa-book-open', '15')),
                     linkItem('My Quizzes', reverse('core:user-created-quizzes-view'),
                              Icon('', 'fas fa-question', '15')),
                     None,

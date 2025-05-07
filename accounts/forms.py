@@ -76,7 +76,7 @@ class RegistrationForm(UserCreationForm):
             raise ValidationError('Your passwords do not match!')
 
         if not generalOperations.isPasswordStrong(password1):
-            raise ValidationError('Your password is not strong enough.')
+            raise ValidationError('Your password is not strong enough!')
 
         return password1
 

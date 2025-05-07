@@ -33,7 +33,7 @@ class RegistrationFormTest(BaseTest):
         self.assertFalse(form.is_valid())
 
         for message in form.errors.as_data()['password2'][0]:
-            self.assertEqual(message, 'Your password is not strong enough.')
+            self.assertEqual(message, 'Your password is not strong enough!')
 
     def testPasswordDoesNotHaveCapitalLetters(self):
         testParams = self.TestParams('example@example.com', 'test_password', 'test_password')
@@ -41,7 +41,7 @@ class RegistrationFormTest(BaseTest):
         self.assertFalse(form.is_valid())
 
         for message in form.errors.as_data()['password2'][0]:
-            self.assertEqual(message, 'Your password is not strong enough.')
+            self.assertEqual(message, 'Your password is not strong enough!')
 
     def testPasswordDoesNotHaveNumbers(self):
         testParams = self.TestParams('example@example.com', 'TEST_PASSWORD', 'TEST_PASSWORD')
@@ -49,7 +49,7 @@ class RegistrationFormTest(BaseTest):
         self.assertFalse(form.is_valid())
 
         for message in form.errors.as_data()['password2'][0]:
-            self.assertEqual(message, 'Your password is not strong enough.')
+            self.assertEqual(message, 'Your password is not strong enough!')
 
     def testRegisterUserSuccessfully(self):
         testParams = self.TestParams('example@example.com', TEST_PASSWORD, TEST_PASSWORD)

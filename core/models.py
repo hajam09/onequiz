@@ -167,7 +167,7 @@ class Question(BaseModel):
 
     def cloneAndCleanChoices(self):
         clonedChoices = copy.deepcopy(self.choices)
-        for choice in clonedChoices.get('choices'):
+        for choice in clonedChoices:
             choice['isChecked'] = False
         return clonedChoices
 

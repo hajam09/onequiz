@@ -141,7 +141,7 @@ class MultipleChoiceQuestionCreateFormTest(BaseTest):
         self.assertEqual(Question.Type.MULTIPLE_CHOICE, newMultipleChoiceQuestion.questionType)
         self.assertEqual(Question.ChoiceOrder.SEQUENTIAL, newMultipleChoiceQuestion.choiceOrder)
         self.assertEqual(Question.ChoiceType.SINGLE, newMultipleChoiceQuestion.choiceType)
-        self.assertListEqual(testParams.choices, newMultipleChoiceQuestion.choices.get('choices'))
+        self.assertListEqual(testParams.choices, newMultipleChoiceQuestion.choices)
 
     class TestParams:
         def __init__(self, figure=None, content=None, explanation=None, mark=80, choiceOrder=None, choiceType=None,

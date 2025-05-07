@@ -151,7 +151,7 @@ def createMultipleChoiceQuestionAndAnswers(quiz, save=True):
         questionType=Question.Type.MULTIPLE_CHOICE,
         choiceOrder=random.choice(Question.ChoiceOrder.values),
         choiceType=choiceType,
-        choices={'choices': choices}
+        choices=choices
     )
 
     if save:

@@ -9,6 +9,7 @@ from django.core.paginator import Paginator, PageNotAnInteger, EmptyPage
 from django.db.models import Q
 from django.http import Http404, HttpResponseForbidden
 from django.shortcuts import get_object_or_404, render, redirect
+from django.urls import reverse
 from django.views.generic import ListView
 
 from core.forms import (
@@ -58,7 +59,12 @@ def quizCreateView(request):
     if request.method == 'POST':
         form = QuizCreateForm(request, request.POST)
         if form.is_valid():
-            form.save()
+            quiz = form.save()
+            quizUrl = reverse('core:quiz-update-view', kwargs={'url': quiz.url})
+            messages.success(
+                request,
+                f'Your quiz has been created successfully! You can view it by clicking <a href="{quizUrl}">here</a>'
+            )
             return redirect('core:quiz-create-view')
     else:
         form = QuizCreateForm(request)
@@ -280,7 +286,7 @@ def quizAttemptViewVersion1(request, url):
             elif responseObject.question.questionType == Question.Type.MULTIPLE_CHOICE:
                 optionsKey = next((key for key in request.POST if key.startswith('option')), None)
                 checkedOptionsIds = set(request.POST.getlist(optionsKey))
-                for choice in responseObject.choices.get('choices'):
+                for choice in responseObject.choices:
                     choice['isChecked'] = choice['id'] in checkedOptionsIds
             responseObject.save()
 

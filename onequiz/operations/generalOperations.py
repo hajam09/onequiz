@@ -88,8 +88,8 @@ class QuizAttemptAutomaticMarking:
                     numberOfWrongAnswers += 1
 
             elif response.question.questionType == Question.Type.MULTIPLE_CHOICE:
-                actualChoices = sorted(response.question.choices['choices'], key=lambda x: x['id'])
-                selectedChoices = sorted(response.choices['choices'], key=lambda x: x['id'])
+                actualChoices = sorted(response.question.choices, key=lambda x: x['id'])
+                selectedChoices = sorted(response.choices, key=lambda x: x['id'])
 
                 if response.question.choiceType == Question.ChoiceType.SINGLE:
                     awardedMark = response.question.mark if actualChoices == selectedChoices else 0

@@ -547,7 +547,7 @@ class MultipleChoiceQuestionCreateForm(QuestionForm):
             questionType=Question.Type.MULTIPLE_CHOICE,
             choiceOrder=self.cleaned_data.get('choiceOrder'),
             choiceType=self.cleaned_data.get('choiceType'),
-            choices={'choices': self.cleaned_data.get('choices', [])}
+            choices=self.cleaned_data.get('choices', [])
         )
         return question
 
@@ -718,7 +718,7 @@ class MultipleChoiceQuestionUpdateForm(QuestionForm):
         self.initial['mark'] = self.question.mark
         self.initial['choiceOrder'] = self.question.choiceOrder
         self.initial['choiceType'] = self.question.choiceType
-        self.initial['choices'] = self.question.choices.get('choices')
+        self.initial['choices'] = self.question.choices
 
     def clean_choiceOrder(self):
         choiceOrder = self.cleaned_data.get('choiceOrder')
@@ -757,7 +757,7 @@ class MultipleChoiceQuestionUpdateForm(QuestionForm):
         self.question.mark = self.cleaned_data.get('mark')
         self.question.choiceOrder = self.cleaned_data.get('choiceOrder')
         self.question.choiceType = self.cleaned_data.get('choiceType')
-        self.question.choices = {'choices': self.cleaned_data.get('choices', [])}
+        self.question.choices = self.cleaned_data.get('choices', [])
         self.question.save()
         return self.question
 
@@ -874,8 +874,8 @@ class MultipleChoiceQuestionResponseForm(BaseResponseForm):
 
         self.fields[fieldName] = forms.MultipleChoiceField(
             label='Select the correct answer(s).' if self.allowEdit else 'Your Answer',
-            choices=[(choice['id'], choice['content']) for choice in response.choices.get('choices')],
-            initial=[choice['id'] for choice in response.choices.get('choices') if choice['isChecked']],
+            choices=[(choice['id'], choice['content']) for choice in response.choices],
+            initial=[choice['id'] for choice in response.choices if choice['isChecked']],
             widget=widget
         )
 
@@ -888,7 +888,7 @@ class MultipleChoiceQuestionResponseForm(BaseResponseForm):
             widget = forms.CheckboxSelectMultiple(attrs=style)
         self.fields[f'systemAnswer_{generalOperations.generateRandomString(3)}'] = forms.MultipleChoiceField(
             label='System Answer',
-            choices=[(choice['id'], choice['content']) for choice in response.question.choices.get('choices')],
-            initial=[choice['id'] for choice in response.question.choices.get('choices') if choice['isChecked']],
+            choices=[(choice['id'], choice['content']) for choice in response.question.choices],
+            initial=[choice['id'] for choice in response.question.choices if choice['isChecked']],
             widget=widget
         )
