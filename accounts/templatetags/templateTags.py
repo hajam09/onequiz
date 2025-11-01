@@ -4,10 +4,14 @@ from django.forms.widgets import (
     CheckboxInput,
     CheckboxSelectMultiple,
     ClearableFileInput,
+    DateInput,
+    EmailInput,
     HiddenInput,
     NumberInput,
+    PasswordInput,
     RadioSelect,
     Select,
+    SelectMultiple,
     TextInput,
     Textarea
 )
@@ -154,9 +158,21 @@ def paginationComponent(request, objects: Page):
 @register.simple_tag
 def renderFormFields(field):
     body = ''
-    if (isinstance(field.field.widget, ClearableFileInput) or isinstance(field.field.widget, NumberInput)
-            or isinstance(field.field.widget, Select) or isinstance(field.field.widget, TextInput)
-            or isinstance(field.field.widget, Textarea)):
+    if isinstance(field.field.widget, SelectMultiple):
+        label = f'<span class="form-label">{field.label}</span>'
+        body = str(field)
+    elif isinstance(field.field.widget, DateInput):
+        label = f'<span class="form-label">{field.label}</span>'
+        body += f'''
+                <div class="row">
+                    <div class="col">
+                        <input class="form-control col" type={field.widget_type} name={field.name} value={field.initial} style="width: 100%;">
+                    </div>
+                </div>'''
+    elif (isinstance(field.field.widget, ClearableFileInput) or isinstance(field.field.widget, NumberInput)
+          or isinstance(field.field.widget, Select) or isinstance(field.field.widget, TextInput)
+          or isinstance(field.field.widget, Textarea) or isinstance(field.field.widget, EmailInput)
+          or isinstance(field.field.widget, PasswordInput)):
         label = f'<span class="form-label">{field.label}</span>'
         body = str(field)
     elif isinstance(field.field.widget, CheckboxInput):
