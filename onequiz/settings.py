@@ -45,6 +45,7 @@ INSTALLED_APPS = [
     'crispy_forms',
     'core',
     'rest_framework',
+    'tasks',
 ]
 
 MIDDLEWARE = [
