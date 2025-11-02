@@ -4,6 +4,7 @@ from django.contrib import auth
 from django.contrib import messages
 from django.contrib.auth.models import User
 from django.contrib.auth.tokens import PasswordResetTokenGenerator
+from django.contrib.sites.shortcuts import get_current_site
 from django.core.cache import cache
 from django.http import Http404
 from django.shortcuts import redirect
@@ -15,7 +16,7 @@ from django.utils.http import urlsafe_base64_decode
 from accounts.forms import LoginForm
 from accounts.forms import PasswordResetForm
 from accounts.forms import RegistrationForm
-from onequiz.operations import emailOperations
+from tasks.models import Task
 
 
 def login(request):
@@ -60,8 +61,11 @@ def register(request):
     if request.method == 'POST':
         form = RegistrationForm(request.POST)
         if form.is_valid():
-            newUser = form.save()
-            emailOperations.sendEmailToActivateAccount(request, newUser)
+            user = form.save()
+            Task.objects.create(
+                name='SendEmailToActivateAccountTask',
+                data={'domain': get_current_site(request).domain, 'user': user.pk},
+            )
 
             messages.info(
                 request, 'We\'ve sent you an activation link. Please check your email.'
@@ -118,7 +122,10 @@ def passwordForgotten(request):
             user = None
 
         if user is not None:
-            emailOperations.sendEmailToResetPassword(request, user)
+            Task.objects.create(
+                name='SendEmailToResetPasswordTask',
+                data={'domain': get_current_site(request).domain, 'user': user.pk},
+            )
 
         messages.info(
             request, 'Check your email for a password change link.'

@@ -7,6 +7,7 @@ from string import (
     digits
 )
 
+from django.conf import settings
 from django.db.models import (
     F,
     Case,
@@ -27,6 +28,9 @@ from core.models import (
 
 
 def isPasswordStrong(password):
+    if settings.DEBUG:
+        return True
+
     if len(password) < 8:
         return False
 
@@ -111,7 +115,7 @@ class QuizAttemptAutomaticMarking:
             totalQuizMark += response.question.mark
             response.mark = awardedMark
 
-        self.result = Result.objects.create(
+        Result.objects.create(
             quizAttempt=self.quizAttempt,
             timeSpent=(timezone.now() - self.quizAttempt.createdDttm).seconds,
             numberOfCorrectAnswers=numberOfCorrectAnswers,

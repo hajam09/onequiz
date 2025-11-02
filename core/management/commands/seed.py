@@ -16,7 +16,7 @@ from onequiz.operations import bakerOperations
 
 class Command(BaseCommand):
     help = 'Create Baker Model'
-    NUMBER_OF_QUIZ = 100
+    NUMBER_OF_QUIZ = 5
 
     def handle(self, *args, **kwargs):
         bakerOperations.createUsers()

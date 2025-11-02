@@ -20,7 +20,8 @@ from core.forms import (
 )
 from core.models import Quiz, Question, QuizAttempt, Result, Response
 from onequiz.operations import generalOperations
-from onequiz.operations.generalOperations import QuizAttemptManualMarking, QuizAttemptAutomaticMarking
+from onequiz.operations.generalOperations import QuizAttemptManualMarking
+from tasks.models import Task
 
 
 def indexView(request):
@@ -345,21 +346,12 @@ def quizAttemptSubmissionPreview(request, url):
         cache.delete(f'quiz-attempt-v1-{url}')
 
         if quizAttempt.quiz.enableAutoMarking:
-            quizAttemptAutomaticMarking = QuizAttemptAutomaticMarking(
-                quizAttempt, quizAttempt.responses.select_related('question').all()
+            Task.objects.create(name='QuizAttemptAutomaticMarkingTask', data={'url': quizAttempt.url})
+            messages.success(
+                request,
+                'Your quiz attempt is currently being marked.'
             )
-            marked = quizAttemptAutomaticMarking.mark()
-            if marked:
-                quizAttempt.status = QuizAttempt.Status.MARKED
-                messages.success(
-                    request,
-                    'This quiz attempt has been auto marked successfully.'
-                )
-            else:
-                messages.success(
-                    request,
-                    'This quiz attempt will be marked manually by the author.'
-                )
+            quizAttempt.status = QuizAttempt.Status.IN_REVIEW
         else:
             messages.success(
                 request,
