@@ -1,4 +1,3 @@
-from auditlog.registry import auditlog
 from django.contrib import admin
 from django.urls import reverse
 from django.utils.html import format_html
@@ -119,7 +118,7 @@ class ResponseAdmin(admin.ModelAdmin):
         'id',
         'url',
         'question_link',
-        'question__questionType'
+        # 'question__questionType'
     ]
     list_filter = [
         'question__questionType'
@@ -181,10 +180,3 @@ class ResultAdmin(admin.ModelAdmin):
         model_name = result.quizAttempt._meta.model_name
         url = reverse(f'admin:{app_label}_{model_name}_change', args=[result.quizAttempt.id])
         return format_html('<a href="{}">{}</a>', url, result.quizAttempt)
-
-
-auditlog.register(Question)
-auditlog.register(Quiz)
-auditlog.register(QuizAttempt)
-auditlog.register(Response)
-auditlog.register(Result)

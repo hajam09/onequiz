@@ -1,8 +1,7 @@
 asgiref==3.10.0
 coverage==7.11.0
 crispy-bootstrap4==2025.6
-Django==5.2.7
-django-auditlog==3.0.0
+Django==4.2.25
 django-crispy-forms==2.4
 django-debug-toolbar==6.1.0
 djangorestframework==3.16.1

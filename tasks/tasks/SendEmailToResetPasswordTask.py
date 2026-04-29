@@ -20,7 +20,7 @@ class SendEmailToResetPasswordTask(BaseTask):
 
         uid = urlsafe_base64_encode(force_bytes(user.pk))
         prtg = PasswordResetTokenGenerator()
-        url = reverse('accounts:password-reset', kwargs={'encodedId': uid, 'token': prtg.make_token(user)})
+        url = reverse('accounts:password-reset-view', kwargs={'encodedId': uid, 'token': prtg.make_token(user)})
 
         message = """
             Hi {},

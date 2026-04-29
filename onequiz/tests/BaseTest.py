@@ -16,7 +16,7 @@ class BaseTest(TestCase):
         setUp: Run once for every test method to setup clean data.
         """
         self.factory = RequestFactory()
-        self.user = bakerOperations.createUser()
+        self.user = bakerOperations.createUsers()
         self.client = Client(
             HTTP_USER_AGENT='Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/87.0.4280.88 Safari/537.36'
         )

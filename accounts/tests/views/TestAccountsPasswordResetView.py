@@ -17,33 +17,33 @@ class AccountsPasswordResetViewTest(BaseTestViews):
 
     def testDjangoUnicodeDecodeErrorCaught(self):
         token = self.prtg.make_token(self.request.user)
-        path = reverse('accounts:password-reset', kwargs={'encodedId': 'DECODE_ERROR', 'token': token})
+        path = reverse('password-reset-view', kwargs={'encodedId': 'DECODE_ERROR', 'token': token})
 
         response = self.get(path=path)
         self.assertEqual(response.status_code, 200)
         self.assertIsInstance(response.context['form'], PasswordResetForm)
-        self.assertTemplateUsed(response, 'accounts/activateFailed.html')
+        self.assertTemplateUsed(response, 'accounts/activate-failed.html')
 
     def testUserDoesNotExistCaught(self):
         uid = urlsafe_base64_encode(force_bytes(0))
         token = self.prtg.make_token(self.request.user)
-        path = reverse('accounts:password-reset', kwargs={'encodedId': uid, 'token': token})
+        path = reverse('password-reset-view', kwargs={'encodedId': uid, 'token': token})
 
         response = self.get(path=path)
         self.assertEqual(response.status_code, 200)
         self.assertIsInstance(response.context['form'], PasswordResetForm)
-        self.assertTemplateUsed(response, 'accounts/activateFailed.html')
+        self.assertTemplateUsed(response, 'accounts/activate-failed.html')
 
     def testIncorrectToken(self):
         newUser = bakerOperations.createUser()
         uid = urlsafe_base64_encode(force_bytes(newUser.id))
         token = self.prtg.make_token(self.request.user)
-        path = reverse('accounts:password-reset', kwargs={'encodedId': uid, 'token': token})
+        path = reverse('password-reset-view', kwargs={'encodedId': uid, 'token': token})
 
         response = self.get(path=path)
         self.assertEqual(response.status_code, 200)
         self.assertIsInstance(response.context['form'], PasswordResetForm)
-        self.assertTemplateUsed(response, 'accounts/activateFailed.html')
+        self.assertTemplateUsed(response, 'accounts/activate-failed.html')
 
     def testGetRequestWhenEncodedIdAndTokenIsValid(self):
         # todo: the verifyToken in the view is failing
