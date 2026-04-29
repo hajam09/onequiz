@@ -12,5 +12,5 @@ def getIcon(icon):
     return '<i style="font-size:{}px" class="{}">{}</i>'.format(icon.size, icon.clazz, icon.name)
 
 
-def linkItem(name, url, icon=None, subLinks=None):
-    return {'name': name, 'url': url, 'icon': getIcon(icon), 'subLinks': subLinks}
+def linkItem(name, url, icon=None, subLinks=None, isActive=None):
+    return {'name': name, 'url': url, 'icon': getIcon(icon), 'subLinks': subLinks, 'isActive': isActive}

@@ -1,8 +1,7 @@
-from unittest.mock import patch
-
 from django.urls import reverse
 
 from onequiz.tests.BaseTestViews import BaseTestViews
+from tasks.models import Task
 
 
 class AccountsPasswordForgottenTest(BaseTestViews):
@@ -17,8 +16,7 @@ class AccountsPasswordForgottenTest(BaseTestViews):
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, 'accounts/passwordForgotten.html')
 
-    @patch('onequiz.operations.emailOperations.sendEmailToResetPassword')
-    def testPasswordRequestExistingUser(self, mockSendEmailToResetPassword):
+    def testPasswordRequestExistingUser(self):
         testParams = self.TestParams(self.user.email)
         response = self.post(testParams.getData())
         messages = self.getMessages(response)
@@ -29,10 +27,13 @@ class AccountsPasswordForgottenTest(BaseTestViews):
                 'Check your email for a password change link.'
             )
 
-        mockSendEmailToResetPassword.assert_called_once()
+        task = Task.objects.last()
+        self.assertIsNotNone(task)
+        self.assertEqual(task.name, 'SendEmailToResetPasswordTask')
+        self.assertEqual('testserver', task.data.get('domain'))
+        self.assertEqual(1, task.data.get('user'))
 
-    @patch('onequiz.operations.emailOperations.sendEmailToResetPassword')
-    def testPasswordRequestNonExistingUser(self, mockSendEmailToResetPassword):
+    def testPasswordRequestNonExistingUser(self):
         testParams = self.TestParams('example@example.com')
         response = self.post(testParams.getData())
         messages = self.getMessages(response)
@@ -43,7 +44,8 @@ class AccountsPasswordForgottenTest(BaseTestViews):
                 'Check your email for a password change link.'
             )
 
-        mockSendEmailToResetPassword.assert_not_called()
+        task = Task.objects.last()
+        self.assertIsNone(task)
 
     class TestParams:
         def __init__(self, email):

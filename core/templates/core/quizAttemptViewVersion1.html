@@ -63,7 +63,6 @@
             <input type="hidden" id="ref" name="ref"/>
         </form>
     </div>
-    <script src="{% static '/js/utils.js' %}"></script>
     <script>
         function onTimeout() {
             window.location.href = '{% url 'core:quiz-attempt-submission-preview' url=quizAttempt.url %}'

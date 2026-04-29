@@ -26,10 +26,14 @@ class QuizDetailViewTest(BaseTestViews):
         self.assertTrue(isinstance(response.context['quizQuestions'], QuerySet))
         self.assertTemplateUsed(response, 'core/quizTemplateView.html')
 
-    def testQuizDetailViewGetForAnotherUser(self):
+    def testQuizDetailViewGetForAnotherUserQuizNotInDraft(self):
+        self.quiz.isDraft = False
+        self.quiz.save()
+
         user2 = bakerOperations.createUser()
         self.client.login(username=user2.username, password=TEST_PASSWORD)
         response = self.get()
+
         self.assertEqual(response.status_code, 200)
         self.assertTrue(isinstance(response.context['form'], QuizUpdateForm))
         self.assertTrue(response.context['formTitle'], 'View Quiz')
@@ -37,6 +41,16 @@ class QuizDetailViewTest(BaseTestViews):
         self.assertEqual(len(response.context['quizQuestions']), 0)
         self.assertTrue(isinstance(response.context['quizQuestions'], QuerySet))
         self.assertTemplateUsed(response, 'core/quizTemplateView.html')
+
+    def testQuizDetailViewGetForAnotherUserQuizIsInDraft(self):
+        self.quiz.isDraft = True
+        self.quiz.save()
+
+        user2 = bakerOperations.createUser()
+        self.client.login(username=user2.username, password=TEST_PASSWORD)
+        response = self.get()
+
+        self.assertEqual(response.status_code, 404)
 
     def testQuizDoesNotExist(self):
         path = reverse('core:quiz-update-view', kwargs={'url': 'non-existing-url'})
@@ -50,3 +64,4 @@ class QuizDetailViewTest(BaseTestViews):
         form.update = None
         response = self.post()
         self.assertEqual(response.status_code, 200)
+        self.assertRedirects(response, f'/quiz/{self.quiz.url}/update/')

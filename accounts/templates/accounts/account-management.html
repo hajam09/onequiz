@@ -1,0 +1,56 @@
+{% extends 'accounts/base.html' %}
+{% load static %}
+{% load templateTags %}
+{% block content %}
+    <div class='container mt-5'>
+        <div class='row'>
+            <div class='col-lg-4 mb-4'>
+                {% include 'accounts/components/settings-panel.html' %}
+            </div>
+
+            <div class='col-lg-8'>
+                <div class='card' id='idCardWideComponent'>
+                    <div class='card-body'>
+                        <h4 class='heading-h2'>Account Management</h4>
+                        <hr>
+
+                        <div class='mb-5'>
+                            <h5>Deactivate Account</h5>
+                            <p class='text-muted'>
+                                Deactivating your account will disable login access without deleting your data.
+                            </p>
+                            <form method='post'>
+                                {% csrf_token %}
+                                <input type='hidden' name='action' value='deactivate-account'>
+                                <input type='submit' class='btn btn-warning' value='Deactivate Account'>
+                            </form>
+                        </div>
+
+                        <div>
+                            <h5>Delete Account</h5>
+                            <p class='text-muted'>
+                                This permanently deletes your account. Type <strong>DELETE</strong> to confirm.
+                            </p>
+                            <form method='post'>
+                                {% csrf_token %}
+                                <input type='hidden' name='action' value='delete-account'>
+                                <div class='form-group'>
+                                    <label for='deleteAccountConfirmation'>Confirmation</label>
+                                    <input
+                                        type='text'
+                                        id='deleteAccountConfirmation'
+                                        name='deleteAccountConfirmation'
+                                        class='form-control'
+                                        placeholder='Type DELETE'
+                                        required
+                                    >
+                                </div>
+                                <input type='submit' class='btn btn-danger' value='Delete Account'>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}

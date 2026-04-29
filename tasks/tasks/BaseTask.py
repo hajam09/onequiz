@@ -35,4 +35,4 @@ class BaseTask:
                 taskInstance.scheduledAt = timezone.now() + timedelta(minutes=5)
         finally:
             taskInstance.finishedAt = timezone.now()
-            taskInstance.save(update_fields=['status', 'tries', 'lastError', 'finishedAt'])
+            taskInstance.save()

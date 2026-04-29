@@ -80,7 +80,7 @@ def quizCreateView(request):
 
 
 def quizUpdateView(request, url):
-    quiz = get_object_or_404(Quiz, url=url)  # creator=request.user
+    quiz = get_object_or_404(Quiz.objects.filter(Q(isDraft=False) | Q(creator=request.user)), url=url)
 
     if request.method == 'POST':
         form = QuizUpdateForm(request, quiz, request.POST, request.FILES)
@@ -276,7 +276,7 @@ def quizAttemptViewVersion1(request, url):
     if responseUrl not in responseUrls:
         return redirect(f'/v1/quiz-attempt/{url}/?r={responseUrls[0]}')
 
-    responseObject = quizAttempt.responses.filter(url=responseUrl).first()
+    responseObject = quizAttempt.responses.select_related('question').filter(url=responseUrl).first()
 
     if request.method == 'POST' and 'submitResponse' in request.POST:
         if not quizAttempt.hasQuizEnded():

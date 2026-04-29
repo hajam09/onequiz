@@ -32,7 +32,7 @@
                     {% for quizAttempt in quizAttemptList %}
                         <tr>
                             <th scope='row'>{{ quizAttempt.user.get_full_name }}</th>
-                            <td>{{ quizAttempt.createdDttm }}</td>
+                            <td>{{ quizAttempt.createdAt }}</td>
                             <td>{{ quizAttempt.get_status_display }}</td>
                             <td>
                                 {% if quizAttempt.status == 'MARKED' and quizAttempt.quizAttemptResults %}

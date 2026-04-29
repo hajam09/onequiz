@@ -117,7 +117,7 @@ class QuizAttemptAutomaticMarking:
 
         Result.objects.create(
             quizAttempt=self.quizAttempt,
-            timeSpent=(timezone.now() - self.quizAttempt.createdDttm).seconds,
+            timeSpent=(timezone.now() - self.quizAttempt.createdAt).seconds,
             numberOfCorrectAnswers=numberOfCorrectAnswers,
             numberOfPartialAnswers=numberOfPartialAnswers,
             numberOfWrongAnswers=numberOfWrongAnswers,
