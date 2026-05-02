@@ -119,7 +119,7 @@
             {% if user.is_authenticated %}
                 beginQuizAttempt(quizId);
             {% else %}
-                const loginURL = "{% url 'accounts:login' %}";
+                const loginURL = "{% url 'accounts:login-view' %}";
                 const next = "?next=";
                 const pathname = window.location.pathname;
                 const query = window.location.search;

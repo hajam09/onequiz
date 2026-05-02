@@ -1,7 +1,7 @@
 from django.http import QueryDict
 from django.urls import reverse
 
-from accounts.forms import RegistrationForm
+from accounts.forms import RegisterForm
 from onequiz.settings import TEST_PASSWORD
 from onequiz.tests.BaseTestViews import BaseTestViews
 from tasks.models import Task
@@ -9,7 +9,7 @@ from tasks.models import Task
 
 class AccountsRegisterViewTest(BaseTestViews):
 
-    def setUp(self, path=reverse('accounts:register')) -> None:
+    def setUp(self, path=reverse('accounts:register-view')) -> None:
         self.basePath = path
         super(AccountsRegisterViewTest, self).setUp(self.basePath)
         self.client.logout()
@@ -17,8 +17,8 @@ class AccountsRegisterViewTest(BaseTestViews):
     def testRegisterGet(self):
         response = self.get()
         self.assertEqual(response.status_code, 200)
-        self.assertTemplateUsed(response, 'accounts/registration.html')
-        self.assertIsInstance(response.context['form'], RegistrationForm)
+        self.assertTemplateUsed(response, 'accounts/register.html')
+        self.assertIsInstance(response.context['form'], RegisterForm)
 
     def testRegistrationValidForm(self):
         testParams = self.TestParams('user@example.com', TEST_PASSWORD, 'Django', 'Admin')

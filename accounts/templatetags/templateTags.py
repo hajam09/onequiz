@@ -36,19 +36,19 @@ def navigationPanel(request):
                 linkItem('Create a Quiz', reverse('core:quiz-create-view'), None),
                 linkItem('Account', '', None, [
                     linkItem('My Attempts', reverse('core:attempted-quizzes-view'), Icon('', 'fas fa-book-open', '15')),
-                    linkItem('My Quizzes', reverse('core:user-created-quizzes-view'),
-                             Icon('', 'fas fa-question', '15')),
+                    linkItem('My Quizzes', reverse('core:user-created-quizzes-view'), Icon('', 'fas fa-question', '15')),
+                    linkItem('My Settings', reverse('settings:profile-information-view'), Icon('', 'fa-solid fa-gear', '15')),
                     None,
-                    linkItem('Logout', reverse('accounts:logout'), Icon('', 'fas fa-sign-out-alt', '15')),
+                    linkItem('Logout', reverse('accounts:logout-view'), Icon('', 'fas fa-sign-out-alt', '15')),
                 ]),
             ]
         )
     else:
         links.append(
             linkItem('Login / Register', '', None, [
-                linkItem('Register', reverse('accounts:register'), Icon('', 'fas fa-user-circle', '20')),
+                linkItem('Register', reverse('accounts:register-view'), Icon('', 'fas fa-user-circle', '20')),
                 None,
-                linkItem('Login', reverse('accounts:login'), Icon('', 'fas fa-sign-in-alt', '20')),
+                linkItem('Login', reverse('accounts:login-view'), Icon('', 'fas fa-sign-in-alt', '20')),
             ]),
         )
     return links
@@ -60,31 +60,31 @@ def settingsPanel(request):
     links = [
         linkItem(
             name='Profile Information',
-            url=reverse('accounts:profile-information-view'),
+            url=reverse('settings:profile-information-view'),
             icon=Icon('', 'fa-regular fa-user', None),
             isActive=urlName == 'profile-information-view'
         ),
         linkItem(
-            name='Change Password',
-            url=reverse('accounts:change-password-view'),
+            name='Update Password',
+            url=reverse('settings:update-password-view'),
             icon=Icon('', 'fa-solid fa-key', None),
-            isActive=urlName == 'change-password-view'
+            isActive=urlName == 'update-password-view'
         ),
         linkItem(
             name='Notifications',
-            url=reverse('accounts:notifications-view'),
+            url=reverse('settings:notifications-view'),
             icon=Icon('', 'fa-regular fa-bell', None),
             isActive=urlName == 'notifications-view'
         ),
         linkItem(
             name='Activity Log',
-            url=reverse('accounts:activity-log-view'),
+            url=reverse('settings:activity-log-view'),
             icon=Icon('', 'fa-regular fa-clock', None),
             isActive=urlName == 'activity-log-view'
         ),
         linkItem(
             name='Account Management',
-            url=reverse('accounts:account-management-view'),
+            url=reverse('settings:account-management-view'),
             icon=Icon('', 'fa-regular fa-circle-xmark', None),
             isActive=urlName == 'account-management-view'
         ),
@@ -207,10 +207,26 @@ def renderFormFields(field):
                         <input class="form-control col" type={field.widget_type} name={field.name} value={field.initial} style="width: 100%;">
                     </div>
                 </div>'''
+    elif isinstance(field.field.widget, (TextInput, EmailInput, PasswordInput)):
+        label = ''
+        body += f'''
+                <div class="form-group floating">
+                    <input 
+                        type="{field.field.widget.input_type}" 
+                        name="{field.name}" 
+                        id="{field.id_for_label}"
+                        class="form-control" 
+                        placeholder=""
+                        value="{field.value() or ''}"
+                        {"required" if field.field.required else ""}
+                        {"disabled" if field.field.disabled else ""}
+                    >
+                    <label for="{field.id_for_label}">{field.label}</label>
+                </div>
+            '''
     elif (isinstance(field.field.widget, ClearableFileInput) or isinstance(field.field.widget, NumberInput)
-          or isinstance(field.field.widget, Select) or isinstance(field.field.widget, TextInput)
-          or isinstance(field.field.widget, Textarea) or isinstance(field.field.widget, EmailInput)
-          or isinstance(field.field.widget, PasswordInput)):
+          or isinstance(field.field.widget, Select)
+          or isinstance(field.field.widget, Textarea)):
         label = f'<span class="form-label">{field.label}</span>'
         body = str(field)
     elif isinstance(field.field.widget, CheckboxInput):

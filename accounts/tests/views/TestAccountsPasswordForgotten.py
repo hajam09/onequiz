@@ -6,7 +6,7 @@ from tasks.models import Task
 
 class AccountsPasswordForgottenTest(BaseTestViews):
 
-    def setUp(self, path=reverse('accounts:password-forgotten')) -> None:
+    def setUp(self, path=reverse('password-forgotten-view')) -> None:
         self.basePath = path
         super(AccountsPasswordForgottenTest, self).setUp(self.basePath)
         self.client.logout()
@@ -14,7 +14,7 @@ class AccountsPasswordForgottenTest(BaseTestViews):
     def testLoginGet(self):
         response = self.get()
         self.assertEqual(response.status_code, 200)
-        self.assertTemplateUsed(response, 'accounts/passwordForgotten.html')
+        self.assertTemplateUsed(response, 'accounts/password-forgotten.html')
 
     def testPasswordRequestExistingUser(self):
         testParams = self.TestParams(self.user.email)

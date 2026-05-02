@@ -20,7 +20,7 @@ class AccountManagementViewTest(BaseTestViews):
         self.user.refresh_from_db()
 
         self.assertEqual(response.status_code, 200)
-        self.assertRedirects(response, reverse('accounts:login'))
+        self.assertRedirects(response, reverse('accounts:login-view'))
         self.assertFalse(self.user.is_active)
 
     def testDeleteAccountRequiresConfirmation(self):
@@ -36,5 +36,5 @@ class AccountManagementViewTest(BaseTestViews):
         response = self.post(data={'action': 'delete-account', 'deleteAccountConfirmation': 'DELETE'})
 
         self.assertEqual(response.status_code, 200)
-        self.assertRedirects(response, reverse('accounts:register'))
+        self.assertRedirects(response, reverse('registration'))
         self.assertFalse(User.objects.filter(pk=userId).exists())

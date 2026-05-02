@@ -1,6 +1,6 @@
 from django.urls import reverse
 
-from accounts.models import UserNotificationSettings
+from settings.models import UserNotificationSettings
 from onequiz.tests.BaseTestViews import BaseTestViews
 
 
@@ -12,7 +12,7 @@ class NotificationSettingsViewTest(BaseTestViews):
         response = self.get()
 
         self.assertEqual(response.status_code, 200)
-        self.assertTemplateUsed(response, 'accounts/notification.html')
+        self.assertTemplateUsed(response, 'accounts/notifications.html')
         self.assertTrue(UserNotificationSettings.objects.filter(user=self.user).exists())
 
     def testNotificationSettingsPost(self):

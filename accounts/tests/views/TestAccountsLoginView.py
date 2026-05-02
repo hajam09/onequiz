@@ -10,7 +10,7 @@ from onequiz.tests.BaseTestViews import BaseTestViews
 
 class AccountsLoginViewTest(BaseTestViews):
 
-    def setUp(self, path=reverse('accounts:login')) -> None:
+    def setUp(self, path=reverse('accounts:login-view')) -> None:
         self.basePath = path
         super(AccountsLoginViewTest, self).setUp(self.basePath)
         self.client.logout()

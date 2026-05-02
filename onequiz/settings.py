@@ -24,6 +24,7 @@ INSTALLED_APPS = [
     'crispy_forms',
     'core',
     'rest_framework',
+    'settings',
     'tasks',
 ]
 
@@ -64,12 +65,7 @@ DATABASES = {
     }
 }
 
-CACHES = {
-    'default': {
-        'BACKEND': 'django.core.cache.backends.redis.RedisCache',
-        'LOCATION': 'redis://:redis-password@localhost:6379',
-    }
-}
+
 
 AUTH_PASSWORD_VALIDATORS = [
     {

@@ -18,13 +18,13 @@ class SendEmailToVerifyNewEmailTask(BaseTask):
         user = User.objects.get(id=args[0].get('user'))
         fullName = user.get_full_name()
         domain = args[0].get('domain')
-        newEmail = args[0].get('newEmail')
+        email = args[0].get('email')
 
         uid = urlsafe_base64_encode(force_bytes(user.pk))
         prtg = PasswordResetTokenGenerator()
         signer = TimestampSigner()
-        signedEmail = signer.sign(newEmail)
-        url = reverse('accounts:verify-new-email', kwargs={'encodedId': uid, 'token': prtg.make_token(user)})
+        signedEmail = signer.sign(email)
+        url = reverse('settings:verify-new-email-view', kwargs={'encodedId': uid, 'token': prtg.make_token(user)})
 
         message = """
             Hi {},
@@ -38,5 +38,5 @@ class SendEmailToVerifyNewEmailTask(BaseTask):
             The OneQuiz Team
         """.format(fullName, domain, url, signedEmail)
 
-        emailMessage = EmailMessage(emailSubject, message, settings.EMAIL_HOST_USER, [newEmail])
+        emailMessage = EmailMessage(emailSubject, message, settings.EMAIL_HOST_USER, [email])
         emailMessage.send()

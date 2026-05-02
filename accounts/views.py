@@ -2,38 +2,47 @@ from http import HTTPStatus
 
 from django.contrib import auth
 from django.contrib import messages
-from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.contrib.auth.tokens import PasswordResetTokenGenerator
 from django.contrib.sites.shortcuts import get_current_site
 from django.core.cache import cache
-from django.core.signing import BadSignature
-from django.core.signing import SignatureExpired
-from django.core.signing import TimestampSigner
 from django.http import Http404
 from django.shortcuts import redirect
 from django.shortcuts import render
 from django.utils.encoding import DjangoUnicodeDecodeError
 from django.utils.encoding import force_str
-from django.utils.http import urlsafe_base64_decode
+from django.utils.http import urlsafe_base64_decode, url_has_allowed_host_and_scheme
 
-from accounts.forms import LoginForm, UserProfileInformationForm
+from accounts.forms import LoginForm
 from accounts.forms import PasswordResetForm
-from accounts.forms import RegistrationForm
-from accounts.models import UserNotificationSettings
+from accounts.forms import RegisterForm
 from tasks.models import Task
 
 
-def renderSettingsPage(request, activeSectionKey, activeSection, sectionItems):
+def registerView(request):
+    if request.method == 'POST':
+        form = RegisterForm(request.POST)
+        if form.is_valid():
+            user = form.save()
+            Task.objects.create(
+                name='SendEmailToActivateAccountTask',
+                data={'domain': get_current_site(request).domain, 'user': user.pk},
+            )
+
+            messages.info(
+                request, 'We\'ve sent you an activation link. Please check your email.'
+            )
+            return redirect('accounts:login-view')
+    else:
+        form = RegisterForm()
+
     context = {
-        'activeSection': activeSection,
-        'activeSectionKey': activeSectionKey,
-        'sectionItems': sectionItems,
+        'form': form
     }
-    return render(request, 'accounts/profile-information.html', context)
+    return render(request, 'accounts/register.html', context)
 
 
-def login(request):
+def loginView(request):
     if not request.session.session_key:
         request.session.save()
 
@@ -46,7 +55,7 @@ def login(request):
             messages.error(
                 request, 'Your account has been temporarily locked out because of too many failed login attempts.'
             )
-            return redirect('accounts:login')
+            return redirect('accounts:login-view')
 
         form = LoginForm(request, request.POST)
 
@@ -71,40 +80,17 @@ def login(request):
     return render(request, 'accounts/login.html', context)
 
 
-def register(request):
-    if request.method == 'POST':
-        form = RegistrationForm(request.POST)
-        if form.is_valid():
-            user = form.save()
-            Task.objects.create(
-                name='SendEmailToActivateAccountTask',
-                data={'domain': get_current_site(request).domain, 'user': user.pk},
-            )
-
-            messages.info(
-                request, 'We\'ve sent you an activation link. Please check your email.'
-            )
-            return redirect('accounts:login')
-    else:
-        form = RegistrationForm()
-
-    context = {
-        'form': form
-    }
-    return render(request, 'accounts/registration.html', context)
-
-
-def logout(request):
+def logoutView(request):
     auth.logout(request)
 
-    previousUrl = request.META.get('HTTP_REFERER')
-    if previousUrl:
-        return redirect(previousUrl)
+    referer = request.META.get('HTTP_REFERER')
+    if referer and url_has_allowed_host_and_scheme(referer, {request.get_host()}):
+        return redirect(referer)
 
-    return redirect('accounts:login')
+    return redirect('accounts:login-view')
 
 
-def activateAccount(request, encodedId, token):
+def activateAccountView(request, encodedId, token):
     try:
         uid = force_str(urlsafe_base64_decode(encodedId))
         user = User.objects.get(pk=uid)
@@ -115,18 +101,18 @@ def activateAccount(request, encodedId, token):
 
     if user is not None and passwordResetTokenGenerator.check_token(user, token):
         user.is_active = True
-        user.save()
+        user.save(update_fields=['is_active'])
 
         messages.success(
             request,
             'Account activated successfully'
         )
-        return redirect('accounts:login')
+        return redirect('accounts:login-view')
 
-    return render(request, 'accounts/activateFailed.html', status=HTTPStatus.UNAUTHORIZED)
+    return render(request, 'accounts/activate-failed.html', status=HTTPStatus.UNAUTHORIZED)
 
 
-def passwordForgotten(request):
+def passwordForgottenView(request):
     if request.method == 'POST':
         email = request.POST.get('email')
 
@@ -145,10 +131,10 @@ def passwordForgotten(request):
             request, 'Check your email for a password change link.'
         )
 
-    return render(request, 'accounts/passwordForgotten.html')
+    return render(request, 'accounts/password-forgotten.html')
 
 
-def passwordReset(request, encodedId, token):
+def passwordResetView(request, encodedId, token):
     try:
         uid = force_str(urlsafe_base64_decode(encodedId))
         user = User.objects.get(pk=uid)
@@ -163,134 +149,17 @@ def passwordReset(request, encodedId, token):
 
         if form.is_valid():
             form.updatePassword()
-            return redirect('accounts:login')
+            return redirect('accounts:login-view')
 
     context = {
         'form': PasswordResetForm(),
     }
 
-    TEMPLATE = 'passwordResetForm' if user is not None and verifyToken else 'activateFailed'
+    TEMPLATE = 'password-reset' if user is not None and verifyToken else 'activate-failed'
     return render(request, 'accounts/{}.html'.format(TEMPLATE), context)
 
 
-def settingsProfileInformationView(request):
-    context = {
-    }
-    return render(request, 'accounts/profile-information.html', context)
-
-
-def settingsChangePasswordView(request):
-    context = {
-    }
-    return render(request, 'accounts/change-password.html', context)
-
-
-@login_required
-def settingsNotificationView(request):
-    settingsObject, _ = UserNotificationSettings.objects.get_or_create(user=request.user)
-
-    if request.method == 'POST':
-        attributes = [
-            'emailOnQuizAttemptSubmitted', 'emailOnQuizMarked', 'emailOnPasswordChanged', 'emailOnProductUpdates',
-            'emailOnAccountSecurityUpdate',
-        ]
-        for attribute in attributes:
-            setattr(settingsObject, attribute, request.POST.get(attribute) == 'on')
-        settingsObject.save()
-        messages.success(request, 'Your notification settings have been updated.')
-        return redirect('accounts:notifications-view')
-
-    context = {
-        'notificationSettings': settingsObject,
-    }
-    return render(request, 'accounts/notification.html', context)
-
-
-def settingsActivityLogView(request):
-    pass
-
-
-@login_required
-def settingsAccountManagement(request):
-    if request.method == 'POST':
-        action = request.POST.get('action')
-
-        if action == 'deactivate-account':
-            request.user.is_active = False
-            request.user.save(update_fields=['is_active'])
-            auth.logout(request)
-            messages.info(request, 'Your account has been deactivated.')
-            return redirect('accounts:login')
-
-        if action == 'delete-account':
-            confirmation = request.POST.get('deleteAccountConfirmation', '').strip()
-            if confirmation != 'DELETE':
-                messages.error(request, 'Type DELETE to permanently delete your account.')
-                return redirect('accounts:account-management-view')
-
-            user = request.user
-            auth.logout(request)
-            user.delete()
-            messages.success(request, 'Your account has been permanently deleted.')
-            return redirect('accounts:register')
-
-    context = {
-    }
-    return render(request, 'accounts/account-management.html', context)
-
-
-# ---------------------------------------------------------------------
-# SECURITY AND PASSWORD
-# ---------------------------------------------------------------------
-
-@login_required
-def passwordChange(request):
-    """
-    Let user change password while logged in.
-    Should use Django’s built-in PasswordChangeForm.
-    """
-    # if request.method == 'POST':
-    #     form = PasswordChangeForm(user=request.user, data=request.POST)
-    #     if form.is_valid():
-    #         user = form.save()
-    #         update_session_auth_hash(request, user)  # keep user logged in
-    #         messages.success(request, 'Password changed successfully!')
-    #         return redirect('profile')
-    # else:
-    #     form = PasswordChangeForm(user=request.user)
-    # return render(request, 'accounts/password_change.html', {'form': form})
-    pass
-
-
-def verifyNewEmail(request, encodedId, token):
-    try:
-        uid = force_str(urlsafe_base64_decode(encodedId))
-        user = User.objects.get(pk=uid)
-    except (DjangoUnicodeDecodeError, ValueError, User.DoesNotExist):
-        user = None
-
-    signedEmail = request.GET.get('email')
-    signer = TimestampSigner()
-
-    try:
-        newEmail = signer.unsign(signedEmail, max_age=60 * 60 * 24) if signedEmail else None
-    except (BadSignature, SignatureExpired):
-        newEmail = None
-
-    passwordResetTokenGenerator = PasswordResetTokenGenerator()
-    verifyToken = user is not None and passwordResetTokenGenerator.check_token(user, token)
-
-    if verifyToken and newEmail and not User.objects.filter(email=newEmail).exclude(pk=user.pk).exists():
-        user.email = newEmail
-        user.username = newEmail
-        user.save(update_fields=['email', 'username'])
-        messages.success(request, 'Your email address has been updated successfully.')
-        return redirect('accounts:profile-view')
-
-    return render(request, 'accounts/activateFailed.html', status=HTTPStatus.UNAUTHORIZED)
-
-
-def extras(request):
+def extrasView(request):
     if request.GET.get('page') == 'privacy-policy':
         template = 'accounts/privacyPolicy.html'
     elif request.GET.get('page') == 'terms-and-conditions':

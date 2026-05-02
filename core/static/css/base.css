@@ -1,0 +1,74 @@
+body {
+    font-family: "Roboto", sans-serif;
+}
+
+input::-webkit-inner-spin-button,
+input::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+    margin: 0
+}
+
+#idCardWideComponent {
+    background-color: #fff;
+    border-radius: 10px;
+    padding: 20px;
+    box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+}
+
+#id-card-narrow-component {
+    background-color: #fff;
+    border-radius: 10px;
+    padding: 20px;
+    box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+    width: 25rem;
+}
+
+.invalid-feedback {
+    text-align: center;
+}
+
+.CWQk3-custom-checkbox > input {
+    height: 34px;
+    width: 34px;
+}
+
+.CWQk3-custom-checkbox > label {
+    padding-top: 10px;
+    padding-left: 30px;
+}
+
+/* Floating form group */
+.form-group.floating {
+    position: relative;
+    margin: 20px 0;
+}
+.form-group.floating .form-control {
+    width: 100%;
+    padding: 15px 10px -1px 10px;
+    height: auto;
+    font-size: 1rem;
+}
+.form-group.floating label {
+    position: absolute;
+    top: 50%;
+    left: 10px;
+    transform: translateY(-50%);
+    background: #fff;
+    padding: 0 5px;
+    font-size: 14px;
+    color: #6c757d;
+    pointer-events: none;
+    transition: all 0.2s ease;
+}
+.form-group.floating .form-control:focus + label {
+    top: 0;
+    transform: translateY(-50%) scale(0.9);
+    font-size: 12px;
+    color: #007bff;
+}
+.form-group.floating .form-control:not(:placeholder-shown) + label {
+    top: 0;
+    transform: translateY(-50%) scale(0.9);
+    font-size: 12px;
+    color: #007bff;
+}

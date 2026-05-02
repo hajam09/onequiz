@@ -281,7 +281,7 @@ class Response(BaseModel):
             return super().bulk_create(objs, batch_size, ignore_conflicts)
 
         def bulk_update(self, objs, fields, batch_size=None):
-            super().bulk_update()
+            return super().bulk_update(objs, fields, batch_size=batch_size)
 
     objects = ModelManager()
 
