@@ -1,0 +1,26 @@
+{% extends 'accounts/base.html' %}
+{% load static %}
+{% load templateTags %}
+{% block content %}
+    <div class='container mt-5'>
+        <div class='row'>
+            <div class='col-lg-4 mb-4'>
+                {% include 'components/settings-panel.html' %}
+            </div>
+
+            <div class='col-lg-8'>
+                <div class='card' id='idCardWideComponent'>
+                    <form method='post'>
+                        {% csrf_token %}
+
+                        <div class='card-body'>
+                            <h4 class='heading-h2'>Activity Log</h4>
+                            <hr>
+                            
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}

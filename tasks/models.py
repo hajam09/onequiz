@@ -27,5 +27,5 @@ class Task(BaseModel):
     class Meta:
         indexes = [
             models.Index(fields=['status', 'scheduledAt'], name='idx-task-status-scheduledAt'),
-            models.Index(fields=['scheduledAt'], name='idx-quiz-scheduledAt'),
+            models.Index(fields=['scheduledAt'], name='idx-task-scheduledAt'),
         ]

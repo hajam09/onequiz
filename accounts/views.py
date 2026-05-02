@@ -11,15 +11,38 @@ from django.shortcuts import redirect
 from django.shortcuts import render
 from django.utils.encoding import DjangoUnicodeDecodeError
 from django.utils.encoding import force_str
-from django.utils.http import urlsafe_base64_decode
+from django.utils.http import urlsafe_base64_decode, url_has_allowed_host_and_scheme
 
 from accounts.forms import LoginForm
 from accounts.forms import PasswordResetForm
-from accounts.forms import RegistrationForm
+from accounts.forms import RegisterForm
 from tasks.models import Task
 
 
-def login(request):
+def registerView(request):
+    if request.method == 'POST':
+        form = RegisterForm(request.POST)
+        if form.is_valid():
+            user = form.save()
+            Task.objects.create(
+                name='SendEmailToActivateAccountTask',
+                data={'domain': get_current_site(request).domain, 'user': user.pk},
+            )
+
+            messages.info(
+                request, 'We\'ve sent you an activation link. Please check your email.'
+            )
+            return redirect('accounts:login-view')
+    else:
+        form = RegisterForm()
+
+    context = {
+        'form': form
+    }
+    return render(request, 'accounts/register.html', context)
+
+
+def loginView(request):
     if not request.session.session_key:
         request.session.save()
 
@@ -32,7 +55,7 @@ def login(request):
             messages.error(
                 request, 'Your account has been temporarily locked out because of too many failed login attempts.'
             )
-            return redirect('accounts:login')
+            return redirect('accounts:login-view')
 
         form = LoginForm(request, request.POST)
 
@@ -57,40 +80,17 @@ def login(request):
     return render(request, 'accounts/login.html', context)
 
 
-def register(request):
-    if request.method == 'POST':
-        form = RegistrationForm(request.POST)
-        if form.is_valid():
-            user = form.save()
-            Task.objects.create(
-                name='SendEmailToActivateAccountTask',
-                data={'domain': get_current_site(request).domain, 'user': user.pk},
-            )
-
-            messages.info(
-                request, 'We\'ve sent you an activation link. Please check your email.'
-            )
-            return redirect('accounts:login')
-    else:
-        form = RegistrationForm()
-
-    context = {
-        'form': form
-    }
-    return render(request, 'accounts/registration.html', context)
-
-
-def logout(request):
+def logoutView(request):
     auth.logout(request)
 
-    previousUrl = request.META.get('HTTP_REFERER')
-    if previousUrl:
-        return redirect(previousUrl)
+    referer = request.META.get('HTTP_REFERER')
+    if referer and url_has_allowed_host_and_scheme(referer, {request.get_host()}):
+        return redirect(referer)
 
-    return redirect('accounts:login')
+    return redirect('accounts:login-view')
 
 
-def activateAccount(request, encodedId, token):
+def activateAccountView(request, encodedId, token):
     try:
         uid = force_str(urlsafe_base64_decode(encodedId))
         user = User.objects.get(pk=uid)
@@ -101,18 +101,18 @@ def activateAccount(request, encodedId, token):
 
     if user is not None and passwordResetTokenGenerator.check_token(user, token):
         user.is_active = True
-        user.save()
+        user.save(update_fields=['is_active'])
 
         messages.success(
             request,
             'Account activated successfully'
         )
-        return redirect('accounts:login')
+        return redirect('accounts:login-view')
 
-    return render(request, 'accounts/activateFailed.html', status=HTTPStatus.UNAUTHORIZED)
+    return render(request, 'accounts/activate-failed.html', status=HTTPStatus.UNAUTHORIZED)
 
 
-def passwordForgotten(request):
+def passwordForgottenView(request):
     if request.method == 'POST':
         email = request.POST.get('email')
 
@@ -131,10 +131,10 @@ def passwordForgotten(request):
             request, 'Check your email for a password change link.'
         )
 
-    return render(request, 'accounts/passwordForgotten.html')
+    return render(request, 'accounts/password-forgotten.html')
 
 
-def passwordReset(request, encodedId, token):
+def passwordResetView(request, encodedId, token):
     try:
         uid = force_str(urlsafe_base64_decode(encodedId))
         user = User.objects.get(pk=uid)
@@ -149,17 +149,17 @@ def passwordReset(request, encodedId, token):
 
         if form.is_valid():
             form.updatePassword()
-            return redirect('accounts:login')
+            return redirect('accounts:login-view')
 
     context = {
         'form': PasswordResetForm(),
     }
 
-    TEMPLATE = 'passwordResetForm' if user is not None and verifyToken else 'activateFailed'
+    TEMPLATE = 'password-reset' if user is not None and verifyToken else 'activate-failed'
     return render(request, 'accounts/{}.html'.format(TEMPLATE), context)
 
 
-def extras(request):
+def extrasView(request):
     if request.GET.get('page') == 'privacy-policy':
         template = 'accounts/privacyPolicy.html'
     elif request.GET.get('page') == 'terms-and-conditions':

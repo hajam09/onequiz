@@ -1,6 +1,6 @@
 from django.contrib.auth.models import User
 
-from accounts.forms import RegistrationForm
+from accounts.forms import RegisterForm
 from onequiz.settings import TEST_PASSWORD
 from onequiz.tests.BaseTest import BaseTest
 
@@ -13,7 +13,7 @@ class RegistrationFormTest(BaseTest):
 
     def testAccountAlreadyExists(self):
         testParams = self.TestParams(self.request.user.email, TEST_PASSWORD, TEST_PASSWORD)
-        form = RegistrationForm(data=testParams.getData())
+        form = RegisterForm(data=testParams.getData())
         self.assertFalse(form.is_valid())
 
         for message in form.errors.as_data()['email'][0]:
@@ -21,7 +21,7 @@ class RegistrationFormTest(BaseTest):
 
     def testPasswordsNotEqual(self):
         testParams = self.TestParams('example@example.com', TEST_PASSWORD, 'TEST_PASSWORD')
-        form = RegistrationForm(data=testParams.getData())
+        form = RegisterForm(data=testParams.getData())
         self.assertFalse(form.is_valid())
 
         for message in form.errors.as_data()['password2'][0]:
@@ -29,7 +29,7 @@ class RegistrationFormTest(BaseTest):
 
     def testPasswordDoesNotHaveAlphabets(self):
         testParams = self.TestParams('example@example.com', '1234567890', '1234567890')
-        form = RegistrationForm(data=testParams.getData())
+        form = RegisterForm(data=testParams.getData())
         self.assertFalse(form.is_valid())
 
         for message in form.errors.as_data()['password2'][0]:
@@ -37,7 +37,7 @@ class RegistrationFormTest(BaseTest):
 
     def testPasswordDoesNotHaveCapitalLetters(self):
         testParams = self.TestParams('example@example.com', 'test_password', 'test_password')
-        form = RegistrationForm(data=testParams.getData())
+        form = RegisterForm(data=testParams.getData())
         self.assertFalse(form.is_valid())
 
         for message in form.errors.as_data()['password2'][0]:
@@ -45,7 +45,7 @@ class RegistrationFormTest(BaseTest):
 
     def testPasswordDoesNotHaveNumbers(self):
         testParams = self.TestParams('example@example.com', 'TEST_PASSWORD', 'TEST_PASSWORD')
-        form = RegistrationForm(data=testParams.getData())
+        form = RegisterForm(data=testParams.getData())
         self.assertFalse(form.is_valid())
 
         for message in form.errors.as_data()['password2'][0]:
@@ -53,7 +53,7 @@ class RegistrationFormTest(BaseTest):
 
     def testRegisterUserSuccessfully(self):
         testParams = self.TestParams('example@example.com', TEST_PASSWORD, TEST_PASSWORD)
-        form = RegistrationForm(data=testParams.getData())
+        form = RegisterForm(data=testParams.getData())
         self.assertTrue(form.is_valid())
         form.save()
 

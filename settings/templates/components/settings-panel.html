@@ -1,0 +1,14 @@
+{% load templateTags %}
+{% settingsPanel request as settingsPanel %}
+
+<div class='card' id='idCardWideComponent'>
+    <div class='list-group list-group-flush'>
+        {% for panel in settingsPanel %}
+            <a href='{{ panel.url }}'
+               class='list-group-item list-group-item-action{% if panel.isActive %} active{% endif %}'>
+                {{ panel.icon|safe }}
+                <span class='ml-2'>{{ panel.name }}</span>
+            </a>
+        {% endfor %}
+    </div>
+</div>

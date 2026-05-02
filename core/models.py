@@ -17,12 +17,9 @@ def generateModelUrl():
 
 
 class BaseModel(models.Model):
-    createdDttm = models.DateTimeField(default=timezone.now)
-    modifiedDttm = models.DateTimeField(auto_now=True)
-    reference = models.CharField(max_length=1024, blank=True, null=True)
+    createdAt = models.DateTimeField(default=timezone.now)
+    updatedAt = models.DateTimeField(auto_now=True)
     deleteFl = models.BooleanField(default=False)
-    orderNo = models.IntegerField(default=1, blank=True, null=True)
-    versionNo = models.IntegerField(default=1, blank=True, null=True)
 
     class Meta:
         abstract = True
@@ -206,7 +203,7 @@ class QuizAttempt(BaseModel):
         return reverse('core:quiz-attempt-result-view', kwargs={'url': self.url})
 
     def getQuizEndTime(self, uiFormat=True):
-        endTime = (self.createdDttm + datetime.timedelta(minutes=self.quiz.quizDuration))
+        endTime = (self.createdAt + datetime.timedelta(minutes=self.quiz.quizDuration))
         return endTime.strftime('%b %d, %Y %H:%M:%S') if uiFormat else endTime
 
     def hasQuizEnded(self):
@@ -283,6 +280,9 @@ class Response(BaseModel):
                     obj.choices = obj.question.cloneAndCleanChoices()
             return super().bulk_create(objs, batch_size, ignore_conflicts)
 
+        def bulk_update(self, objs, fields, batch_size=None):
+            return super().bulk_update(objs, fields, batch_size=batch_size)
+
     objects = ModelManager()
 
 
@@ -309,5 +309,5 @@ class Result(BaseModel):
 
     def save(self, *args, **kwargs):
         if not self.timeSpent and self.quizAttempt:
-            self.timeSpent = (timezone.now() - self.quizAttempt.createdDttm).seconds
+            self.timeSpent = (timezone.now() - self.quizAttempt.createdAt).seconds
         super(Result, self).save(*args, **kwargs)
