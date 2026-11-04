@@ -64,6 +64,21 @@ def performComplexQuizSearch(query, filterList=None):
 
     return Quiz.objects.filter(reduce(operator.and_, filterList)).distinct()
 
+def performComplexQuizSearchV2(query, queryset=None):
+    queryset = queryset or Quiz.objects.all()
+    queryset = queryset.filter(deleteFl=False)
+
+    if query and query.strip():
+        queryset = queryset.filter(
+            Q(name__icontains=query) |
+            Q(description__icontains=query) |
+            Q(url__icontains=query) |
+            Q(topic__icontains=query) |
+            Q(subject__icontains=query)
+        )
+
+    return queryset.distinct()
+
 
 class QuizAttemptAutomaticMarking:
     def __init__(self, quizAttempt, responses):
@@ -117,7 +132,7 @@ class QuizAttemptAutomaticMarking:
 
         Result.objects.create(
             quizAttempt=self.quizAttempt,
-            timeSpent=(timezone.now() - self.quizAttempt.createdDttm).seconds,
+            timeSpent=(timezone.now() - self.quizAttempt.createdAt).seconds,
             numberOfCorrectAnswers=numberOfCorrectAnswers,
             numberOfPartialAnswers=numberOfPartialAnswers,
             numberOfWrongAnswers=numberOfWrongAnswers,

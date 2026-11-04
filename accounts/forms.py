@@ -10,48 +10,28 @@ from django.core.exceptions import ValidationError
 from onequiz.operations import generalOperations
 
 
-class RegistrationForm(UserCreationForm):
+class RegisterForm(UserCreationForm):
     first_name = forms.CharField(
-        label='',
-        widget=forms.TextInput(
-            attrs={
-                'placeholder': 'Firstname'
-            }
-        )
+        label='First Name',
+        widget=forms.TextInput()
     )
     last_name = forms.CharField(
-        label='',
-        widget=forms.TextInput(
-            attrs={
-                'placeholder': 'Lastname'
-            }
-        )
+        label='Last Name',
+        widget=forms.TextInput()
     )
     email = forms.EmailField(
-        label='',
-        widget=forms.EmailInput(
-            attrs={
-                'placeholder': 'Email'
-            }
-        )
+        label='Email',
+        widget=forms.EmailInput()
     )
     password1 = forms.CharField(
-        label='',
+        label='Password',
         strip=False,
-        widget=forms.PasswordInput(
-            attrs={
-                'placeholder': 'Password'
-            }
-        )
+        widget=forms.PasswordInput()
     )
     password2 = forms.CharField(
-        label='',
+        label='Confirm Password',
         strip=False,
-        widget=forms.PasswordInput(
-            attrs={
-                'placeholder': 'Confirm Password'
-            }
-        )
+        widget=forms.PasswordInput()
     )
 
     class Meta:
@@ -96,21 +76,13 @@ class RegistrationForm(UserCreationForm):
 
 class LoginForm(forms.ModelForm):
     email = forms.EmailField(
-        label='',
-        widget=forms.EmailInput(
-            attrs={
-                'placeholder': 'Email'
-            }
-        )
+        label='Email',
+        widget=forms.EmailInput()
     )
     password = forms.CharField(
-        label='',
+        label='Password',
         strip=False,
-        widget=forms.PasswordInput(
-            attrs={
-                'placeholder': 'Password'
-            }
-        )
+        widget=forms.PasswordInput()
     )
 
     class Meta:
@@ -135,23 +107,15 @@ class LoginForm(forms.ModelForm):
 
 class PasswordResetForm(forms.Form):
     password = forms.CharField(
-        label='',
+        label='Password',
         strip=False,
-        widget=forms.PasswordInput(
-            attrs={
-                'placeholder': 'Password'
-            }
-        )
+        widget=forms.PasswordInput()
     )
 
     repeatPassword = forms.CharField(
-        label='',
+        label='Repeat Password',
         strip=False,
-        widget=forms.PasswordInput(
-            attrs={
-                'placeholder': 'Repeat Password'
-            }
-        )
+        widget=forms.PasswordInput()
     )
 
     def __init__(self, request=None, user=None, *args, **kwargs):
@@ -181,62 +145,5 @@ class PasswordResetForm(forms.Form):
 
     def updatePassword(self):
         newPassword = self.cleaned_data.get('password')
-        self.user.set_password(newPassword)
-        self.user.save()
-
-
-class PasswordUpdateForm(forms.Form):
-    currentPassword = forms.CharField(
-        label='',
-        strip=False,
-        widget=forms.PasswordInput(
-            attrs={
-                'placeholder': 'Current password'
-            }
-        )
-    )
-    newPassword = forms.CharField(
-        label='',
-        strip=False,
-        widget=forms.PasswordInput(
-            attrs={
-                'placeholder': 'New password'
-            }
-        )
-    )
-    repeatNewPassword = forms.CharField(
-        label='',
-        strip=False,
-        widget=forms.PasswordInput(
-            attrs={
-                'placeholder': 'Repeat new password'
-            }
-        )
-    )
-
-    def __init__(self, request, *args, **kwargs):
-        self.request = request
-        self.user = request.user
-        super(PasswordUpdateForm, self).__init__(*args, **kwargs)
-
-    def clean(self):
-        currentPassword = self.cleaned_data.get('currentPassword')
-        newPassword = self.cleaned_data.get('newPassword')
-        repeatNewPassword = self.cleaned_data.get('repeatNewPassword')
-
-        if currentPassword and not self.user.check_password(currentPassword):
-            raise ValidationError('Your current password does not match with the account\'s existing password.')
-
-        if newPassword and repeatNewPassword:
-            if newPassword != repeatNewPassword:
-                raise ValidationError('Your new password and confirm password does not match.')
-
-            if not generalOperations.isPasswordStrong(newPassword):
-                raise ValidationError('Your new password is not strong enough.')
-
-        return self.cleaned_data
-
-    def updatePassword(self):
-        newPassword = self.cleaned_data.get('newPassword')
         self.user.set_password(newPassword)
         self.user.save()

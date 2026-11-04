@@ -1,0 +1,56 @@
+{% extends 'accounts/base.html' %}
+{% load static %}
+{% load templateTags %}
+{% block content %}
+    <div class='d-flex justify-content-center mt-5'>
+        <div class='card' id='id-card-narrow-component'>
+            <form method='post'>
+                {% csrf_token %}
+                <div class='card-body'>
+                    <h4 class='heading-h2 text-center'>Register</h4>
+                    <hr>
+                    {% for field in form %}
+                        {% renderFormFields field %}
+                        {% for error in field.errors %}
+                            <p class='text-center' style='color: red;'><small>{{ error }}</small></p>
+                        {% endfor %}
+                    {% endfor %}
+
+                    <span id='span-id-password-visibility' class='pull-right mb-3'
+                          style='color: #007bff;cursor: pointer;float: right;'>
+                        Show Password
+                    </span>
+
+                    <input type='submit' class='btn btn-primary btn-block' value='Register Now'>
+                    <p class='text-muted text-center small mt-3'>
+                        By clicking the Register Now button, you agree to our
+                        <a href='{% url 'accounts:extras-view' %}?page=terms-and-conditions' target='_blank'>Terms &amp;
+                            Conditions</a>, and
+                        <a href='{% url 'accounts:extras-view' %}?page=privacy-policy' target='_blank'>Privacy Policy</a>
+                    </p>
+                    <div class='text-muted text-center'>
+                        Already have an account? <a href='{% url 'accounts:login-view' %}'>Log in</a>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+    <script>
+        $(function () {
+            const $passwords = $("[name='password1'], [name='password2']");
+            const $toggle = $('#span-id-password-visibility');
+
+            $toggle.on('mousedown', function (e) {
+                e.preventDefault();
+            });
+
+            $toggle.on('click', function () {
+                const isHidden = $passwords.first().attr('type') === 'password';
+                const newType = isHidden ? 'text' : 'password';
+
+                $passwords.attr('type', newType);
+                $toggle.text(isHidden ? 'Hide Password' : 'Show Password');
+            });
+        });
+    </script>
+{% endblock %}

@@ -20,7 +20,7 @@ class SendEmailToActivateAccountTask(BaseTask):
 
         uid = urlsafe_base64_encode(force_bytes(user.pk))
         prtg = PasswordResetTokenGenerator()
-        url = reverse('accounts:activate-account', kwargs={'encodedId': uid, 'token': prtg.make_token(user)})
+        url = reverse('accounts:activate-account-view', kwargs={'encodedId': uid, 'token': prtg.make_token(user)})
 
         message = """
             Hi {},

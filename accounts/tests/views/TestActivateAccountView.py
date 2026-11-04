@@ -19,38 +19,38 @@ class ActivateAccountViewTest(BaseTestViews):
 
     def testDjangoUnicodeDecodeErrorCaught(self):
         token = self.prtg.make_token(self.request.user)
-        path = reverse('accounts:activate-account', kwargs={'encodedId': 'DECODE_ERROR', 'token': token})
+        path = reverse('accounts:activate-account-view', kwargs={'encodedId': 'DECODE_ERROR', 'token': token})
         response = self.get(path=path)
-        self.assertTemplateUsed(response, 'accounts/activateFailed.html')
+        self.assertTemplateUsed(response, 'accounts/activate-failed.html')
 
     def testUserDoesNotExistCaught(self):
         uid = urlsafe_base64_encode(force_bytes(0))
         token = self.prtg.make_token(self.request.user)
-        path = reverse('accounts:activate-account', kwargs={'encodedId': uid, 'token': token})
+        path = reverse('accounts:activate-account-view', kwargs={'encodedId': uid, 'token': token})
         response = self.get(path=path)
-        self.assertTemplateUsed(response, 'accounts/activateFailed.html')
+        self.assertTemplateUsed(response, 'accounts/activate-failed.html')
 
     def testValueErrorCaught(self):
         uid = urlsafe_base64_encode(force_bytes('ID'))
         token = self.prtg.make_token(self.request.user)
-        path = reverse('accounts:activate-account', kwargs={'encodedId': uid, 'token': token})
+        path = reverse('accounts:activate-account-view', kwargs={'encodedId': uid, 'token': token})
         response = self.get(path=path)
-        self.assertTemplateUsed(response, 'accounts/activateFailed.html')
+        self.assertTemplateUsed(response, 'accounts/activate-failed.html')
 
     def testIncorrectToken(self):
         newUser = bakerOperations.createUser()
         uid = urlsafe_base64_encode(force_bytes(newUser.id))
         token = self.prtg.make_token(self.request.user)
-        path = reverse('accounts:activate-account', kwargs={'encodedId': uid, 'token': token})
+        path = reverse('accounts:activate-account-view', kwargs={'encodedId': uid, 'token': token})
         response = self.get(path=path)
-        self.assertTemplateUsed(response, 'accounts/activateFailed.html')
+        self.assertTemplateUsed(response, 'accounts/activate-failed.html')
 
     def testUserActivatedSuccessfully(self):
         self.assertFalse(self.request.user.is_active)
 
         uid = urlsafe_base64_encode(force_bytes(self.request.user.id))
         token = self.prtg.make_token(self.request.user)
-        path = reverse('accounts:activate-account', kwargs={'encodedId': uid, 'token': token})
+        path = reverse('accounts:activate-account-view', kwargs={'encodedId': uid, 'token': token})
 
         response = self.get(path=path)
         messages = self.getMessages(response)

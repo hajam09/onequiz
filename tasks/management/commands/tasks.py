@@ -45,11 +45,11 @@ class Command(BaseCommand):
                 )
 
                 taskCount = len(tasksBatch)
-                self.stdout.write(f"📋 {taskCount} task(s) fetched.")
 
                 if taskCount == 0:
                     self.stdout.write("💤 No tasks available right now.\n")
                 else:
+                    self.stdout.write(f"📋 {taskCount} task(s) fetched.")
                     startBatchTime = timezone.now()
 
                     # Run in parallel threads
